@@ -1,5 +1,5 @@
 """
-Goody Backend v5.1 — FIXED
+Goody Backend v5.2 — Amazon price fix
 - Pataisyti CSS selektoriai Varle, Pigu, Senukai, Topo, Elesen, 1a
 - Amazon.de + Amazon.pl DABAR VEIKIA search endpoint'e
 - ScraperAPI + fallback
@@ -456,17 +456,33 @@ def scrape_amazon(query: str, domain: str = "de") -> list:
                 if not name:
                     continue
 
-                # Amazon kaina: whole + fraction
-                whole = item.select_one(".a-price-whole")
-                frac = item.select_one(".a-price-fraction")
-                if not whole:
-                    continue
-                whole_txt = re.sub(r"[^\d]", "", whole.get_text())
-                frac_txt = re.sub(r"[^\d]", "", frac.get_text() if frac else "00")[:2] or "00"
-                if not whole_txt:
-                    continue
-                raw = float(f"{whole_txt}.{frac_txt}")
-                if raw <= 0 or raw > 100000:
+                # Amazon kaina — bandome kelis selektorius
+                raw = 0.0
+                # 1. Standartinis .a-price
+                price_el = item.select_one(".a-price .a-offscreen")
+                if price_el:
+                    raw = parse_price(price_el.get_text())
+                # 2. whole + fraction
+                if not raw:
+                    whole = item.select_one(".a-price-whole")
+                    frac = item.select_one(".a-price-fraction")
+                    if whole:
+                        whole_txt = re.sub(r"[^\d]", "", whole.get_text())
+                        frac_txt = re.sub(r"[^\d]", "", frac.get_text() if frac else "00")[:2] or "00"
+                        if whole_txt:
+                            try:
+                                raw = float(f"{whole_txt}.{frac_txt}")
+                            except:
+                                pass
+                # 3. Bet koks kainų elementas
+                if not raw:
+                    for sel in [".a-color-price", "[class*='price']"]:
+                        pel = item.select_one(sel)
+                        if pel:
+                            raw = parse_price(pel.get_text())
+                            if raw:
+                                break
+                if not raw or raw > 100000:
                     continue
                 price = to_eur(raw, currency)
 
