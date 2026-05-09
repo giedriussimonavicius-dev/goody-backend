@@ -739,7 +739,7 @@ def search():
         ("Amazon.pl", scrape_amazon, query_en),
     ]
 
-    with ThreadPoolExecutor(max_workers=8) as executor:
+    with ThreadPoolExecutor(max_workers=4) as executor:
         futures = {}
         for name, fn, q in scrapers:
             if name == "Amazon.de":
@@ -750,10 +750,10 @@ def search():
                 f = executor.submit(fn, q)
             futures[f] = name
 
-        for f in as_completed(futures, timeout=30):
+        for f in as_completed(futures, timeout=25):
             name = futures[f]
             try:
-                res = f.result(timeout=5)
+                res = f.result(timeout=8)
                 print(f"  [{name}] returned {len(res)} results")
                 all_results.extend(res)
             except Exception as e:
