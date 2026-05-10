@@ -195,7 +195,8 @@ def parse_price(text: str) -> float:
     if not text:
         return 0.0
 
-    text = text.replace("\xa0", " ").replace("€", "").replace("Eur", "").replace("EUR", "").strip()
+    text = (text.replace("\xa0", " ").replace("€", "").replace("Eur", "").replace("EUR", "")
+                .replace("zł", "").replace("zl", "").replace("PLN", "").replace(" ", "").strip())
 
     if "," in text and "." in text:
         if text.rfind(".") < text.rfind(","):
