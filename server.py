@@ -1,5 +1,5 @@
 """
-Goody Backend v5.3 — Fixes:
+Goody Backend v5.4 — Fixes:
 - Amazon: ScraperAPI render=true + country_code
 - Elesen: per platus selector pataisytas (dedup fix)
 - Amazon.pl: verčiama į lenkiškai (ne angliškai)
@@ -52,7 +52,7 @@ def get_headers(lang="lt"):
         "Sec-Fetch-Site": "none",
     }
 
-def fetch_url(url: str, lang: str = "lt", timeout: int = 25):
+def fetch_url(url: str, lang: str = "lt", timeout: int = 10):
     """Fetch URL — Zyte API pirma, tada ScraperAPI, tada tiesiogiai."""
     # 1. Zyte API
     if ZYTE_API_KEY:
@@ -61,7 +61,7 @@ def fetch_url(url: str, lang: str = "lt", timeout: int = 25):
                 "https://api.zyte.com/v1/extract",
                 auth=(ZYTE_API_KEY, ""),
                 json={"url": url, "httpResponseBody": True},
-                timeout=30,
+                timeout=15,
             )
             if resp.status_code == 200:
                 import base64
@@ -90,7 +90,7 @@ def fetch_url(url: str, lang: str = "lt", timeout: int = 25):
                 f"&render={'true' if is_amazon else 'false'}"
                 + (f"&country_code={country}" if country else "")
             )
-            resp = requests.get(scraper_url, timeout=35)
+            resp = requests.get(scraper_url, timeout=15)
             if resp.status_code == 200:
                 print(f"[ScraperAPI OK] {url[:70]}")
                 return resp
@@ -701,22 +701,34 @@ def search():
     if not query:
         return jsonify({"error": "Query required"}), 400
 
-    cache_key = hashlib.md5(f"v53:{query.lower()}".encode()).hexdigest()
+    cache_key = hashlib.md5(f"v54:{query.lower()}".encode()).hexdigest()
     cached = get_cache(cache_key)
     if cached:
         cached["_cached"] = True
         return jsonify(cached)
 
-    query_en = claude_translate(query, "en")
-    query_de = claude_translate(query, "de")
-    # FIX: Amazon.pl verčiama į lenkiškai, ne angliškai
-    query_pl = claude_translate(query, "pl")
+    # Parallel translate — was 3 sequential Claude calls (~15-30s), now concurrent
+    with ThreadPoolExecutor(max_workers=3) as tex:
+        f_en = tex.submit(claude_translate, query, "en")
+        f_de = tex.submit(claude_translate, query, "de")
+        f_pl = tex.submit(claude_translate, query, "pl")
+        try:
+            query_en = f_en.result(timeout=12)
+        except Exception:
+            query_en = query
+        try:
+            query_de = f_de.result(timeout=12)
+        except Exception:
+            query_de = query
+        try:
+            query_pl = f_pl.result(timeout=12)
+        except Exception:
+            query_pl = query
 
     print(f"\n=== SEARCH: '{query}' → EN:'{query_en}' DE:'{query_de}' PL:'{query_pl}' ===")
 
     all_results = []
 
-    # FIX: max_workers=8 (buvo 4)
     with ThreadPoolExecutor(max_workers=8) as executor:
         futures = {
             executor.submit(scrape_varle,   query):    "Varle",
@@ -729,10 +741,10 @@ def search():
             executor.submit(scrape_amazon,  query_pl, "pl"): "Amazon.PL",
         }
 
-        for f in as_completed(futures, timeout=30):
+        for f in as_completed(futures, timeout=25):
             name = futures[f]
             try:
-                res = f.result(timeout=10)
+                res = f.result(timeout=5)
                 print(f"  [{name}] returned {len(res)} results")
                 all_results.extend(res)
             except Exception as e:
@@ -740,10 +752,13 @@ def search():
 
     print(f"=== TOTAL: {len(all_results)} results before dedup/filter ===\n")
 
+    # Strict 8s cap — fetch_url chain (Zyte+ScraperAPI+direct) was up to 180s here
     price_history = {}
     try:
-        price_history = get_price_history(query_en)
-    except:
+        with ThreadPoolExecutor(max_workers=1) as phex:
+            phf = phex.submit(get_price_history, query_en)
+            price_history = phf.result(timeout=8)
+    except Exception:
         pass
 
     ai_data = claude_analyze(query, all_results, price_history)
@@ -772,8 +787,7 @@ def scan_image():
         client = anthropic.Anthropic(api_key=ANTHROPIC_API_KEY)
 
         response = client.messages.create(
-            model="claude-sonnet-4-20250514", max_tokens=1024,
-            tools=[{"type": "web_search_20250305", "name": "web_search"}],
+            model="claude-haiku-4-5-20251001", max_tokens=256,
             messages=[{"role": "user", "content": [
                 {"type": "image", "source": {"type": "base64", "media_type": "image/jpeg", "data": data["image"]}},
                 {"type": "text", "text": """Analyze this image. Find the product and any visible price.
@@ -784,8 +798,7 @@ Respond ONLY with JSON (no markdown):
 Rules:
 - product_name: brand + model in English (e.g. "Apple iPhone 16 Pro", "Sony WH-1000XM5")
 - price_visible: numeric price in EUR if visible, else 0
-- confidence: high=exact model, medium=brand+category, low=category only
-- Use web_search if needed to identify partial model numbers"""}
+- confidence: high=exact model, medium=brand+category, low=category only"""}
             ]}]
         )
 
@@ -821,7 +834,7 @@ Rules:
                 "message": "Produktas neatpažintas. Pabandykite aiškesnę nuotrauką."
             }), 400
 
-        cache_key = hashlib.md5(f"scan_v53:{product_name.lower()}".encode()).hexdigest()
+        cache_key = hashlib.md5(f"scan_v54:{product_name.lower()}".encode()).hexdigest()
         cached = get_cache(cache_key)
         if cached:
             cached["_cached"] = True
@@ -829,11 +842,20 @@ Rules:
             cached["store_price"] = price_visible
             return jsonify(cached)
 
-        query_de = claude_translate(product_name, "de")
-        query_pl = claude_translate(product_name, "pl")
+        with ThreadPoolExecutor(max_workers=2) as tex:
+            f_de = tex.submit(claude_translate, product_name, "de")
+            f_pl = tex.submit(claude_translate, product_name, "pl")
+            try:
+                query_de = f_de.result(timeout=12)
+            except Exception:
+                query_de = product_name
+            try:
+                query_pl = f_pl.result(timeout=12)
+            except Exception:
+                query_pl = product_name
+
         all_results = []
 
-        # FIX: max_workers=8
         with ThreadPoolExecutor(max_workers=8) as executor:
             futures = {
                 executor.submit(scrape_varle,   product_name): "Varle",
@@ -845,7 +867,7 @@ Rules:
                 executor.submit(scrape_amazon,  query_de, "de"): "Amazon.DE",
                 executor.submit(scrape_amazon,  query_pl, "pl"): "Amazon.PL",
             }
-            for f in as_completed(futures, timeout=30):
+            for f in as_completed(futures, timeout=25):
                 try:
                     all_results.extend(f.result(timeout=5))
                 except Exception as e:
@@ -863,8 +885,10 @@ Rules:
 
         price_history = {}
         try:
-            price_history = get_price_history(product_name)
-        except:
+            with ThreadPoolExecutor(max_workers=1) as phex:
+                phf = phex.submit(get_price_history, product_name)
+                price_history = phf.result(timeout=8)
+        except Exception:
             pass
 
         ai_data = claude_analyze(product_name, all_results, price_history)
@@ -924,7 +948,7 @@ def debug_html():
 @app.route("/api/health", methods=["GET"])
 def health():
     return jsonify({
-        "status": "ok", "version": "5.3-goody",
+        "status": "ok", "version": "5.4-goody",
         "shops": ["Varle.lt", "Pigu.lt", "Senukai.lt", "Topo centras", "Elesen.lt", "1a.lt", "Amazon.DE", "Amazon.PL"],
         "scraper_api": bool(SCRAPER_API_KEY),
         "anthropic_configured": bool(ANTHROPIC_API_KEY),
