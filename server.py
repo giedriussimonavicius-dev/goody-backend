@@ -730,7 +730,8 @@ def search():
             executor.submit(scrape_amazon,  query_de, "de"): "Amazon.DE",
         }
 
-        for f in as_completed(futures, timeout=25):
+        # FIX v5.6: raised from 25s to 40s — Amazon scraper_timeout=35s must fit inside this cap
+        for f in as_completed(futures, timeout=40):
             name = futures[f]
             try:
                 res = f.result(timeout=5)
@@ -844,7 +845,8 @@ Rules:
                 executor.submit(scrape_elesen,  product_name):    "Elesen",
                 executor.submit(scrape_amazon,  query_de, "de"):  "Amazon.DE",
             }
-            for f in as_completed(futures, timeout=25):
+            # FIX v5.6: raised from 25s to 40s — Amazon scraper_timeout=35s must fit inside this cap
+            for f in as_completed(futures, timeout=40):
                 try:
                     all_results.extend(f.result(timeout=5))
                 except Exception as e:
