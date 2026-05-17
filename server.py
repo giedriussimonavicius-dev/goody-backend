@@ -1,8 +1,8 @@
 """
-Goody Backend v5.7 — OpenAI runtime AI + Claude fallback:
-- OpenAI added as main runtime AI analysis provider
-- Claude remains for translation, image scan, and optional fallback analysis
-- AI never searches the web; it only analyzes Goody scraped results
+Goody Backend v5.8 — cheap product recognition strategy:
+- Barcode → Open Food Facts (free) first
+- Keyword / price-range classification (free) second
+- OpenAI GPT-4o-mini text-only (max_tokens=5) only as last resort
 - AI_PROVIDER=openai | claude | none
 """
 
@@ -41,6 +41,30 @@ AI_MAX_TOKENS = int(os.getenv("AI_MAX_TOKENS", "300"))
 DAILY_FREE_LIMIT  = int(os.getenv("DAILY_FREE_LIMIT", "200"))
 CACHE_TTL_SECONDS = int(os.getenv("CACHE_TTL_SECONDS", "3600"))
 
+# ── PRODUCT CLASSIFICATION KEYWORDS ──
+ACCESSORY_KEYWORDS = [
+    # English
+    "case", "cover", "protector", "screen protector", "tempered glass",
+    "cable", "charger", "adapter", "holder", "strap", "stand",
+    "shell", "bumper", "sleeve", "pouch", "wallet case",
+    "screen film", "glass film",
+    # Lithuanian
+    "dėklas", "etui", "plėvelė", "apsauginis stiklas", "kabelis",
+    "kroviklis", "įkroviklis", "adapteris", "laikiklis", "dirželis",
+    # German
+    "hülle", "schutzglas", "schutzhülle", "ladekabel", "aufladekabel",
+    # Polish
+    "kabel", "ładowarka", "etui", "szkło",
+]
+
+MAIN_PRODUCT_KEYWORDS = [
+    "iphone", "samsung galaxy", "macbook", "laptop", "notebook",
+    "television", " tv ", "headphones", "earbuds", "airpods",
+    "playstation", "xbox", "nintendo switch", "tablet", "ipad",
+    "smartwatch", "camera", "monitor", "speaker", "soundbar",
+    "refrigerator", "washing machine", "vacuum", "dyson",
+]
+
 cache = {}
 rate_store = {}
 _fx_cache = {"ts": 0, "rates": {"PLN": 0.233, "GBP": 1.17}}
@@ -66,6 +90,92 @@ def get_headers(lang="lt"):
         "Sec-Fetch-Mode": "navigate",
         "Sec-Fetch-Site": "none",
     }
+
+
+# ── FREE BARCODE LOOKUP ──
+def lookup_barcode_free(barcode: str) -> str:
+    """Looks up product name from EAN/UPC barcode using free APIs. Returns empty string if not found."""
+    barcode = barcode.strip()
+    if not re.match(r'^\d{8,14}$', barcode):
+        return ""
+
+    # Open Food Facts (works best for food/grocery products)
+    try:
+        resp = requests.get(
+            f"https://world.openfoodfacts.org/api/v2/product/{barcode}.json",
+            timeout=5,
+            headers={"User-Agent": "GoodyApp/1.0 (price comparison)"},
+        )
+        if resp.status_code == 200:
+            data = resp.json()
+            if data.get("status") == 1:
+                p = data.get("product", {})
+                name = (
+                    p.get("product_name_en")
+                    or p.get("product_name")
+                    or p.get("generic_name")
+                    or ""
+                ).strip()
+                if name:
+                    brand = p.get("brands", "").split(",")[0].strip()
+                    return f"{brand} {name}".strip() if brand and brand.lower() not in name.lower() else name
+    except Exception as e:
+        print(f"[OpenFoodFacts] {e}")
+
+    # Open Product Data (UPCItemDB trial — free, limited)
+    try:
+        resp = requests.get(
+            f"https://api.upcitemdb.com/prod/trial/lookup?upc={barcode}",
+            timeout=5,
+            headers={"User-Agent": "GoodyApp/1.0"},
+        )
+        if resp.status_code == 200:
+            items = resp.json().get("items", [])
+            if items:
+                return items[0].get("title", "").strip()
+    except Exception as e:
+        print(f"[UPCItemDB] {e}")
+
+    return ""
+
+
+# ── CHEAP PRODUCT TYPE CLASSIFICATION ──
+def classify_product_cheap(product_name: str, price: float = 0.0) -> str:
+    """Returns 'MAIN' or 'ACCESSORY'. Uses free heuristics first, GPT-4o-mini only as last resort."""
+    name_lower = product_name.lower()
+
+    # Step 1: keyword match (free)
+    if any(kw in name_lower for kw in ACCESSORY_KEYWORDS):
+        return "ACCESSORY"
+    if any(kw in name_lower for kw in MAIN_PRODUCT_KEYWORDS):
+        return "MAIN"
+
+    # Step 2: price range (free)
+    if 0 < price < 30:
+        return "ACCESSORY"
+    if price > 150:
+        return "MAIN"
+
+    # Step 3: GPT-4o-mini text-only (< $0.0001 per call)
+    if OPENAI_API_KEY and OpenAI:
+        try:
+            client = OpenAI(api_key=OPENAI_API_KEY)
+            resp = client.chat.completions.create(
+                model="gpt-4o-mini",
+                messages=[{
+                    "role": "user",
+                    "content": f'Is "{product_name}" a main product or accessory? Reply: MAIN or ACCESSORY'
+                }],
+                max_tokens=5,
+                temperature=0,
+            )
+            answer = resp.choices[0].message.content.strip().upper()
+            if "ACCESSORY" in answer:
+                return "ACCESSORY"
+        except Exception as e:
+            print(f"[classify] {e}")
+
+    return "MAIN"
 
 
 def fetch_url(url: str, lang: str = "lt", timeout: int = 10, scraper_timeout: int = 15):
@@ -1142,7 +1252,15 @@ def search():
     if not query:
         return jsonify({"error": "Query required"}), 400
 
-    cache_key = hashlib.md5(f"v57:{query.lower()}".encode()).hexdigest()
+    # Barcode detection — free lookup before any AI
+    original_query = query
+    if re.match(r'^\d{8,14}$', query):
+        product_from_barcode = lookup_barcode_free(query)
+        if product_from_barcode:
+            print(f"[Barcode] {query} → {product_from_barcode}")
+            query = product_from_barcode
+
+    cache_key = hashlib.md5(f"v58:{query.lower()}".encode()).hexdigest()
     cached = get_cache(cache_key)
 
     if cached:
@@ -1159,7 +1277,7 @@ def search():
     except Exception:
         query_pl = query
 
-    print(f"\n=== SEARCH: '{query}' → DE:'{query_de}' PL:'{query_pl}' ===")
+    print(f"\n=== SEARCH: '{original_query}' → resolved:'{query}' DE:'{query_de}' PL:'{query_pl}' ===")
 
     all_results = []
 
@@ -1194,6 +1312,9 @@ def search():
     ai_data = analyze_deal_with_ai(query, all_results, price_history)
     result = post_process(all_results, query, ai_data, price_history)
 
+    price_for_classify = result.get("price_min", 0)
+    result["product_type"] = classify_product_cheap(query, price_for_classify)
+
     set_cache(cache_key, result)
 
     ip = request.remote_addr or "unknown"
@@ -1206,6 +1327,33 @@ def search():
     }
 
     return jsonify(result)
+
+
+@app.route("/api/classify", methods=["POST"])
+def classify_route():
+    data = request.get_json()
+    if not data:
+        return jsonify({"error": "No data"}), 400
+    product_name = (data.get("product_name") or data.get("query") or "").strip()
+    if not product_name:
+        return jsonify({"error": "product_name required"}), 400
+    price = float(data.get("price") or 0)
+    product_type = classify_product_cheap(product_name, price)
+    return jsonify({"product_name": product_name, "product_type": product_type})
+
+
+@app.route("/api/barcode", methods=["POST"])
+def barcode_route():
+    data = request.get_json()
+    if not data:
+        return jsonify({"error": "No data"}), 400
+    barcode = (data.get("barcode") or "").strip()
+    if not barcode:
+        return jsonify({"error": "barcode required"}), 400
+    product_name = lookup_barcode_free(barcode)
+    if product_name:
+        return jsonify({"barcode": barcode, "product_name": product_name, "source": "open_food_facts"})
+    return jsonify({"barcode": barcode, "product_name": "", "source": "not_found"}), 404
 
 
 @app.route("/api/scan-image", methods=["POST"])
@@ -1290,7 +1438,7 @@ Rules:
                 "message": "Produktas neatpažintas. Pabandykite aiškesnę nuotrauką."
             }), 400
 
-        cache_key = hashlib.md5(f"scan_v57:{product_name.lower()}".encode()).hexdigest()
+        cache_key = hashlib.md5(f"scan_v58:{product_name.lower()}".encode()).hexdigest()
         cached = get_cache(cache_key)
 
         if cached:
@@ -1363,6 +1511,10 @@ Rules:
             price_visible
             if isinstance(price_visible, (int, float)) and price_visible > 1
             else 0
+        )
+        result["product_type"] = classify_product_cheap(
+            product_name,
+            price_visible if isinstance(price_visible, (int, float)) and price_visible > 1 else result.get("price_min", 0)
         )
 
         set_cache(cache_key, result)
@@ -1448,7 +1600,7 @@ def debug_html():
 def health():
     return jsonify({
         "status": "ok",
-        "version": "5.7-goody-openai-runtime",
+        "version": "5.8-cheap-recognition",
         "shops": ["Elesen.lt", "Amazon.DE", "Amazon.PL"],
         "scraper_api": bool(SCRAPER_API_KEY),
         "zyte_configured": bool(ZYTE_API_KEY),
@@ -1482,7 +1634,7 @@ def rate_limit_status():
 if __name__ == "__main__":
     port = int(os.getenv("PORT", 5000))
 
-    print("\n🟢 Goody API v5.7")
+    print("\n🟢 Goody API v5.8")
     print("📦 Shops: Elesen.lt + Amazon.DE + Amazon.PL")
     print(f"🔑 ScraperAPI: {'✅ configured' if SCRAPER_API_KEY else '⚠️ not set'}")
     print(f"🔑 Zyte: {'✅ configured' if ZYTE_API_KEY else '⚠️ not set'}")
