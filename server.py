@@ -1,8 +1,8 @@
 """
-Goody Backend v5.8 — cheap product recognition strategy:
-- Barcode → Open Food Facts (free) first
-- Keyword / price-range classification (free) second
-- OpenAI GPT-4o-mini text-only (max_tokens=5) only as last resort
+Goody Backend v5.9 — Supabase price history:
+- Saves every search result to price_history table
+- GET /api/price-history?q=... returns historical data for charts
+- Cheap product recognition (v5.8) retained
 - AI_PROVIDER=openai | claude | none
 """
 
@@ -21,6 +21,11 @@ try:
 except Exception:
     OpenAI = None
 
+try:
+    from supabase import create_client as _sb_create
+except Exception:
+    _sb_create = None
+
 
 load_dotenv()
 
@@ -29,6 +34,8 @@ CORS(app)
 
 ANTHROPIC_API_KEY = os.getenv("ANTHROPIC_API_KEY", "")
 OPENAI_API_KEY    = os.getenv("OPENAI_API_KEY", "")
+SUPABASE_URL      = os.getenv("SUPABASE_URL", "")
+SUPABASE_KEY      = os.getenv("SUPABASE_KEY", "")
 
 SCRAPER_API_KEY   = os.getenv("SCRAPER_API_KEY", "")
 ZYTE_API_KEY      = os.getenv("ZYTE_API_KEY", "")
@@ -176,6 +183,66 @@ def classify_product_cheap(product_name: str, price: float = 0.0) -> str:
             print(f"[classify] {e}")
 
     return "MAIN"
+
+
+# ── SUPABASE PRICE HISTORY ──
+_sb_client = None
+
+def get_supabase():
+    global _sb_client
+    if _sb_client is None and SUPABASE_URL and SUPABASE_KEY and _sb_create:
+        try:
+            _sb_client = _sb_create(SUPABASE_URL, SUPABASE_KEY)
+        except Exception as e:
+            print(f"[Supabase init] {e}")
+    return _sb_client
+
+
+def save_prices_to_supabase(product_name: str, results: list):
+    """Fire-and-forget: saves current search prices to Supabase. Non-blocking."""
+    sb = get_supabase()
+    if not sb:
+        return
+    try:
+        now = time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime())
+        rows = [
+            {
+                "product_name": product_name.lower().strip(),
+                "shop": r.get("shop", ""),
+                "price": r.get("price", 0),
+                "currency": r.get("currency", "EUR"),
+                "checked_at": now,
+            }
+            for r in results
+            if r.get("price", 0) > 0 and not (
+                r.get("source") == "scan" or "scanned" in r.get("shop", "").lower()
+            )
+        ]
+        if rows:
+            sb.table("price_history").insert(rows).execute()
+            print(f"[Supabase] saved {len(rows)} rows for '{product_name}'")
+    except Exception as e:
+        print(f"[Supabase save] {e}")
+
+
+def fetch_price_history_from_supabase(product_name: str) -> list:
+    """Returns last 90 days of price rows for a product."""
+    sb = get_supabase()
+    if not sb:
+        return []
+    try:
+        resp = (
+            sb.table("price_history")
+            .select("shop, price, currency, checked_at")
+            .eq("product_name", product_name.lower().strip())
+            .order("checked_at", desc=False)
+            .limit(500)
+            .execute()
+        )
+        return resp.data or []
+    except Exception as e:
+        print(f"[Supabase history] {e}")
+        return []
 
 
 def fetch_url(url: str, lang: str = "lt", timeout: int = 10, scraper_timeout: int = 15):
@@ -1317,6 +1384,10 @@ def search():
 
     set_cache(cache_key, result)
 
+    # Save to Supabase in background (non-blocking)
+    with ThreadPoolExecutor(max_workers=1) as sb_ex:
+        sb_ex.submit(save_prices_to_supabase, query, all_results)
+
     ip = request.remote_addr or "unknown"
     used = rate_store.get(ip, {}).get("count", 1)
 
@@ -1327,6 +1398,49 @@ def search():
     }
 
     return jsonify(result)
+
+
+@app.route("/api/price-history", methods=["GET"])
+def price_history_endpoint():
+    q = request.args.get("q", "").strip()
+    if not q:
+        return jsonify({"error": "q required"}), 400
+
+    if not (SUPABASE_URL and SUPABASE_KEY):
+        return jsonify({"error": "Supabase not configured", "history": []}), 200
+
+    rows = fetch_price_history_from_supabase(q)
+
+    # Group by date and shop for frontend charting
+    by_date: dict = {}
+    shops: set = set()
+    for row in rows:
+        ts = row.get("checked_at", "")
+        day = ts[:10] if ts else ""
+        shop = row.get("shop", "")
+        price = float(row.get("price", 0))
+        if day and shop and price > 0:
+            shops.add(shop)
+            by_date.setdefault(day, {})[shop] = min(
+                by_date[day].get(shop, price), price
+            )
+
+    sorted_days = sorted(by_date.keys())
+    shop_list = sorted(shops)
+
+    datasets = []
+    for shop in shop_list:
+        datasets.append({
+            "shop": shop,
+            "prices": [by_date[day].get(shop) for day in sorted_days],
+        })
+
+    return jsonify({
+        "product_name": q,
+        "labels": sorted_days,
+        "datasets": datasets,
+        "raw": rows[-100:],
+    })
 
 
 @app.route("/api/classify", methods=["POST"])
@@ -1600,7 +1714,8 @@ def debug_html():
 def health():
     return jsonify({
         "status": "ok",
-        "version": "5.8-cheap-recognition",
+        "version": "5.9-price-history",
+        "supabase_configured": bool(SUPABASE_URL and SUPABASE_KEY),
         "shops": ["Elesen.lt", "Amazon.DE", "Amazon.PL"],
         "scraper_api": bool(SCRAPER_API_KEY),
         "zyte_configured": bool(ZYTE_API_KEY),
@@ -1634,7 +1749,8 @@ def rate_limit_status():
 if __name__ == "__main__":
     port = int(os.getenv("PORT", 5000))
 
-    print("\n🟢 Goody API v5.8")
+    print("\n🟢 Goody API v5.9")
+    print(f"📊 Supabase: {'✅ configured' if SUPABASE_URL else '⚠️ not set'}")
     print("📦 Shops: Elesen.lt + Amazon.DE + Amazon.PL")
     print(f"🔑 ScraperAPI: {'✅ configured' if SCRAPER_API_KEY else '⚠️ not set'}")
     print(f"🔑 Zyte: {'✅ configured' if ZYTE_API_KEY else '⚠️ not set'}")
