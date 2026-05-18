@@ -1,5 +1,5 @@
 """
-Goody Backend v5.16 — 90% rule-based AI, cost optimization:
+Goody Backend v5.17 — Speed: parallel translate+scrape, 5s timeout, instant partial:
 - SSE streaming /api/search-stream: partial results as each shop responds
 - Per-shop timeout 8 s (was up to 35 s for Amazon)
 - Two-tier cache: popular searches 1 h, others 30 min
@@ -52,7 +52,7 @@ DAILY_FREE_LIMIT    = int(os.getenv("DAILY_FREE_LIMIT", "200"))
 CACHE_TTL_SECONDS   = int(os.getenv("CACHE_TTL_SECONDS", "1800"))   # 30 min default
 POPULAR_CACHE_TTL   = int(os.getenv("POPULAR_CACHE_TTL", "3600"))   # 1 h for popular
 POPULAR_THRESHOLD   = int(os.getenv("POPULAR_THRESHOLD", "5"))       # min searches to be "popular"
-SHOP_TIMEOUT        = int(os.getenv("SHOP_TIMEOUT", "8"))            # seconds per shop
+SHOP_TIMEOUT        = int(os.getenv("SHOP_TIMEOUT", "5"))            # seconds per shop
 DEBUG_API_KEY       = os.getenv("DEBUG_API_KEY", "")
 
 # ── PRODUCT CLASSIFICATION KEYWORDS ──
@@ -405,7 +405,7 @@ def fetch_price_history_from_supabase(product_name: str) -> list:
         return []
 
 
-def fetch_url(url: str, lang: str = "lt", timeout: int = SHOP_TIMEOUT, scraper_timeout: int = 10):
+def fetch_url(url: str, lang: str = "lt", timeout: int = SHOP_TIMEOUT, scraper_timeout: int = 5):
     """Fetch URL — Zyte API pirma, tada ScraperAPI, tada tiesiogiai."""
     if ZYTE_API_KEY:
         try:
@@ -413,7 +413,7 @@ def fetch_url(url: str, lang: str = "lt", timeout: int = SHOP_TIMEOUT, scraper_t
                 "https://api.zyte.com/v1/extract",
                 auth=(ZYTE_API_KEY, ""),
                 json={"url": url, "httpResponseBody": True},
-                timeout=10,
+                timeout=4,
             )
             if resp.status_code == 200:
                 import base64
@@ -1144,44 +1144,52 @@ def _make_result(shop, flag, link, price, name, source):
 
 
 # ── CLAUDE TRANSLATION / VISION ──
+_translate_cache: dict = {}
+
+# Lithuanian category words that need translation for Amazon DE/PL search
+_LT_CATEGORY_WORDS = [
+    "ausines", "ausinės", "ausinis", "siurblys", "siurblio", "dulkių",
+    "skalbyklė", "skalbyklės", "skustuvas", "skustuvo", "telefonas",
+    "televizorius", "televizoriaus", "kompiuteris", "planšetė", "kamera",
+    "virdulys", "keptuvė", "puodas", "šaldytuvas", "mikrobangų",
+    "kavos", "žaislas", "žaislo", "laidynas", "džiovintuvas",
+    "spausdintuvas", "monitorius", "klaviatūra", "pelė",
+]
+
+
 def claude_translate(query: str, target_lang: str = "en") -> str:
-    if not ANTHROPIC_API_KEY:
+    cache_key = f"{query.lower()}:{target_lang}"
+    if cache_key in _translate_cache:
+        return _translate_cache[cache_key]
+
+    q_lower = query.lower()
+
+    # If no Lithuanian category words — brand/model queries work as-is in any language
+    if not any(w in q_lower for w in _LT_CATEGORY_WORDS):
+        _translate_cache[cache_key] = query
         return query
 
-    common = [
-        "iphone", "samsung", "sony", "apple", "lg",
-        "xiaomi", "dyson", "macbook", "huawei", "lenovo"
-    ]
-
-    if any(w in query.lower() for w in common) and target_lang == "en":
+    if not ANTHROPIC_API_KEY:
         return query
 
     try:
         client = anthropic.Anthropic(api_key=ANTHROPIC_API_KEY)
 
-        lang_names = {
-            "en": "English",
-            "de": "German",
-            "pl": "Polish",
-            "lt": "Lithuanian"
-        }
+        lang_names = {"en": "English", "de": "German", "pl": "Polish", "lt": "Lithuanian"}
 
         resp = client.messages.create(
             model=AI_MODEL_CLAUDE,
             max_tokens=60,
-            messages=[
-                {
-                    "role": "user",
-                    "content": f'Translate to {lang_names.get(target_lang, "English")} for e-commerce search. Return ONLY the product name: "{query}"'
-                }
-            ]
+            messages=[{
+                "role": "user",
+                "content": f'Translate to {lang_names.get(target_lang, "English")} for e-commerce search. Return ONLY the product name: "{query}"'
+            }]
         )
 
-        result = "".join(
-            b.text for b in resp.content if hasattr(b, "text")
-        ).strip().strip('"')
-
-        return result if result else query
+        result = "".join(b.text for b in resp.content if hasattr(b, "text")).strip().strip('"')
+        result = result if result else query
+        _translate_cache[cache_key] = result
+        return result
 
     except Exception:
         return query
@@ -1539,38 +1547,55 @@ def search():
         cached["_cached"] = True
         return jsonify(cached)
 
-    try:
-        query_de = claude_translate(query, "de")
-    except Exception:
-        query_de = query
-
-    try:
-        query_pl = claude_translate(query, "pl")
-    except Exception:
-        query_pl = query
-
-    print(f"\n=== SEARCH: '{original_query}' → resolved:'{query}' DE:'{query_de}' PL:'{query_pl}' ===")
+    print(f"\n=== SEARCH: '{original_query}' → resolved:'{query}' ===")
+    t0_search = time.time()
 
     all_results = []
 
-    with ThreadPoolExecutor(max_workers=8) as executor:
-        futures = {
-            executor.submit(scrape_varle,   query):          "Varle",
-            executor.submit(scrape_pigu,    query):          "Pigu",
-            executor.submit(scrape_1a,      query):          "1a",
-            executor.submit(scrape_senukai, query):          "Senukai",
-            executor.submit(scrape_topo,    query):          "Topo",
-            executor.submit(scrape_elesen,  query):          "Elesen",
-            executor.submit(scrape_amazon,  query_de, "de"): "Amazon.DE",
-            executor.submit(scrape_amazon,  query_pl, "pl"): "Amazon.PL",
+    with ThreadPoolExecutor(max_workers=10) as executor:
+        t_de_fut = executor.submit(claude_translate, query, "de")
+        t_pl_fut = executor.submit(claude_translate, query, "pl")
+
+        lt_futures = {
+            executor.submit(scrape_varle,   query): "Varle",
+            executor.submit(scrape_pigu,    query): "Pigu",
+            executor.submit(scrape_1a,      query): "1a",
+            executor.submit(scrape_senukai, query): "Senukai",
+            executor.submit(scrape_topo,    query): "Topo",
+            executor.submit(scrape_elesen,  query): "Elesen",
         }
 
-        for f in as_completed(futures, timeout=22):
-            name = futures[f]
-
+        for f in as_completed(lt_futures, timeout=12):
+            name = lt_futures[f]
             try:
-                res = f.result(timeout=2)
-                print(f"  [{name}] returned {len(res)} results")
+                res = f.result(timeout=1)
+                print(f"  [{name}] {len(res)} results @ {round(time.time()-t0_search,1)}s")
+                all_results.extend(res)
+            except Exception as e:
+                print(f"  [{name}] error: {e}")
+
+        query_de = query
+        query_pl = query
+        try:
+            query_de = t_de_fut.result(timeout=2)
+        except Exception:
+            pass
+        try:
+            query_pl = t_pl_fut.result(timeout=2)
+        except Exception:
+            pass
+        print(f"  [Translate] DE:'{query_de}' PL:'{query_pl}'")
+
+        amz_futures = {
+            executor.submit(scrape_amazon, query_de, "de"): "Amazon.DE",
+            executor.submit(scrape_amazon, query_pl, "pl"): "Amazon.PL",
+        }
+
+        for f in as_completed(amz_futures, timeout=10):
+            name = amz_futures[f]
+            try:
+                res = f.result(timeout=1)
+                print(f"  [{name}] {len(res)} results @ {round(time.time()-t0_search,1)}s")
                 all_results.extend(res)
             except Exception as e:
                 print(f"  [{name}] error: {e}")
@@ -1659,49 +1684,83 @@ def search_stream():
             yield _sse("complete", cached)
             return
 
-        # ── Translate query ──
-        try:
-            q_de = claude_translate(_query, "de")
-        except Exception:
-            q_de = _query
-        try:
-            q_pl = claude_translate(_query, "pl")
-        except Exception:
-            q_pl = _query
-
-        print(f"\n=== STREAM: '{_original}' → '{_query}' DE:'{q_de}' PL:'{q_pl}' ===")
+        print(f"\n=== STREAM: '{_original}' → '{_query}' ===")
+        t_start = time.time()
 
         all_results = []
         partial_sent = False
 
+        def _try_partial():
+            nonlocal partial_sent
+            if partial_sent:
+                return None
+            priced = [r for r in all_results if r.get("price", 0) > 0]
+            if len(priced) >= 1:
+                partial_sent = True
+                p = post_process(list(all_results), _query, None, {})
+                p["_partial"] = True
+                p["_rate"] = rate_info
+                return _sse("partial", p)
+            return None
+
         try:
-            with ThreadPoolExecutor(max_workers=8) as executor:
-                futures = {
-                    executor.submit(scrape_varle,   _query):          "Varle",
-                    executor.submit(scrape_pigu,    _query):          "Pigu",
-                    executor.submit(scrape_1a,      _query):          "1a",
-                    executor.submit(scrape_senukai, _query):          "Senukai",
-                    executor.submit(scrape_topo,    _query):          "Topo",
-                    executor.submit(scrape_elesen,  _query):          "Elesen",
-                    executor.submit(scrape_amazon,  q_de, "de"):      "Amazon.DE",
-                    executor.submit(scrape_amazon,  q_pl, "pl"):      "Amazon.PL",
+            with ThreadPoolExecutor(max_workers=10) as executor:
+                # ── Start translations in background (parallel with LT shops) ──
+                t_de_fut = executor.submit(claude_translate, _query, "de")
+                t_pl_fut = executor.submit(claude_translate, _query, "pl")
+
+                # ── Launch all 6 LT shops immediately (no waiting for translations) ──
+                lt_futures = {
+                    executor.submit(scrape_varle,   _query): "Varle",
+                    executor.submit(scrape_pigu,    _query): "Pigu",
+                    executor.submit(scrape_1a,      _query): "1a",
+                    executor.submit(scrape_senukai, _query): "Senukai",
+                    executor.submit(scrape_topo,    _query): "Topo",
+                    executor.submit(scrape_elesen,  _query): "Elesen",
                 }
 
-                for f in as_completed(futures, timeout=22):
-                    name = futures[f]
+                for f in as_completed(lt_futures, timeout=12):
+                    name = lt_futures[f]
                     try:
-                        res = f.result(timeout=2)
-                        print(f"  [{name}] {len(res)} results (stream)")
+                        res = f.result(timeout=1)
+                        t_shop = round(time.time() - t_start, 1)
+                        print(f"  [{name}] {len(res)} results @ {t_shop}s")
                         all_results.extend(res)
+                        sse_partial = _try_partial()
+                        if sse_partial:
+                            yield sse_partial
+                    except Exception as e:
+                        print(f"  [{name}] error: {e}")
 
-                        # Send partial as soon as 3+ priced results available
-                        priced = [r for r in all_results if r.get("price", 0) > 0]
-                        if not partial_sent and len(priced) >= 3:
-                            partial_sent = True
-                            p = post_process(list(all_results), _query, None, {})
-                            p["_partial"] = True
-                            p["_rate"] = rate_info
-                            yield _sse("partial", p)
+                # ── Get translations (should be ready; LT shops took ~5s) ──
+                q_de = _query
+                q_pl = _query
+                try:
+                    q_de = t_de_fut.result(timeout=2)
+                except Exception:
+                    pass
+                try:
+                    q_pl = t_pl_fut.result(timeout=2)
+                except Exception:
+                    pass
+                print(f"  [Translate] DE:'{q_de}' PL:'{q_pl}' @ {round(time.time()-t_start,1)}s")
+
+                # ── Launch Amazon shops with translated queries ──
+                amz_futures = {
+                    executor.submit(scrape_amazon, q_de, "de"): "Amazon.DE",
+                    executor.submit(scrape_amazon, q_pl, "pl"): "Amazon.PL",
+                }
+
+                for f in as_completed(amz_futures, timeout=10):
+                    name = amz_futures[f]
+                    try:
+                        res = f.result(timeout=1)
+                        t_shop = round(time.time() - t_start, 1)
+                        print(f"  [{name}] {len(res)} results @ {t_shop}s")
+                        all_results.extend(res)
+                        sse_partial = _try_partial()
+                        if sse_partial:
+                            yield sse_partial
                     except Exception as e:
                         print(f"  [{name}] error: {e}")
 
@@ -2119,7 +2178,7 @@ def debug_html():
 def health():
     return jsonify({
         "status": "ok",
-        "version": "5.16",
+        "version": "5.17",
         "supabase_configured": bool(SUPABASE_URL and SUPABASE_KEY),
         "shops": ["Varle.lt", "Pigu.lt", "1a.lt", "Senukai.lt", "Topo centras", "Elesen.lt", "Amazon.DE", "Amazon.PL"],
         "scraper_api": bool(SCRAPER_API_KEY),
