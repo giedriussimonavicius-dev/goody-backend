@@ -53,7 +53,7 @@ chk("iphone cheap2",0.5,    "iPhone case",        False)
 
 # ── Samsung Galaxy (no iPhone rule — passes) ──
 chk("samsung ok",   749,    "Samsung Galaxy S24", True)
-chk("samsung low",  1.50,   "Samsung Galaxy S24", True)   # no Samsung floor rule
+chk("samsung low",  1.50,   "Samsung Galaxy S24", False)  # Samsung Galaxy floor = €50
 
 # ── AirPods / headphones (no strict floor) ──
 chk("airpods ok",   219,    "AirPods Pro",        True)

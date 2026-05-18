@@ -411,36 +411,11 @@ def fetch_price_history_from_supabase(product_name: str) -> list:
 def fetch_url(url: str, lang: str = "lt", timeout: int = SHOP_TIMEOUT,
               scraper_timeout: int = 5, render_js: bool = False):
     """
-    render_js=False (LT shops): ScraperAPI (1 credit, cheapest) -> direct fallback.
-    render_js=True  (Amazon):   Zyte browserHtml ($0.0075, needs JS) -> ScraperAPI premium fallback.
+    render_js=False (LT shops): ScraperAPI (1 credit) -> Zyte httpResponseBody -> direct.
+    render_js=True  (Amazon):   ScraperAPI premium+render -> Zyte httpResponseBody -> direct.
+    Zyte browserHtml intentionally not used (requires paid plan upgrade).
     """
     is_amazon = "amazon." in url
-
-    if render_js and ZYTE_API_KEY:
-        # Amazon needs real JS rendering — Zyte browserHtml is cheaper than ScraperAPI premium
-        try:
-            resp = requests.post(
-                "https://api.zyte.com/v1/extract",
-                auth=(ZYTE_API_KEY, ""),
-                json={"url": url, "browserHtml": True},
-                timeout=10,
-            )
-            if resp.status_code == 200:
-                html = resp.json().get("browserHtml", "")
-
-                class _ZyteResp:
-                    status_code = 200
-
-                    def __init__(self, text):
-                        self.text = text
-                        self.content = text.encode("utf-8", errors="replace")
-
-                print(f"[Zyte browserHtml OK] {url[:70]}")
-                return _ZyteResp(html)
-
-            print(f"[Zyte {resp.status_code}] -> ScraperAPI fallback")
-        except Exception as e:
-            print(f"[Zyte err] {e} -> ScraperAPI fallback")
 
     if SCRAPER_API_KEY:
         try:
@@ -458,9 +433,35 @@ def fetch_url(url: str, lang: str = "lt", timeout: int = SHOP_TIMEOUT,
                 print(f"[ScraperAPI OK] {url[:70]}")
                 return resp
 
-            print(f"[ScraperAPI {resp.status_code}] -> direct fallback")
+            print(f"[ScraperAPI {resp.status_code}] -> Zyte fallback")
         except Exception as e:
-            print(f"[ScraperAPI err] {e} -> direct fallback")
+            print(f"[ScraperAPI err] {e} -> Zyte fallback")
+
+    if ZYTE_API_KEY and not is_amazon:
+        # Zyte httpResponseBody: cheap fallback for LT shops (free plan supports this)
+        try:
+            import base64
+            resp = requests.post(
+                "https://api.zyte.com/v1/extract",
+                auth=(ZYTE_API_KEY, ""),
+                json={"url": url, "httpResponseBody": True},
+                timeout=6,
+            )
+            if resp.status_code == 200:
+                body = base64.b64decode(resp.json()["httpResponseBody"])
+
+                class _ZyteResp:
+                    status_code = 200
+
+                    def __init__(self, content):
+                        self.content = content
+                        self.text = content.decode("utf-8", errors="replace")
+
+                print(f"[Zyte OK] {url[:70]}")
+                return _ZyteResp(body)
+            print(f"[Zyte {resp.status_code}] -> direct")
+        except Exception as e:
+            print(f"[Zyte err] {e} -> direct")
 
     try:
         resp = requests.get(url, headers=get_headers(lang), timeout=timeout, allow_redirects=True)
@@ -605,6 +606,7 @@ def parse_price(text: str) -> float:
 _TV_WORDS   = ["tv ", " tv", "televizorius", "television", "oled", "qled", "naled", "mini led", "smarttv"]
 _MACBOOK_W  = ["macbook"]
 _IPHONE_W   = ["iphone"]
+_GALAXY_W   = ["samsung galaxy s", "samsung galaxy a", "samsung galaxy z", "pixel 8", "pixel 9"]
 _WASHING_W  = ["skalbyklė", "skalbykle", "washing machine", "waschmaschine", "pralka"]
 _FRIDGE_W   = ["šaldytuvas", "saldytuvas", "refrigerator", "kühlschrank", "lodówka"]
 _TV_SIZE_RE = re.compile(r"\b(43|50|55|65|75|85)\b")
@@ -633,6 +635,10 @@ def validate_price(price: float, query: str) -> float:
 
     # iPhone: oldest supported model ≥ €50
     if any(w in q for w in _IPHONE_W) and price < 50:
+        return 0.0
+
+    # Samsung Galaxy S/A/Z, Pixel phones: clearly a phone search, not an accessory
+    if any(w in q for w in _GALAXY_W) and price < 50:
         return 0.0
 
     # Washing machine / dishwasher: always > €100
