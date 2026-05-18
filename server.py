@@ -1,15 +1,7 @@
 """
-Goody Backend v5.13 — Keep-alive + security hardening:
-- get_client_ip(): X-Forwarded-For support (Render proxy)
-- CORS restricted via ALLOWED_ORIGINS env var
-- /api/debug-html protected by DEBUG_API_KEY
-- ScraperAPI: http → https
-- scan-image: 10 MB base64 limit, auto media_type, no error leaking
-- rate_store cleanup (stale IPs purged)
-- /api/classify + /api/barcode now rate-limited
-- /api/health: no longer leaks model names
-- /api/price-history: q param capped at 200 chars
-- All v5.11 UX features preserved
+Goody Backend v5.14 — UX navigation audit fixes:
+- get_client_ip(): used consistently in _rate reporting (was request.remote_addr)
+- All v5.13 security + keep-alive features preserved
 """
 
 from flask import Flask, request, jsonify
@@ -1593,7 +1585,7 @@ def search():
     track_search(query)
     threading.Thread(target=save_prices_to_supabase, args=(query, all_results), daemon=True).start()
 
-    ip = request.remote_addr or "unknown"
+    ip = get_client_ip()
     used = rate_store.get(ip, {}).get("count", 1)
 
     result["_rate"] = {
@@ -1980,7 +1972,7 @@ def debug_html():
 def health():
     return jsonify({
         "status": "ok",
-        "version": "5.13",
+        "version": "5.14",
         "supabase_configured": bool(SUPABASE_URL and SUPABASE_KEY),
         "shops": ["Varle.lt", "Pigu.lt", "1a.lt", "Senukai.lt", "Topo centras", "Elesen.lt", "Amazon.DE", "Amazon.PL"],
         "scraper_api": bool(SCRAPER_API_KEY),
