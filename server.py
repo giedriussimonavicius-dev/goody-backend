@@ -1742,7 +1742,9 @@ def search():
     _ph_exec.shutdown(wait=False)  # don't block if still running
     _t_after_ph = time.time()
 
-    ai_data = analyze_deal_with_ai(query, all_results, price_history)
+    # Deduplicate before AI so it sees 1 price per shop, not raw multi-item list
+    deduped_for_ai = deduplicate_by_shop(all_results)
+    ai_data = analyze_deal_with_ai(query, deduped_for_ai, price_history)
     _t_after_ai = time.time()
     result = post_process(all_results, query, ai_data, price_history)
     _t_after_pp = time.time()
@@ -2415,7 +2417,7 @@ def debug_html():
 def health():
     return jsonify({
         "status": "ok",
-        "version": "5.43",
+        "version": "5.44",
         "supabase_configured": bool(SUPABASE_URL and SUPABASE_KEY),
         "shops": ["Varle.lt", "Elesen.lt", "Amazon.DE", "Amazon.PL"],
         "scraper_api": bool(SCRAPER_API_KEY),
