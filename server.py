@@ -1651,10 +1651,11 @@ def search():
 
     all_results = []
 
-    with ThreadPoolExecutor(max_workers=12) as executor:
-        # Start translations and LT shops immediately
+    with ThreadPoolExecutor(max_workers=13) as executor:
+        # Start translations, price history, and LT shops immediately (all in parallel)
         t_de_fut = executor.submit(claude_translate, query, "de")
         t_pl_fut = executor.submit(claude_translate, query, "pl")
+        ph_fut   = executor.submit(get_price_history, query)
 
         lt_futures = {
             executor.submit(scrape_varle,   query): "Varle",
@@ -1724,12 +1725,10 @@ def search():
 
     print(f"=== TOTAL: {len(all_results)} results before dedup/filter ===\n")
 
+    # Price history was submitted at t=0 alongside shops — just collect it now
     price_history = {}
-
     try:
-        with ThreadPoolExecutor(max_workers=1) as phex:
-            phf = phex.submit(get_price_history, query)
-            price_history = phf.result(timeout=8)
+        price_history = ph_fut.result(timeout=1)
     except Exception:
         pass
 
@@ -2396,7 +2395,7 @@ def debug_html():
 def health():
     return jsonify({
         "status": "ok",
-        "version": "5.34",
+        "version": "5.35",
         "supabase_configured": bool(SUPABASE_URL and SUPABASE_KEY),
         "shops": ["Varle.lt", "Pigu.lt", "1a.lt", "Senukai.lt", "Topo centras", "Elesen.lt", "Amazon.DE", "Amazon.PL"],
         "scraper_api": bool(SCRAPER_API_KEY),
