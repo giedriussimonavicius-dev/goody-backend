@@ -421,7 +421,7 @@ def fetch_url(url: str, lang: str = "lt", timeout: int = SHOP_TIMEOUT,
 
     if SCRAPER_API_KEY:
         try:
-            country = "de" if "amazon.de" in url else ("pl" if "amazon.pl" in url else "")
+            country = "de" if "amazon.de" in url else ("pl" if "amazon.pl" in url else ("lt" if any(s in url for s in ["varle.lt","pigu.lt","1a.lt","senukai.lt","topocentras.lt","elesen.lt"]) else ""))
             scraper_url = (
                 f"https://api.scraperapi.com"
                 f"?api_key={SCRAPER_API_KEY}"
@@ -2395,7 +2395,7 @@ def debug_html():
 def health():
     return jsonify({
         "status": "ok",
-        "version": "5.25",
+        "version": "5.26",
         "supabase_configured": bool(SUPABASE_URL and SUPABASE_KEY),
         "shops": ["Varle.lt", "Pigu.lt", "1a.lt", "Senukai.lt", "Topo centras", "Elesen.lt", "Amazon.DE", "Amazon.PL"],
         "scraper_api": bool(SCRAPER_API_KEY),
