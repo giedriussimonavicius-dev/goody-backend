@@ -1,9 +1,10 @@
 """
-Goody Backend v5.29 — LupaSearch DOM scraping for 1a.lt / Senukai.lt:
-- 1a.lt and Senukai.lt use LupaSearch (JS search engine); switch to render_js=True
-  with _scrape_lupa_items() helper that targets lupa-* CSS selectors
-- Topocentras.lt: render_js=True with generic product-card selectors
-- v5.28: Fixed HTTP 500 from as_completed TimeoutError (try/except around loops)
+Goody Backend v5.30 — Varle.lt ld+json extraction:
+- Varle.lt: add schema.org ld+json extraction (Product Offers) as Strategy 2,
+  before DOM fallback. Varle embeds all offers with prices in a ld+json script —
+  no __NEXT_DATA__ needed. Tested: 8 real iPhone results locally.
+- v5.29: LupaSearch DOM scraping for 1a.lt / Senukai.lt
+- v5.28: Fixed HTTP 500 from as_completed TimeoutError
 """
 
 from flask import Flask, request, jsonify, Response, stream_with_context
@@ -843,10 +844,16 @@ def scrape_varle(query: str) -> list:
         if results:
             return results
 
-        # Strategy 2: DOM fallback (prices may be empty if hydration is client-side)
+        # Strategy 2: ld+json (Varle embeds Product + Offers with prices in schema.org script)
+        results = _extract_spa_products(resp.text, query, "Varle.lt", "🇱🇹",
+                                        "https://varle.lt", "varle")
+        if results:
+            return results
+
+        # Strategy 3: DOM fallback (prices may be empty without JS)
         soup = BeautifulSoup(resp.text, "html.parser")
         items = soup.select(".GRID_ITEM")
-        print(f"[Varle DOM] {len(items)} items (NEXT_DATA returned 0)")
+        print(f"[Varle DOM] {len(items)} items")
 
         for item in items[:8]:
             try:
@@ -2386,7 +2393,7 @@ def debug_html():
 def health():
     return jsonify({
         "status": "ok",
-        "version": "5.29",
+        "version": "5.30",
         "supabase_configured": bool(SUPABASE_URL and SUPABASE_KEY),
         "shops": ["Varle.lt", "Pigu.lt", "1a.lt", "Senukai.lt", "Topo centras", "Elesen.lt", "Amazon.DE", "Amazon.PL"],
         "scraper_api": bool(SCRAPER_API_KEY),
