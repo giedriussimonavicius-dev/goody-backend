@@ -675,6 +675,108 @@ def deduplicate_by_shop(results: list) -> list:
     return list(best.values())
 
 
+# ── GENERIC SPA JSON EXTRACTOR ──
+def _walk_for_products(node, query, shop, flag, base_url, src_key, out, depth=0):
+    """Recursively search JSON tree for product-like objects."""
+    if depth > 10 or len(out) >= 8:
+        return
+    if isinstance(node, dict):
+        name = (node.get("name") or node.get("title") or node.get("productName")
+                or node.get("fullName") or node.get("Product_name") or "")
+        price_val = None
+        for pf in ("price", "finalPrice", "priceWithVat", "currentPrice",
+                   "salePrice", "regularPrice", "Price", "priceValue"):
+            if pf in node:
+                price_val = node[pf]; break
+        if price_val is None and isinstance(node.get("prices"), dict):
+            price_val = node["prices"].get("final") or node["prices"].get("regular")
+
+        if name and price_val is not None:
+            try:
+                p = float(str(price_val).replace(",", "."))
+                vp = validate_price(p, query)
+                if vp:
+                    slug = (node.get("url") or node.get("slug") or
+                            node.get("urlKey") or node.get("link") or "")
+                    link = slug if slug.startswith("http") else f"{base_url.rstrip('/')}/{slug.lstrip('/')}"
+                    out.append(_make_result(shop, flag, link, vp, str(name)[:100], src_key))
+            except (ValueError, TypeError):
+                pass
+        for v in node.values():
+            _walk_for_products(v, query, shop, flag, base_url, src_key, out, depth + 1)
+    elif isinstance(node, list):
+        for item in node[:40]:
+            _walk_for_products(item, query, shop, flag, base_url, src_key, out, depth + 1)
+
+
+def _extract_spa_products(html: str, query: str, shop: str, flag: str,
+                           base_url: str, src_key: str) -> list:
+    """
+    Try to pull product data from SPA HTML without JS execution:
+    1. __NEXT_DATA__ (Next.js)
+    2. window.__*STATE*__ inline scripts
+    3. <script type="application/ld+json"> product listings
+    4. JSON arrays inside <script> matching product patterns
+    """
+    out = []
+    soup = BeautifulSoup(html, "html.parser")
+
+    # 1. Next.js
+    nd = soup.find("script", {"id": "__NEXT_DATA__"})
+    if nd:
+        try:
+            _walk_for_products(json.loads(nd.string or "{}"),
+                               query, shop, flag, base_url, src_key, out)
+            if out:
+                print(f"[{shop}] {len(out)} via __NEXT_DATA__")
+                return out
+        except Exception:
+            pass
+
+    # 2. window.* state patterns in inline scripts
+    for scr in soup.find_all("script", src=False):
+        txt = scr.string or ""
+        if len(txt) < 50:
+            continue
+        for pat in [
+            r'window\.__(?:INITIAL|PRELOADED|NUXT|APP|REACT_QUERY|REDUX)_?STATE__\s*=\s*(\{.+?\})\s*;',
+            r'window\.(?:state|store|appState|pageData|__data)\s*=\s*(\{.+?\})\s*;',
+            r'"products"\s*:\s*(\[.+?\])',
+            r'"items"\s*:\s*(\[.+?\])',
+            r'"results"\s*:\s*(\[.+?\])',
+            r'"hits"\s*:\s*(\[.+?\])',
+        ]:
+            m = re.search(pat, txt, re.DOTALL)
+            if not m:
+                continue
+            try:
+                raw = m.group(1)
+                if len(raw) > 500_000:
+                    continue
+                data = json.loads(raw)
+                node = data if isinstance(data, dict) else {"items": data}
+                _walk_for_products(node, query, shop, flag, base_url, src_key, out)
+                if out:
+                    print(f"[{shop}] {len(out)} via window state pattern")
+                    return out
+            except Exception:
+                continue
+
+    # 3. ld+json (structured data — often has offers)
+    for scr in soup.find_all("script", type="application/ld+json"):
+        try:
+            data = json.loads(scr.string or "{}")
+            _walk_for_products(data, query, shop, flag, base_url, src_key, out)
+            if out:
+                print(f"[{shop}] {len(out)} via ld+json")
+                return out
+        except Exception:
+            pass
+
+    print(f"[{shop}] embedded JSON extraction: {len(out)} results")
+    return out
+
+
 # ── VARLE.LT ──
 def _varle_from_next_data(html: str, query: str) -> list:
     """Extract Varle products from __NEXT_DATA__ JSON (Next.js SSR payload)."""
@@ -772,193 +874,71 @@ def scrape_varle(query: str) -> list:
 # ── PIGU.LT ──
 def scrape_pigu(query: str) -> list:
     results = []
-
     try:
         url = f"https://pigu.lt/lt/search?query={requests.utils.quote(query)}"
-        # Pigu.lt is a React SPA — needs JS rendering to get product listings
-        resp = fetch_url(url, "lt", render_js=True, scraper_timeout=9)
-
+        # Try without JS first (fast, 1 credit) — extract embedded JSON state
+        resp = fetch_url(url, "lt", render_js=False, scraper_timeout=8)
         if not resp or resp.status_code != 200:
-            print("[Pigu] failed")
+            print(f"[Pigu] failed {resp.status_code if resp else 'no resp'}")
             return results
-
-        soup = BeautifulSoup(resp.text, "html.parser")
-
-        # After render: Pigu uses c-product-card or similar design-system classes
-        items = (
-            soup.select("[class*='c-product-card']") or
-            soup.select("[class*='product-card']") or
-            soup.select("[class*='product-item']") or
-            soup.select("[class*='ProductCard']") or
-            soup.select(".catalog-product")
-        )
-
-        print(f"[Pigu] {len(items)} items")
-
-        for item in items[:8]:
-            try:
-                price_el = (
-                    item.select_one("[class*='price-main']") or
-                    item.select_one("[class*='product-price']") or
-                    item.select_one("[class*='c-price']") or
-                    item.select_one("[class*='price']")
-                )
-
-                if not price_el:
-                    continue
-
-                price = validate_price(parse_price(price_el.get_text()), query)
-
-                if not price:
-                    continue
-
-                name_el = (
-                    item.select_one("[class*='product-name']") or
-                    item.select_one("[class*='c-product-name']") or
-                    item.select_one("h2") or
-                    item.select_one("h3") or
-                    item.select_one("a[title]")
-                )
-
-                name = (name_el.get("title") or name_el.get_text(strip=True))[:100] if name_el else query
-
-                link_el = item.select_one("a[href]")
-                href = link_el["href"] if link_el else ""
-                link = href if href.startswith("http") else f"https://pigu.lt{href}"
-
-                results.append(_make_result("Pigu.lt", "🇱🇹", link, price, name, "pigu"))
-            except Exception as e:
-                print(f"[Pigu item] {e}")
-
+        results = _extract_spa_products(resp.text, query, "Pigu.lt", "🇱🇹",
+                                        "https://pigu.lt", "pigu")
+        if results:
+            return results
+        # Fall back: render_js (5 credits, ~12s) — only if no embedded data found
+        print("[Pigu] no embedded JSON, trying render_js")
+        resp2 = fetch_url(url, "lt", render_js=True, scraper_timeout=12)
+        if resp2 and resp2.status_code == 200:
+            results = _extract_spa_products(resp2.text, query, "Pigu.lt", "🇱🇹",
+                                            "https://pigu.lt", "pigu")
     except Exception as e:
         print(f"[Pigu] {e}")
-
     return results
 
 
 # ── SENUKAI.LT ──
 def scrape_senukai(query: str) -> list:
     results = []
-
     try:
         url = f"https://www.senukai.lt/paieska?q={requests.utils.quote(query)}"
-        # Senukai is a React SPA — needs JS rendering
-        resp = fetch_url(url, "lt", render_js=True, scraper_timeout=9)
-
+        resp = fetch_url(url, "lt", render_js=False, scraper_timeout=8)
         if not resp or resp.status_code != 200:
-            print("[Senukai] failed")
+            print(f"[Senukai] failed {resp.status_code if resp else 'no resp'}")
             return results
-
-        soup = BeautifulSoup(resp.text, "html.parser")
-
-        items = (
-            soup.select(".product-item") or
-            soup.select("[class*='product-card']") or
-            soup.select(".grid-item") or
-            soup.select("[data-sku]")
-        )
-
-        print(f"[Senukai] {len(items)} items")
-
-        for item in items[:6]:
-            try:
-                price_el = (
-                    item.select_one(".price-value") or
-                    item.select_one("[class*='price']") or
-                    item.select_one(".product-price")
-                )
-
-                if not price_el:
-                    continue
-
-                price = validate_price(parse_price(price_el.get_text()), query)
-
-                if not price:
-                    continue
-
-                name_el = (
-                    item.select_one(".product-name") or
-                    item.select_one("[class*='name']") or
-                    item.select_one("h2") or
-                    item.select_one("h3")
-                )
-
-                name = name_el.get_text(strip=True)[:100] if name_el else query
-
-                link_el = item.select_one("a[href]")
-                href = link_el["href"] if link_el else ""
-                link = href if href.startswith("http") else f"https://www.senukai.lt{href}"
-
-                results.append(_make_result("Senukai.lt", "🇱🇹", link, price, name, "senukai"))
-            except Exception as e:
-                print(f"[Senukai item] {e}")
-
+        results = _extract_spa_products(resp.text, query, "Senukai.lt", "🇱🇹",
+                                        "https://www.senukai.lt", "senukai")
+        if results:
+            return results
+        print("[Senukai] no embedded JSON, trying render_js")
+        resp2 = fetch_url(url, "lt", render_js=True, scraper_timeout=12)
+        if resp2 and resp2.status_code == 200:
+            results = _extract_spa_products(resp2.text, query, "Senukai.lt", "🇱🇹",
+                                            "https://www.senukai.lt", "senukai")
     except Exception as e:
         print(f"[Senukai] {e}")
-
     return results
 
 
 # ── TOPOCENTRAS.LT ──
 def scrape_topo(query: str) -> list:
     results = []
-
     try:
         url = f"https://www.topocentras.lt/search?q={requests.utils.quote(query)}"
-        # Topocentras is a React SPA — needs JS rendering
-        resp = fetch_url(url, "lt", render_js=True, scraper_timeout=9)
-
+        resp = fetch_url(url, "lt", render_js=False, scraper_timeout=8)
         if not resp or resp.status_code != 200:
-            print("[Topo] failed")
+            print(f"[Topo] failed {resp.status_code if resp else 'no resp'}")
             return results
-
-        soup = BeautifulSoup(resp.text, "html.parser")
-
-        items = (
-            soup.select(".product-item") or
-            soup.select("[class*='ProductCard']") or
-            soup.select("[class*='product-list-item']") or
-            soup.select(".catalog-grid__item")
-        )
-
-        print(f"[Topo] {len(items)} items")
-
-        for item in items[:6]:
-            try:
-                price_el = (
-                    item.select_one(".price__value") or
-                    item.select_one("[class*='price']") or
-                    item.select_one(".product-price")
-                )
-
-                if not price_el:
-                    continue
-
-                price = validate_price(parse_price(price_el.get_text()), query)
-
-                if not price:
-                    continue
-
-                name_el = (
-                    item.select_one(".product-name") or
-                    item.select_one("[class*='title']") or
-                    item.select_one("h2") or
-                    item.select_one("h3")
-                )
-
-                name = name_el.get_text(strip=True)[:100] if name_el else query
-
-                link_el = item.select_one("a[href]")
-                href = link_el["href"] if link_el else ""
-                link = href if href.startswith("http") else f"https://www.topocentras.lt{href}"
-
-                results.append(_make_result("Topo centras", "🇱🇹", link, price, name, "topo"))
-            except Exception as e:
-                print(f"[Topo item] {e}")
-
+        results = _extract_spa_products(resp.text, query, "Topo centras", "🇱🇹",
+                                        "https://www.topocentras.lt", "topo")
+        if results:
+            return results
+        print("[Topo] no embedded JSON, trying render_js")
+        resp2 = fetch_url(url, "lt", render_js=True, scraper_timeout=12)
+        if resp2 and resp2.status_code == 200:
+            results = _extract_spa_products(resp2.text, query, "Topo centras", "🇱🇹",
+                                            "https://www.topocentras.lt", "topo")
     except Exception as e:
         print(f"[Topo] {e}")
-
     return results
 
 
@@ -1053,23 +1033,29 @@ def scrape_1a(query: str) -> list:
 
     try:
         url = f"https://www.1a.lt/search?q={requests.utils.quote(query)}"
-        # 1a.lt is a React SPA — needs JS rendering
-        resp = fetch_url(url, "lt", render_js=True, scraper_timeout=9)
-
+        # Try without JS first — extract embedded JSON state
+        resp = fetch_url(url, "lt", render_js=False, scraper_timeout=8)
         if not resp or resp.status_code != 200:
-            print("[1a] failed")
+            print(f"[1a] failed {resp.status_code if resp else 'no resp'}")
             return results
-
+        results = _extract_spa_products(resp.text, query, "1a.lt", "🇱🇹",
+                                        "https://www.1a.lt", "1a")
+        if results:
+            return results
+        # Fall back to render_js
+        print("[1a] no embedded JSON, trying render_js")
+        resp = fetch_url(url, "lt", render_js=True, scraper_timeout=12)
+        if not resp or resp.status_code != 200:
+            print("[1a] render_js failed")
+            return results
         soup = BeautifulSoup(resp.text, "html.parser")
-
         items = (
             soup.select(".product-item") or
             soup.select("[class*='product-card']") or
             soup.select("[class*='ProductItem']") or
             soup.select(".item-product")
         )
-
-        print(f"[1a] {len(items)} items")
+        print(f"[1a DOM] {len(items)} items")
 
         for item in items[:6]:
             try:
@@ -2395,7 +2381,7 @@ def debug_html():
 def health():
     return jsonify({
         "status": "ok",
-        "version": "5.26",
+        "version": "5.27",
         "supabase_configured": bool(SUPABASE_URL and SUPABASE_KEY),
         "shops": ["Varle.lt", "Pigu.lt", "1a.lt", "Senukai.lt", "Topo centras", "Elesen.lt", "Amazon.DE", "Amazon.PL"],
         "scraper_api": bool(SCRAPER_API_KEY),
