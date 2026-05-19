@@ -1657,26 +1657,35 @@ def search():
     _ph_exec = ThreadPoolExecutor(max_workers=1)
     ph_fut   = _ph_exec.submit(get_price_history, query)
 
-    # Use explicit executor (not `with`) so shutdown(wait=False) doesn't block on slow futures.
-    # A future blocked in Zyte fallback (6s) would otherwise hold up the response.
-    executor = ThreadPoolExecutor(max_workers=8)
-    try:
-        # Start translations and LT shops immediately
-        t_de_fut = executor.submit(claude_translate, query, "de")
-        t_pl_fut = executor.submit(claude_translate, query, "pl")
+    # For LT queries, pre-translate in parallel (2-3s) so Amazon gets the right query
+    # from the start and no retry is needed. For English queries this returns instantly.
+    q_lower = query.lower()
+    is_lt_query = any(w in q_lower for w in _LT_CATEGORY_WORDS)
+    query_de = query
+    query_pl = query
+    if is_lt_query:
+        try:
+            with ThreadPoolExecutor(max_workers=2) as _pre:
+                _f_de = _pre.submit(claude_translate, query, "de")
+                _f_pl = _pre.submit(claude_translate, query, "pl")
+                query_de = _f_de.result(timeout=4) or query
+                query_pl = _f_pl.result(timeout=4) or query
+        except Exception:
+            pass
+    print(f"  [Translate] DE:'{query_de}' PL:'{query_pl}'")
 
-        # Pigu/Topo/1a/Senukai consistently return 0 (AJAX/JS-heavy, ScraperAPI doesn't help).
-        # Removed from pool to reduce concurrent ScraperAPI calls and free up the 11s window
-        # for shops that actually work.
+    # Use explicit executor (not `with`) so shutdown(wait=False) doesn't block on slow futures.
+    executor = ThreadPoolExecutor(max_workers=6)
+    try:
         lt_futures = {
             executor.submit(scrape_varle,  query): "Varle",
             executor.submit(scrape_elesen, query): "Elesen",
         }
 
-        # Start Amazon in parallel with LT shops using original query
+        # Amazon uses pre-translated query — no retry phase needed
         amz_futures = {
-            executor.submit(scrape_amazon, query, "de"): "Amazon.DE_orig",
-            executor.submit(scrape_amazon, query, "pl"): "Amazon.PL_orig",
+            executor.submit(scrape_amazon, query_de, "de"): "Amazon.DE",
+            executor.submit(scrape_amazon, query_pl, "pl"): "Amazon.PL",
         }
 
         all_shop_futures = {**lt_futures, **amz_futures}
@@ -1692,41 +1701,6 @@ def search():
                     print(f"  [{name}] error: {e}")
         except Exception as e:
             print(f"[shops timeout] {e}")
-
-        # If translations finished, retry Amazon with translated query only if needed
-        query_de = query
-        query_pl = query
-        try:
-            query_de = t_de_fut.result(timeout=0.1)
-        except Exception:
-            pass
-        try:
-            query_pl = t_pl_fut.result(timeout=0.1)
-        except Exception:
-            pass
-        print(f"  [Translate] DE:'{query_de}' PL:'{query_pl}'")
-
-        de_results = [r for r in all_results if r.get("source") == "amazon.de"]
-        pl_results = [r for r in all_results if r.get("source") == "amazon.pl"]
-
-        retry_futures = {}
-        if not de_results and query_de != query:
-            retry_futures[executor.submit(scrape_amazon, query_de, "de")] = "Amazon.DE_trans"
-        if not pl_results and query_pl != query:
-            retry_futures[executor.submit(scrape_amazon, query_pl, "pl")] = "Amazon.PL_trans"
-
-        if retry_futures:
-            try:
-                for f in as_completed(retry_futures, timeout=8):
-                    name = retry_futures[f]
-                    try:
-                        res = f.result(timeout=1)
-                        print(f"  [{name}] {len(res)} results @ {round(time.time()-t0_search,1)}s")
-                        all_results.extend(res)
-                    except Exception as e:
-                        print(f"  [{name}] error: {e}")
-            except Exception as e:
-                print(f"[Amazon retry timeout] {e}")
     finally:
         executor.shutdown(wait=False)  # Don't block on slow futures still running in background
 
@@ -2417,7 +2391,7 @@ def debug_html():
 def health():
     return jsonify({
         "status": "ok",
-        "version": "5.44",
+        "version": "5.45",
         "supabase_configured": bool(SUPABASE_URL and SUPABASE_KEY),
         "shops": ["Varle.lt", "Elesen.lt", "Amazon.DE", "Amazon.PL"],
         "scraper_api": bool(SCRAPER_API_KEY),
