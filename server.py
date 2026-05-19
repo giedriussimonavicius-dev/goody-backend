@@ -1730,8 +1730,8 @@ def search():
     finally:
         executor.shutdown(wait=False)  # Don't block on slow futures still running in background
 
-    _t1 = time.time()
-    print(f"=== TOTAL: {len(all_results)} results before dedup/filter @ {_t1-t0_search:.1f}s ===\n")
+    _t_after_pool = time.time()
+    print(f"=== TOTAL: {len(all_results)} results before dedup/filter @ {_t_after_pool-t0_search:.1f}s ===\n")
 
     # Collect price history (was running in background since t=0, should be ready)
     price_history = {}
@@ -1740,19 +1740,26 @@ def search():
     except Exception:
         pass
     _ph_exec.shutdown(wait=False)  # don't block if still running
-    print(f"  [TIMING] after price_history @ {time.time()-t0_search:.1f}s")
+    _t_after_ph = time.time()
 
     ai_data = analyze_deal_with_ai(query, all_results, price_history)
-    print(f"  [TIMING] after ai_analyze @ {time.time()-t0_search:.1f}s")
+    _t_after_ai = time.time()
     result = post_process(all_results, query, ai_data, price_history)
-    print(f"  [TIMING] after post_process @ {time.time()-t0_search:.1f}s")
+    _t_after_pp = time.time()
 
     price_for_classify = result.get("price_min", 0)
     product_type = classify_product_cheap(query, price_for_classify)
     result["product_type"] = product_type
     result["category_icon"] = get_category_icon(query, product_type)
     result["search_time_ms"] = int((time.time() - t0) * 1000)
-    print(f"  [TIMING] returning @ {time.time()-t0_search:.1f}s")
+
+    # Debug timing breakdown (remove after investigation)
+    result["_timing"] = {
+        "pool_s": round(_t_after_pool - t0_search, 2),
+        "ph_s":   round(_t_after_ph  - _t_after_pool, 2),
+        "ai_s":   round(_t_after_ai  - _t_after_ph, 2),
+        "pp_s":   round(_t_after_pp  - _t_after_ai, 2),
+    }
 
     track_search(query)
     set_cache(cache_key, result, ttl=get_cache_ttl(query))
@@ -2408,7 +2415,7 @@ def debug_html():
 def health():
     return jsonify({
         "status": "ok",
-        "version": "5.42",
+        "version": "5.43",
         "supabase_configured": bool(SUPABASE_URL and SUPABASE_KEY),
         "shops": ["Varle.lt", "Elesen.lt", "Amazon.DE", "Amazon.PL"],
         "scraper_api": bool(SCRAPER_API_KEY),
