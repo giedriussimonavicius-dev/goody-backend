@@ -1,13 +1,11 @@
 """
-Goody Backend v5.32 — Reduce timeouts to prevent 502 from Render proxy:
-- Pigu.lt and Topo.lt: back to render_js=False (AJAX shops, 0 results anyway,
-  no point burning 10s of ScraperAPI credits per request)
-- LT as_completed timeout: 12s → 9s
-- Amazon as_completed timeout: 10s → 8s
-- 1a.lt, Senukai.lt, Amazon scraper_timeout: 10s → 8s
-- Expected total search time: ~9s (LT) + ~8s (Amazon) + overhead ≈ 20s
-- v5.31: Pigu DOM scraping attempt (reverted)
-- v5.30: Varle.lt ld+json (8 results tested locally)
+Goody Backend v5.34 — Parallel Amazon + LT shops, Varle direct fetch:
+- Run Amazon shops in parallel with LT shops (not sequentially after);
+  saves ~8s when Amazon gets original-query results (English queries work fine)
+- Retry Amazon with translated query only if original yielded 0 results
+- Varle: try direct HTTP request first (~2s) before ScraperAPI fallback
+- v5.32: Timeouts reduced (LT→9s, Amazon→8s) to prevent Render 502
+- v5.30: Varle.lt ld+json extraction
 """
 
 from flask import Flask, request, jsonify, Response, stream_with_context
@@ -836,7 +834,15 @@ def scrape_varle(query: str) -> list:
 
     try:
         url = f"https://varle.lt/search/?q={requests.utils.quote(query)}"
-        resp = fetch_url(url, "lt", render_js=False, scraper_timeout=7)
+        # Varle's ld+json is server-rendered; try direct first (fast ~3s, no JS needed)
+        try:
+            resp = requests.get(url, headers=get_headers("lt"), timeout=5, allow_redirects=True)
+            if resp.status_code != 200:
+                resp = None
+        except Exception:
+            resp = None
+        if not resp:
+            resp = fetch_url(url, "lt", render_js=False, scraper_timeout=7)
 
         if not resp or resp.status_code != 200:
             print(f"[Varle] failed {resp.status_code if resp else 'no response'}")
@@ -1645,7 +1651,8 @@ def search():
 
     all_results = []
 
-    with ThreadPoolExecutor(max_workers=10) as executor:
+    with ThreadPoolExecutor(max_workers=12) as executor:
+        # Start translations and LT shops immediately
         t_de_fut = executor.submit(claude_translate, query, "de")
         t_pl_fut = executor.submit(claude_translate, query, "pl")
 
@@ -1658,9 +1665,18 @@ def search():
             executor.submit(scrape_elesen,  query): "Elesen",
         }
 
+        # Start Amazon in parallel with LT shops using original query;
+        # scrape_amazon will use the translation if available via lambda wrapper
+        amz_futures = {
+            executor.submit(scrape_amazon, query, "de"): "Amazon.DE_orig",
+            executor.submit(scrape_amazon, query, "pl"): "Amazon.PL_orig",
+        }
+
+        all_shop_futures = {**lt_futures, **amz_futures}
+
         try:
-            for f in as_completed(lt_futures, timeout=9):
-                name = lt_futures[f]
+            for f in as_completed(all_shop_futures, timeout=11):
+                name = all_shop_futures[f]
                 try:
                     res = f.result(timeout=1)
                     print(f"  [{name}] {len(res)} results @ {round(time.time()-t0_search,1)}s")
@@ -1668,36 +1684,43 @@ def search():
                 except Exception as e:
                     print(f"  [{name}] error: {e}")
         except Exception as e:
-            print(f"[LT shops timeout] {e}")
+            print(f"[shops timeout] {e}")
 
+        # If translations finished, submit Amazon again with translated query
+        # (only if original Amazon yielded no results for that language)
         query_de = query
         query_pl = query
         try:
-            query_de = t_de_fut.result(timeout=2)
+            query_de = t_de_fut.result(timeout=0.1)
         except Exception:
             pass
         try:
-            query_pl = t_pl_fut.result(timeout=2)
+            query_pl = t_pl_fut.result(timeout=0.1)
         except Exception:
             pass
         print(f"  [Translate] DE:'{query_de}' PL:'{query_pl}'")
 
-        amz_futures = {
-            executor.submit(scrape_amazon, query_de, "de"): "Amazon.DE",
-            executor.submit(scrape_amazon, query_pl, "pl"): "Amazon.PL",
-        }
+        de_results = [r for r in all_results if r.get("source") == "amazon.de"]
+        pl_results = [r for r in all_results if r.get("source") == "amazon.pl"]
 
-        try:
-            for f in as_completed(amz_futures, timeout=8):
-                name = amz_futures[f]
-                try:
-                    res = f.result(timeout=1)
-                    print(f"  [{name}] {len(res)} results @ {round(time.time()-t0_search,1)}s")
-                    all_results.extend(res)
-                except Exception as e:
-                    print(f"  [{name}] error: {e}")
-        except Exception as e:
-            print(f"[Amazon timeout] {e}")
+        retry_futures = {}
+        if not de_results and query_de != query:
+            retry_futures[executor.submit(scrape_amazon, query_de, "de")] = "Amazon.DE_trans"
+        if not pl_results and query_pl != query:
+            retry_futures[executor.submit(scrape_amazon, query_pl, "pl")] = "Amazon.PL_trans"
+
+        if retry_futures:
+            try:
+                for f in as_completed(retry_futures, timeout=8):
+                    name = retry_futures[f]
+                    try:
+                        res = f.result(timeout=1)
+                        print(f"  [{name}] {len(res)} results @ {round(time.time()-t0_search,1)}s")
+                        all_results.extend(res)
+                    except Exception as e:
+                        print(f"  [{name}] error: {e}")
+            except Exception as e:
+                print(f"[Amazon retry timeout] {e}")
 
     print(f"=== TOTAL: {len(all_results)} results before dedup/filter ===\n")
 
@@ -2373,7 +2396,7 @@ def debug_html():
 def health():
     return jsonify({
         "status": "ok",
-        "version": "5.32",
+        "version": "5.34",
         "supabase_configured": bool(SUPABASE_URL and SUPABASE_KEY),
         "shops": ["Varle.lt", "Pigu.lt", "1a.lt", "Senukai.lt", "Topo centras", "Elesen.lt", "Amazon.DE", "Amazon.PL"],
         "scraper_api": bool(SCRAPER_API_KEY),
