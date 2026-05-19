@@ -1682,7 +1682,7 @@ def search():
         all_shop_futures = {**lt_futures, **amz_futures}
 
         try:
-            for f in as_completed(all_shop_futures, timeout=11):
+            for f in as_completed(all_shop_futures, timeout=9):
                 name = all_shop_futures[f]
                 try:
                     res = f.result(timeout=1)
@@ -1735,7 +1735,7 @@ def search():
     # Collect price history (was running in background since t=0, should be ready)
     price_history = {}
     try:
-        price_history = ph_fut.result(timeout=2)
+        price_history = ph_fut.result(timeout=1)
     except Exception:
         pass
     _ph_exec.shutdown(wait=False)  # don't block if still running
@@ -2403,7 +2403,7 @@ def debug_html():
 def health():
     return jsonify({
         "status": "ok",
-        "version": "5.40",
+        "version": "5.41",
         "supabase_configured": bool(SUPABASE_URL and SUPABASE_KEY),
         "shops": ["Varle.lt", "Elesen.lt", "Amazon.DE", "Amazon.PL"],
         "scraper_api": bool(SCRAPER_API_KEY),
