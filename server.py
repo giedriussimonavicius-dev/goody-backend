@@ -1657,7 +1657,10 @@ def search():
     _ph_exec = ThreadPoolExecutor(max_workers=1)
     ph_fut   = _ph_exec.submit(get_price_history, query)
 
-    with ThreadPoolExecutor(max_workers=8) as executor:
+    # Use explicit executor (not `with`) so shutdown(wait=False) doesn't block on slow futures.
+    # A future blocked in Zyte fallback (6s) would otherwise hold up the response.
+    executor = ThreadPoolExecutor(max_workers=8)
+    try:
         # Start translations and LT shops immediately
         t_de_fut = executor.submit(claude_translate, query, "de")
         t_pl_fut = executor.submit(claude_translate, query, "pl")
@@ -1670,8 +1673,7 @@ def search():
             executor.submit(scrape_elesen, query): "Elesen",
         }
 
-        # Start Amazon in parallel with LT shops using original query;
-        # scrape_amazon will use the translation if available via lambda wrapper
+        # Start Amazon in parallel with LT shops using original query
         amz_futures = {
             executor.submit(scrape_amazon, query, "de"): "Amazon.DE_orig",
             executor.submit(scrape_amazon, query, "pl"): "Amazon.PL_orig",
@@ -1691,8 +1693,7 @@ def search():
         except Exception as e:
             print(f"[shops timeout] {e}")
 
-        # If translations finished, submit Amazon again with translated query
-        # (only if original Amazon yielded no results for that language)
+        # If translations finished, retry Amazon with translated query only if needed
         query_de = query
         query_pl = query
         try:
@@ -1726,6 +1727,8 @@ def search():
                         print(f"  [{name}] error: {e}")
             except Exception as e:
                 print(f"[Amazon retry timeout] {e}")
+    finally:
+        executor.shutdown(wait=False)  # Don't block on slow futures still running in background
 
     print(f"=== TOTAL: {len(all_results)} results before dedup/filter ===\n")
 
@@ -2400,7 +2403,7 @@ def debug_html():
 def health():
     return jsonify({
         "status": "ok",
-        "version": "5.38",
+        "version": "5.39",
         "supabase_configured": bool(SUPABASE_URL and SUPABASE_KEY),
         "shops": ["Varle.lt", "Elesen.lt", "Amazon.DE", "Amazon.PL"],
         "scraper_api": bool(SCRAPER_API_KEY),
