@@ -1481,7 +1481,7 @@ def analyze_deal_with_ai(query: str, results: list, price_history: dict = None) 
         return rule_based_ai_analyze(query, results, price_history)
 
     prices = [r.get("price", 0) for r in results if r.get("price", 0) > 0]
-    if len(prices) < 3:
+    if len(prices) < 5:   # require 5+ results to justify the ~8s paid AI call
         return rule_based_ai_analyze(query, results, price_history)
 
     price_max = max(prices)
@@ -2403,7 +2403,7 @@ def debug_html():
 def health():
     return jsonify({
         "status": "ok",
-        "version": "5.39",
+        "version": "5.40",
         "supabase_configured": bool(SUPABASE_URL and SUPABASE_KEY),
         "shops": ["Varle.lt", "Elesen.lt", "Amazon.DE", "Amazon.PL"],
         "scraper_api": bool(SCRAPER_API_KEY),
