@@ -318,48 +318,56 @@ def get_headers(lang="lt"):
 
 # ── FREE BARCODE LOOKUP ──
 def lookup_barcode_free(barcode: str) -> str:
-    """Looks up product name from EAN/UPC barcode using free APIs. Returns empty string if not found."""
+    """Looks up product name from EAN/UPC barcode using free APIs concurrently."""
     barcode = barcode.strip()
     if not re.match(r'^\d{8,14}$', barcode):
         return ""
 
-    # Open Food Facts (works best for food/grocery products)
-    try:
-        resp = _http.get(
-            f"https://world.openfoodfacts.org/api/v2/product/{barcode}.json",
-            timeout=5,
-            headers={"User-Agent": "GoodyApp/1.0 (price comparison)"},
-        )
-        if resp.status_code == 200:
-            data = resp.json()
-            if data.get("status") == 1:
-                p = data.get("product", {})
-                name = (
-                    p.get("product_name_en")
-                    or p.get("product_name")
-                    or p.get("generic_name")
-                    or ""
-                ).strip()
-                if name:
-                    brand = p.get("brands", "").split(",")[0].strip()
-                    return f"{brand} {name}".strip() if brand and brand.lower() not in name.lower() else name
-    except Exception as e:
-        print(f"[OpenFoodFacts] {e}")
+    def _off():
+        try:
+            resp = _http.get(
+                f"https://world.openfoodfacts.org/api/v2/product/{barcode}.json",
+                timeout=4,
+                headers={"User-Agent": "GoodyApp/1.0 (price comparison)"},
+            )
+            if resp.status_code == 200:
+                data = resp.json()
+                if data.get("status") == 1:
+                    p = data.get("product", {})
+                    name = (p.get("product_name_en") or p.get("product_name") or p.get("generic_name") or "").strip()
+                    if name:
+                        brand = p.get("brands", "").split(",")[0].strip()
+                        return f"{brand} {name}".strip() if brand and brand.lower() not in name.lower() else name
+        except Exception as e:
+            print(f"[OpenFoodFacts] {e}")
+        return ""
 
-    # Open Product Data (UPCItemDB trial — free, limited)
-    try:
-        resp = _http.get(
-            f"https://api.upcitemdb.com/prod/trial/lookup?upc={barcode}",
-            timeout=5,
-            headers={"User-Agent": "GoodyApp/1.0"},
-        )
-        if resp.status_code == 200:
-            items = resp.json().get("items", [])
-            if items:
-                return items[0].get("title", "").strip()
-    except Exception as e:
-        print(f"[UPCItemDB] {e}")
+    def _upc():
+        try:
+            resp = _http.get(
+                f"https://api.upcitemdb.com/prod/trial/lookup?upc={barcode}",
+                timeout=4,
+                headers={"User-Agent": "GoodyApp/1.0"},
+            )
+            if resp.status_code == 200:
+                items = resp.json().get("items", [])
+                if items:
+                    return items[0].get("title", "").strip()
+        except Exception as e:
+            print(f"[UPCItemDB] {e}")
+        return ""
 
+    from concurrent.futures import ThreadPoolExecutor as _TPE, as_completed as _ac
+    with _TPE(max_workers=2) as ex:
+        futs = {ex.submit(_off): "off", ex.submit(_upc): "upc"}
+        for f in _ac(futs, timeout=5):
+            result = ""
+            try:
+                result = f.result(timeout=0.1)
+            except Exception:
+                pass
+            if result:
+                return result
     return ""
 
 
