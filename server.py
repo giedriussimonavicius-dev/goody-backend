@@ -1,5 +1,11 @@
 """
-Goody Backend v5.67 — query normalization:
+Goody Backend v5.72 — fix relevance/dedup order + barcode cache + SPA extractor:
+- Relevance filter now runs BEFORE dedup (keeps cheapest relevant result per shop)
+- Barcode results cached in-memory permanently (barcodes don't change)
+- SPA extractor: +Nuxt2 window.__NUXT__, +productList/searchResults, +more price/URL fields
+- /api/watchlist-check: Supabase-based price check for watchlist items (no ScraperAPI)
+- Popular searches persisted to Supabase searches table (survives restarts)
+- v5.67 — query normalization:
 - normalize_query strips shopping-intent noise words (buy, kur pirkti, cheap, review, etc.)
   in LT/DE/PL/EN so "kur pirkti iPhone 16" hits same cache as "iPhone 16"
 - v5.66 — AI and deal_score improvements:
