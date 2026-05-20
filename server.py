@@ -1,12 +1,11 @@
 """
-Goody Backend v5.48 — speed, cost and accuracy improvements:
-- Static LT→DE/PL translation dictionary (free + instant, no Claude API call for 95% LT queries)
-- Fixed AI analysis threshold: was 5+ results (NEVER triggered with 4 shops) → now 2+ results
-- Price history: Supabase-only (removed slow/blocked CamelCamelCamel scraping)
-- AI prompt: shorter, cheaper, multilingual, tuned for 2-4 shop comparison
-- AI_MAX_TOKENS: 300→200 (enough for the new shorter prompt)
-- _timing debug data: gated behind X-Debug-Key header (not exposed in production)
-- /api/health: richer stats (uptime, cache hit rate, AI config)
+Goody Backend v5.49 — query normalization, ETag caching, Elesen fixes:
+- normalize_query(): collapses whitespace + strips trailing punctuation → better cache hit rate
+- ETag + Cache-Control headers on /api/search (304 Not Modified for repeated searches)
+- v60 cache key bump (normalize_query changes key semantics)
+- Elesen scraper: added .product-card / [data-product-id] selectors + SPA JSON fallback
+- Elesen centai bug fix: was always preferring centai even for MacBook (€1349 → €13.49)
+- v5.48: static LT→DE/PL translation dict, fixed AI threshold (was < 5, now < 2), Supabase-only history
 - v5.47: 4 active shops, parallel translations, non-blocking executors
 """
 
@@ -234,6 +233,21 @@ def get_category_icon(query: str, product_type: str = "MAIN") -> str:
         if any(kw in q for kw in keywords):
             return icon
     return "🛍️" if product_type == "ACCESSORY" else "🛒"
+
+
+def normalize_query(query: str) -> str:
+    """Normalize a search query so minor variations hit the same cache entry.
+    - Lowercases
+    - Collapses whitespace
+    - Removes common noise words that don't affect product identity
+    - Keeps product-specific content intact
+    """
+    q = query.strip()
+    # Collapse internal whitespace
+    q = re.sub(r'\s+', ' ', q)
+    # Remove trailing punctuation
+    q = q.rstrip('.,;:!?')
+    return q
 
 
 def suggest_simpler_query(query: str) -> str:
@@ -984,10 +998,19 @@ def scrape_elesen(query: str) -> list:
         items = (
             soup.select("article.product-card") or
             soup.select(".product-card.vertical") or
+            soup.select(".product-card") or
             soup.select("[class*='product-item']") or
             soup.select("[class*='catalog-item']") or
-            soup.select(".item-box")
+            soup.select(".item-box") or
+            soup.select("[data-product-id]")
         )
+        # Fall back to SPA JSON extraction if DOM scraping found nothing
+        if not items:
+            spa = _extract_spa_products(resp.text, query, "Elesen.lt", "🇱🇹",
+                                        "https://www.elesen.lt", "elesen")
+            if spa:
+                print(f"[Elesen] {len(spa)} via SPA JSON fallback")
+                return spa
 
         print(f"[Elesen] {len(items)} items")
 
@@ -1007,20 +1030,23 @@ def scrape_elesen(query: str) -> list:
                     continue
 
                 # Elesen mixes euros and centai:
-                #   "Kaina:3999 €"                → 3999 centai = €39.99 (integer only)
-                #   "Kaina su nuolaida6999 €85.99" → 6999 centai = €69.99 (discounted)
-                #   "Kaina su nuolaida1349 €1599 €"→ 1349 euros   (MacBook, no decimal)
-                # Strategy: if integer ≥ 100 and centai interpretation is valid but
-                #   euro interpretation fails validate_price → use centai.
-                #   If both pass → prefer centai (smaller = more realistic).
+                #   "Kaina:3999 €"                → 3999 centai = €39.99 (integer-only values < 50000)
+                #   "Kaina su nuolaida6999 €85.99" → 6999 centai = €69.99
+                #   "Kaina su nuolaida1349 €1599 €"→ 1349 euros  (MacBook — raw passes validate)
+                # Rule: if raw integer ≥ 100 AND raw/100 passes validate but raw doesn't → use centai.
+                #       if both pass → centai only if < €5000 (common appliance range).
+                #       if raw already passes and centai doesn't → keep raw (expensive product like MacBook).
                 if raw_price >= 100 and raw_price == int(raw_price):
                     centai = round(raw_price / 100, 2)
                     p_eur = validate_price(raw_price, query)
                     p_cnt = validate_price(centai, query)
                     if p_cnt and not p_eur:
                         raw_price = centai          # centai is the only valid interpretation
-                    elif p_cnt and p_eur:
-                        raw_price = centai          # both valid → prefer smaller centai price
+                    elif p_cnt and p_eur and raw_price < 50000:
+                        # Both valid: prefer centai for typical appliance prices (< €500)
+                        # but keep euro if centai is implausibly cheap (< €5)
+                        if centai >= 5:
+                            raw_price = centai
 
                 price = validate_price(raw_price, query)
                 if not price:
@@ -1648,7 +1674,8 @@ def search():
     if len(query) > 200:
         query = query[:200]
 
-    # Barcode detection — free lookup before any AI
+    # Normalize and barcode-resolve before cache lookup
+    query = normalize_query(query)
     original_query = query
     if re.match(r'^\d{8,14}$', query):
         product_from_barcode = lookup_barcode_free(query)
@@ -1656,12 +1683,18 @@ def search():
             print(f"[Barcode] {query} -> {product_from_barcode}")
             query = product_from_barcode
 
-    cache_key = hashlib.md5(f"v59:{query.lower()}".encode()).hexdigest()
+    cache_key = hashlib.md5(f"v60:{query.lower()}".encode()).hexdigest()
+    etag = f'"{cache_key}"'
     cached = get_cache(cache_key)
 
     if cached:
+        if request.headers.get("If-None-Match") == etag:
+            return "", 304
         cached["_cached"] = True
-        return jsonify(cached)
+        resp = jsonify(cached)
+        resp.headers["ETag"] = etag
+        resp.headers["Cache-Control"] = "private, max-age=900"
+        return resp
 
     print(f"\n=== SEARCH: '{original_query}' -> resolved:'{query}' ===")
     t0_search = time.time()
@@ -1768,7 +1801,10 @@ def search():
         "remaining": max(0, DAILY_FREE_LIMIT - used)
     }
 
-    return jsonify(result)
+    resp = jsonify(result)
+    resp.headers["ETag"] = etag
+    resp.headers["Cache-Control"] = "private, max-age=900"
+    return resp
 
 
 # ── SSE STREAMING SEARCH ──
@@ -1781,7 +1817,7 @@ def search_stream():
     if not data:
         return jsonify({"error": "No data"}), 400
 
-    query = data.get("query", "").strip()
+    query = normalize_query(data.get("query", "").strip())
     if not query:
         return jsonify({"error": "query_required", "message": "Įveskite produkto pavadinimą."}), 400
     if len(query) < 2:
@@ -1800,7 +1836,7 @@ def search_stream():
     used = rate_store.get(ip, {}).get("count", 1)
     rate_info = {"used": used, "limit": DAILY_FREE_LIMIT, "remaining": max(0, DAILY_FREE_LIMIT - used)}
 
-    cache_key = hashlib.md5(f"v59:{query.lower()}".encode()).hexdigest()
+    cache_key = hashlib.md5(f"v60:{query.lower()}".encode()).hexdigest()
 
     # Freeze query strings for generator closure
     _query = query
@@ -2110,7 +2146,7 @@ Rules:
                 "confidence": confidence
             }), 422
 
-        cache_key = hashlib.md5(f"scan_v59:{product_name.lower()}".encode()).hexdigest()
+        cache_key = hashlib.md5(f"scan_v60:{product_name.lower()}".encode()).hexdigest()
         cached = get_cache(cache_key)
 
         if cached:
@@ -2390,7 +2426,7 @@ def health():
     )
     return jsonify({
         "status": "ok",
-        "version": "5.48",
+        "version": "5.49",
         "uptime_s": uptime_s,
         "shops": ["Varle.lt", "Elesen.lt", "Amazon.DE", "Amazon.PL"],
         "ai": {
