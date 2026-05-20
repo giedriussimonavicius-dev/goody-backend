@@ -360,17 +360,20 @@ def lookup_barcode_free(barcode: str) -> str:
             print(f"[UPCItemDB] {e}")
         return ""
 
-    from concurrent.futures import ThreadPoolExecutor as _TPE, as_completed as _ac
-    with _TPE(max_workers=2) as ex:
-        futs = {ex.submit(_off): "off", ex.submit(_upc): "upc"}
-        for f in _ac(futs, timeout=5):
-            result = ""
+    ex = ThreadPoolExecutor(max_workers=2)
+    futs = {ex.submit(_off): "off", ex.submit(_upc): "upc"}
+    try:
+        for f in as_completed(futs, timeout=5):
             try:
                 result = f.result(timeout=0.1)
+                if result:
+                    return result
             except Exception:
                 pass
-            if result:
-                return result
+    except Exception:
+        pass
+    finally:
+        ex.shutdown(wait=False)
     return ""
 
 
