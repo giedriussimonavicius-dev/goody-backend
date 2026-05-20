@@ -1,11 +1,10 @@
 """
-Goody Backend v5.50 — connection pooling, affiliate URLs, smarter deal_score:
-- requests.Session with HTTPAdapter pool (10 connections, reuses TCP/TLS per host)
-  — saves ~100-200ms per shop scrape by avoiding repeated SSL handshakes
-- Varle.lt affiliate URL: VARLE_AFFILIATE_TAG env → appends ?ref=TAG to product links
-- deal_score now factors in price history: bonus if current price < 90% of avg, penalty if > 110%
-- v5.49: normalize_query(), ETag caching, Elesen scraper fixes
-- v5.48: static LT→DE/PL translation dict, fixed AI threshold, Supabase-only history
+Goody Backend v5.51 — Elesen direct-first, Amazon fixes, all requests via pooled session:
+- Elesen: same direct-first-2s pattern as Varle (avoids ScraperAPI credits when direct works)
+- Amazon.DE flag: 🌍 → 🇩🇪; AMAZON_AFFILIATE_TAG env var (default: goody-21)
+- All requests.get/post use _http pooled session (ScraperAPI + Zyte + barcode + FX)
+- v5.50: connection pooling, Varle affiliate, deal_score with price history
+- v5.49: normalize_query(), ETag caching, Elesen scraper selector + centai bug fixes
 """
 
 from flask import Flask, request, jsonify, Response, stream_with_context
@@ -64,7 +63,8 @@ POPULAR_CACHE_TTL   = int(os.getenv("POPULAR_CACHE_TTL", "7200"))   # 2 h for po
 POPULAR_THRESHOLD   = int(os.getenv("POPULAR_THRESHOLD", "5"))       # min searches to be "popular"
 SHOP_TIMEOUT        = int(os.getenv("SHOP_TIMEOUT", "5"))            # seconds per shop
 DEBUG_API_KEY       = os.getenv("DEBUG_API_KEY", "")
-VARLE_AFFILIATE_TAG = os.getenv("VARLE_AFFILIATE_TAG", "")           # e.g. "goody" → ?ref=goody
+VARLE_AFFILIATE_TAG   = os.getenv("VARLE_AFFILIATE_TAG", "")          # e.g. "goody" → ?ref=goody
+AMAZON_AFFILIATE_TAG  = os.getenv("AMAZON_AFFILIATE_TAG", "goody-21") # Amazon Associates tag
 
 # ── PRODUCT CLASSIFICATION KEYWORDS ──
 ACCESSORY_KEYWORDS = [
@@ -444,7 +444,7 @@ def fetch_url(url: str, lang: str = "lt", timeout: int = SHOP_TIMEOUT,
                 + (f"&country_code={country}" if country else "")
                 + ("&premium=true" if is_amazon else "")
             )
-            resp = requests.get(scraper_url, timeout=scraper_timeout)
+            resp = _http.get(scraper_url, timeout=scraper_timeout)
             if resp.status_code == 200:
                 print(f"[ScraperAPI OK] {url[:70]}")
                 return resp
@@ -457,7 +457,7 @@ def fetch_url(url: str, lang: str = "lt", timeout: int = SHOP_TIMEOUT,
         # Zyte httpResponseBody: cheap fallback for LT shops (free plan supports this)
         try:
             import base64
-            resp = requests.post(
+            resp = _http.post(
                 "https://api.zyte.com/v1/extract",
                 auth=(ZYTE_API_KEY, ""),
                 json={"url": url, "httpResponseBody": True},
@@ -994,8 +994,15 @@ def scrape_elesen(query: str) -> list:
 
     try:
         url = f"https://www.elesen.lt/paieska?q={requests.utils.quote(query)}"
-        # Elesen is server-rendered — no JS render needed
-        resp = fetch_url(url, "lt", render_js=False)
+        # Try direct first (2s, free) before falling back to ScraperAPI (costs credits)
+        try:
+            resp = _http.get(url, headers=get_headers("lt"), timeout=2, allow_redirects=True)
+            if resp.status_code != 200:
+                resp = None
+        except Exception:
+            resp = None
+        if not resp:
+            resp = fetch_url(url, "lt", render_js=False, scraper_timeout=7)
 
         if not resp or resp.status_code != 200:
             print("[Elesen] failed")
@@ -1181,9 +1188,10 @@ def scrape_amazon(query: str, domain: str = "de") -> list:
                 asin_m = re.search(r"/dp/([A-Z0-9]{10})", link)
                 asin = asin_m.group(1) if asin_m else ""
 
+                aff_tag = AMAZON_AFFILIATE_TAG
                 aff = (
-                    f"https://www.amazon.{domain}/dp/{asin}?tag=goody-21"
-                    if asin
+                    f"https://www.amazon.{domain}/dp/{asin}?tag={aff_tag}"
+                    if asin and aff_tag
                     else f"https://www.amazon.{domain}/s?k={requests.utils.quote(query)}"
                 )
 
@@ -1216,7 +1224,7 @@ def scrape_amazon(query: str, domain: str = "de") -> list:
 
                 results.append({
                     "shop": f"Amazon.{domain.upper()}",
-                    "flag": "🌍" if domain == "de" else "🇵🇱",
+                    "flag": "🇩🇪" if domain == "de" else "🇵🇱",
                     "url": link,
                     "affiliate_url": aff,
                     "price": price,
@@ -2456,7 +2464,7 @@ def health():
     )
     return jsonify({
         "status": "ok",
-        "version": "5.50",
+        "version": "5.51",
         "uptime_s": uptime_s,
         "shops": ["Varle.lt", "Elesen.lt", "Amazon.DE", "Amazon.PL"],
         "ai": {
