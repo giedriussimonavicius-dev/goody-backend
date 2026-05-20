@@ -866,13 +866,9 @@ def deduplicate_by_shop(results: list) -> list:
 
 
 # ── GENERIC SPA JSON EXTRACTOR ──
-def _extract_json_value(text: str, key: str) -> str:
-    """Extract the full JSON array/object for `key` from text, handling nested brackets."""
-    pattern = f'"{key}"\\s*:\\s*'
-    m = re.search(pattern, text)
-    if not m:
-        return ""
-    start = m.end()
+def _extract_balanced(text: str, start: int, max_len: int = 600_000) -> str:
+    """Return the balanced JSON value (array or object) starting at `start`.
+    Correctly skips brackets inside quoted strings."""
     if start >= len(text):
         return ""
     opener = text[start]
@@ -880,14 +876,38 @@ def _extract_json_value(text: str, key: str) -> str:
         return ""
     closer = ']' if opener == '[' else '}'
     depth = 0
-    for i in range(start, min(start + 600_000, len(text))):
-        if text[i] == opener:
+    in_str = False
+    escaped = False
+    end = min(start + max_len, len(text))
+    for i in range(start, end):
+        c = text[i]
+        if escaped:
+            escaped = False
+            continue
+        if c == '\\' and in_str:
+            escaped = True
+            continue
+        if c == '"':
+            in_str = not in_str
+            continue
+        if in_str:
+            continue
+        if c == opener:
             depth += 1
-        elif text[i] == closer:
+        elif c == closer:
             depth -= 1
             if depth == 0:
                 return text[start:i + 1]
     return ""
+
+
+def _extract_json_value(text: str, key: str) -> str:
+    """Extract the full JSON array/object for `key` from text, handling nested brackets."""
+    pattern = f'"{key}"\\s*:\\s*'
+    m = re.search(pattern, text)
+    if not m:
+        return ""
+    return _extract_balanced(text, m.end())
 
 
 def _walk_for_products(node, query, shop, flag, base_url, src_key, out, depth=0):
@@ -989,22 +1009,10 @@ def _extract_spa_products(html: str, query: str, shop: str, flag: str,
             m = re.search(pat, txt)
             if not m:
                 continue
-            # Bracket-count to find end of the object (handles nested structures)
+            # String-aware balanced extraction (handles nested structures + strings with brackets)
             brace_pos = m.end() - 1  # position of the opening {
-            depth = 0
-            end_pos = None
-            for i in range(brace_pos, min(brace_pos + 600_000, len(txt))):
-                if txt[i] == '{':
-                    depth += 1
-                elif txt[i] == '}':
-                    depth -= 1
-                    if depth == 0:
-                        end_pos = i + 1
-                        break
-            if not end_pos:
-                continue
-            raw = txt[brace_pos:end_pos]
-            if len(raw) > 500_000:
+            raw = _extract_balanced(txt, brace_pos)
+            if not raw or len(raw) > 500_000:
                 continue
             try:
                 data = json.loads(raw)
