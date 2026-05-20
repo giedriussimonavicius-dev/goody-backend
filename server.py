@@ -1,5 +1,5 @@
 """
-Goody Backend v5.72 — fix relevance/dedup order + barcode cache + SPA extractor:
+Goody Backend v5.76 — Amazon price fallback + SPA extractor robustness:
 - Relevance filter now runs BEFORE dedup (keeps cheapest relevant result per shop)
 - Barcode results cached in-memory permanently (barcodes don't change)
 - SPA extractor: +Nuxt2 window.__NUXT__, +productList/searchResults, +more price/URL fields
@@ -866,6 +866,30 @@ def deduplicate_by_shop(results: list) -> list:
 
 
 # ── GENERIC SPA JSON EXTRACTOR ──
+def _extract_json_value(text: str, key: str) -> str:
+    """Extract the full JSON array/object for `key` from text, handling nested brackets."""
+    pattern = f'"{key}"\\s*:\\s*'
+    m = re.search(pattern, text)
+    if not m:
+        return ""
+    start = m.end()
+    if start >= len(text):
+        return ""
+    opener = text[start]
+    if opener not in ('[', '{'):
+        return ""
+    closer = ']' if opener == '[' else '}'
+    depth = 0
+    for i in range(start, min(start + 600_000, len(text))):
+        if text[i] == opener:
+            depth += 1
+        elif text[i] == closer:
+            depth -= 1
+            if depth == 0:
+                return text[start:i + 1]
+    return ""
+
+
 def _walk_for_products(node, query, shop, flag, base_url, src_key, out, depth=0):
     """Recursively search JSON tree for product-like objects."""
     if depth > 10 or len(out) >= 8:
@@ -918,7 +942,7 @@ def _extract_spa_products(html: str, query: str, shop: str, flag: str,
     out = []
     soup = BeautifulSoup(html, "html.parser")
 
-    # 1. Next.js
+    # 1. Next.js __NEXT_DATA__
     nd = soup.find("script", {"id": "__NEXT_DATA__"})
     if nd:
         try:
@@ -930,34 +954,72 @@ def _extract_spa_products(html: str, query: str, shop: str, flag: str,
         except Exception:
             pass
 
+    # 1b. Nuxt 3 __NUXT_DATA__ (JSON array payload — try to extract dict items)
+    nd3 = soup.find("script", {"id": "__NUXT_DATA__"})
+    if nd3:
+        try:
+            raw3 = json.loads(nd3.string or "[]")
+            # Nuxt 3 stores state as a flat array; walk each dict-like element
+            node3 = raw3 if isinstance(raw3, dict) else {"items": raw3}
+            _walk_for_products(node3, query, shop, flag, base_url, src_key, out)
+            if out:
+                print(f"[{shop}] {len(out)} via __NUXT_DATA__")
+                return out
+        except Exception:
+            pass
+
     # 2. window.* state patterns in inline scripts
     for scr in soup.find_all("script", src=False):
         txt = scr.string or ""
         if len(txt) < 50:
             continue
-        for pat in [
-            r'window\.__(?:INITIAL|PRELOADED|NUXT|APP|REACT_QUERY|REDUX)_?STATE__\s*=\s*(\{.+?\})\s*;',
-            r'window\.__NUXT__\s*=\s*(\{.+?\})\s*(?:;|$)',  # Nuxt 2 (pigu.lt)
-            r'window\.(?:state|store|appState|pageData|__data)\s*=\s*(\{.+?\})\s*;',
-            r'"products"\s*:\s*(\[.+?\])',
-            r'"items"\s*:\s*(\[.+?\])',
-            r'"results"\s*:\s*(\[.+?\])',
-            r'"hits"\s*:\s*(\[.+?\])',
-            r'"productList"\s*:\s*(\[.+?\])',
-            r'"searchResults"\s*:\s*(\[.+?\])',
-        ]:
-            m = re.search(pat, txt, re.DOTALL)
+        # 2a. Whole-object state assignments (window.__NUXT__, window.__INITIAL_STATE__, etc.)
+        _state_pats = [
+            r'window\.__(?:INITIAL|PRELOADED|NUXT|APP|REACT_QUERY|REDUX)_?STATE__\s*=\s*\{',
+            r'window\.__NUXT__\s*=\s*\{',
+            r'window\.(?:state|store|appState|pageData|__data)\s*=\s*\{',
+        ]
+        for pat in _state_pats:
+            m = re.search(pat, txt)
             if not m:
                 continue
+            # Bracket-count to find end of the object (handles nested structures)
+            brace_pos = m.end() - 1  # position of the opening {
+            depth = 0
+            end_pos = None
+            for i in range(brace_pos, min(brace_pos + 600_000, len(txt))):
+                if txt[i] == '{':
+                    depth += 1
+                elif txt[i] == '}':
+                    depth -= 1
+                    if depth == 0:
+                        end_pos = i + 1
+                        break
+            if not end_pos:
+                continue
+            raw = txt[brace_pos:end_pos]
+            if len(raw) > 500_000:
+                continue
             try:
-                raw = m.group(1)
-                if len(raw) > 500_000:
-                    continue
                 data = json.loads(raw)
-                node = data if isinstance(data, dict) else {"items": data}
-                _walk_for_products(node, query, shop, flag, base_url, src_key, out)
+                _walk_for_products(data, query, shop, flag, base_url, src_key, out)
                 if out:
                     print(f"[{shop}] {len(out)} via window state pattern")
+                    return out
+            except Exception:
+                continue
+        # 2b. Named JSON array keys — use bracket counter for correct nesting
+        for key in ("products", "items", "results", "hits", "productList",
+                    "searchResults", "catalogItems", "goods", "offers"):
+            raw = _extract_json_value(txt, key)
+            if not raw or len(raw) > 500_000:
+                continue
+            try:
+                data = json.loads(raw)
+                node = {"items": data} if isinstance(data, list) else data
+                _walk_for_products(node, query, shop, flag, base_url, src_key, out)
+                if out:
+                    print(f"[{shop}] {len(out)} via JSON key '{key}'")
                     return out
             except Exception:
                 continue
@@ -1417,6 +1479,16 @@ def scrape_amazon(query: str, domain: str = "de") -> list:
                         if pel:
                             raw = parse_price(pel.get_text())
 
+                            if raw:
+                                break
+
+                # Fallback: span.a-color-base with currency symbol (used in some Amazon DE layouts)
+                if not raw:
+                    cur_sym = "zł" if domain == "pl" else "€"
+                    for el in item.find_all("span", class_="a-color-base"):
+                        txt = el.get_text(strip=True)
+                        if cur_sym in txt or "EUR" in txt:
+                            raw = parse_price(txt)
                             if raw:
                                 break
 
