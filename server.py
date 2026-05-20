@@ -1352,6 +1352,8 @@ _LT_CATEGORY_WORDS = [
     "belaide", "belaides", "tosteris", "grilis", "kapsulės", "kapsules",
     # Genitive/accusative forms in dict phrases but not trigger list
     "kondicionieriaus", "robotas", "kraujo",
+    # New product categories
+    "dviratis", "paspirtukas", "maišytuvas",
 ]
 
 # Static word-for-word replacement — avoids Claude API for common LT product searches.
@@ -1403,6 +1405,10 @@ _LT_DE: list[tuple[str, str]] = sorted([
     ("tosteris", "Toaster"), ("grilis", "Grill"),
     ("kavos kapsulės", "Kaffeekapseln"), ("kavos kapsules", "Kaffeekapseln"),
     ("kapsulės", "Kapseln"), ("kapsules", "Kapseln"),
+    ("elektrinis dviratis", "E-Bike"), ("elektrinis paspirtukas", "E-Roller"),
+    ("dviratis", "Fahrrad"), ("paspirtukas", "E-Roller"),
+    ("rankinis maišytuvas", "Handmixer"), ("maišytuvas", "Mixer"),
+    ("šaldymo dėžė", "Kühlbox"), ("oro valytuvas", "Luftreiniger"),
 ], key=lambda t: -len(t[0]))
 
 _LT_PL: list[tuple[str, str]] = sorted([
@@ -1452,6 +1458,10 @@ _LT_PL: list[tuple[str, str]] = sorted([
     ("tosteris", "toster"), ("grilis", "grill"),
     ("kavos kapsulės", "kapsułki do kawy"), ("kavos kapsules", "kapsułki do kawy"),
     ("kapsulės", "kapsułki"), ("kapsules", "kapsułki"),
+    ("elektrinis dviratis", "rower elektryczny"), ("elektrinis paspirtukas", "hulajnoga elektryczna"),
+    ("dviratis", "rower"), ("paspirtukas", "hulajnoga elektryczna"),
+    ("rankinis maišytuvas", "mikser ręczny"), ("maišytuvas", "mikser"),
+    ("šaldymo dėžė", "lodówka turystyczna"), ("oro valytuvas", "oczyszczacz powietrza"),
 ], key=lambda t: -len(t[0]))
 
 
