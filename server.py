@@ -1,5 +1,5 @@
 """
-Goody Backend v5.76 — Amazon price fallback + SPA extractor robustness:
+Goody Backend v5.81 — localized no-results + post_process lang detection:
 - Relevance filter now runs BEFORE dedup (keeps cheapest relevant result per shop)
 - Barcode results cached in-memory permanently (barcodes don't change)
 - SPA extractor: +Nuxt2 window.__NUXT__, +productList/searchResults, +more price/URL fields
@@ -2147,13 +2147,25 @@ def post_process(results: list, query: str, ai_data: dict = None, price_history:
 
     if not results:
         suggestion = suggest_simpler_query(query)
+        q_low = query.lower()
+        _is_lt = _is_lt_query(query) or any(ord(c) > 127 for c in query[:20])
+        _is_de = any(c in q_low for c in ("ä", "ö", "ü", "ß")) or any(w in q_low for w in ("waschmaschine", "kühlschrank", "fernseher"))
+        _is_pl = any(c in q_low for c in ("ę", "ó", "ń")) or any(w in q_low for w in ("pralka", "odkurzacz", "lodówka"))
+        _lang = "lt" if _is_lt else ("de" if _is_de else ("pl" if _is_pl else "en"))
+        _NR = {
+            "lt": ("Nerasta", "Produktas nerastas nė vienoje parduotuvėje.", "Pabandykite tikslesnį pavadinimą arba trumpesnę užklausą.", f'Pabandykite: "{suggestion}"' if suggestion else "Pabandykite kitą paieškos terminą."),
+            "de": ("Nicht gefunden", "Produkt in keinem Shop gefunden.", "Bitte genaueren Namen oder kürzeren Suchbegriff eingeben.", f'Versuchen Sie: "{suggestion}"' if suggestion else "Versuchen Sie einen anderen Suchbegriff."),
+            "pl": ("Nie znaleziono", "Produkt nie został znaleziony w żadnym sklepie.", "Spróbuj bardziej szczegółowej nazwy lub krótszego zapytania.", f'Spróbuj: "{suggestion}"' if suggestion else "Spróbuj innego wyszukiwania."),
+            "en": ("Not found", "Product not found in any shop.", "Try a more specific name or shorter query.", f'Try: "{suggestion}"' if suggestion else "Try a different search term."),
+        }
+        _label, _reason, _summary, _rec = _NR[_lang]
         return {
             "product_name": query,
             "ai_verdict": "WAIT",
-            "verdict_label": "Nerasta",
-            "verdict_reason": "Produktas nerastas nė vienoje parduotuvėje.",
-            "ai_summary": "Pabandykite tikslesnį pavadinimą arba trumpesnę užklausą.",
-            "buy_recommendation": f'Pabandykite: "{suggestion}"' if suggestion else "Pabandykite kitą paieškos terminą.",
+            "verdict_label": _label,
+            "verdict_reason": _reason,
+            "ai_summary": _summary,
+            "buy_recommendation": _rec,
             "alternative": suggestion,
             "price_forecast": "",
             "deal_score": 0,
