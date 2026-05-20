@@ -1,10 +1,11 @@
 """
-Goody Backend v5.51 — Elesen direct-first, Amazon fixes, all requests via pooled session:
-- Elesen: same direct-first-2s pattern as Varle (avoids ScraperAPI credits when direct works)
-- Amazon.DE flag: 🌍 → 🇩🇪; AMAZON_AFFILIATE_TAG env var (default: goody-21)
-- All requests.get/post use _http pooled session (ScraperAPI + Zyte + barcode + FX)
-- v5.50: connection pooling, Varle affiliate, deal_score with price history
-- v5.49: normalize_query(), ETag caching, Elesen scraper selector + centai bug fixes
+Goody Backend v5.52 — expanded LT translation dictionaries (40+ new product categories):
+- _LT_DE / _LT_PL: added air conditioner, fan, heater, electric toothbrush, epilator,
+  massager, scale, mattress, LED bulb, lawn mower, robot vacuum, cooker, dishwasher (alt)
+- _LT_CATEGORY_WORDS: added matching detection words for all new categories
+- These additions increase static-translation coverage and improve Amazon DE/PL search quality
+  for common household product searches by Lithuanian users
+- v5.51: Elesen direct-first, Amazon.DE flag fix, configurable affiliate env vars
 """
 
 from flask import Flask, request, jsonify, Response, stream_with_context
@@ -1297,6 +1298,10 @@ _LT_CATEGORY_WORDS = [
     "spausdintuvas", "monitorius", "klaviatūra", "pelė",
     "skalbimo", "džiovyklė", "šaldiklis", "orkaitė", "mikseris",
     "plaukų", "skutimosi", "indaplovė",
+    # Extended
+    "kondicionierius", "ventiliatorius", "šildytuvas",
+    "dantų", "epilatorius", "masažuoklis", "svarstyklės",
+    "čiužinys", "lemputė", "lemputės", "žoliapjovė", "viryklė",
 ]
 
 # Static word-for-word replacement — avoids Claude API for common LT product searches.
@@ -1324,6 +1329,19 @@ _LT_DE: list[tuple[str, str]] = sorted([
     ("pelė", "Maus"), ("garsiakalbis", "Lautsprecher"),
     ("žaislas", "Spielzeug"), ("žaislo", "Spielzeug"),
     ("skutimosi", "Rasier"),
+    # Extended categories
+    ("oro kondicionierius", "Klimaanlage"), ("oro kondicionieriaus", "Klimaanlage"),
+    ("ventiliatorius", "Ventilator"), ("šildytuvas", "Heizgerät"),
+    ("elektrinė dantų šepetėlė", "elektrische Zahnbürste"),
+    ("dantų šepetėlis", "Zahnbürste"), ("dantų šepetėlį", "Zahnbürste"),
+    ("epilatorius", "Epilator"), ("masažuoklis", "Massagegerät"),
+    ("svarstyklės", "Körperwaage"), ("svarstyklių", "Körperwaage"),
+    ("kraujo spaudimas", "Blutdruckmessgerät"),
+    ("čiužinys", "Matratze"), ("čiužinio", "Matratze"),
+    ("lemputė", "LED Glühbirne"), ("lemputės", "LED Glühbirne"),
+    ("žoliapjovė", "Rasenmäher"), ("robotas dulkių", "Saugroboter"),
+    ("robotas siurblys", "Saugroboter"), ("rankinis siurblys", "Handstaubsauger"),
+    ("viryklė", "Herd"), ("indų", "Spülmaschine"),
 ], key=lambda t: -len(t[0]))
 
 _LT_PL: list[tuple[str, str]] = sorted([
@@ -1349,6 +1367,19 @@ _LT_PL: list[tuple[str, str]] = sorted([
     ("pelė", "mysz"), ("garsiakalbis", "głośnik"),
     ("žaislas", "zabawka"), ("žaislo", "zabawka"),
     ("skutimosi", "do golenia"),
+    # Extended categories
+    ("oro kondicionierius", "klimatyzator"), ("oro kondicionieriaus", "klimatyzator"),
+    ("ventiliatorius", "wentylator"), ("šildytuvas", "grzejnik"),
+    ("elektrinė dantų šepetėlė", "elektryczna szczoteczka do zębów"),
+    ("dantų šepetėlis", "szczoteczka do zębów"), ("dantų šepetėlį", "szczoteczka"),
+    ("epilatorius", "epilator"), ("masažuoklis", "masażer"),
+    ("svarstyklės", "waga łazienkowa"), ("svarstyklių", "waga"),
+    ("kraujo spaudimas", "ciśnieniomierz"),
+    ("čiužinys", "materac"), ("čiužinio", "materac"),
+    ("lemputė", "żarówka LED"), ("lemputės", "żarówka"),
+    ("žoliapjovė", "kosiarka"), ("robotas dulkių", "robot sprzątający"),
+    ("robotas siurblys", "robot odkurzający"), ("rankinis siurblys", "odkurzacz ręczny"),
+    ("viryklė", "kuchenka"), ("indų", "zmywarka"),
 ], key=lambda t: -len(t[0]))
 
 
@@ -2464,7 +2495,7 @@ def health():
     )
     return jsonify({
         "status": "ok",
-        "version": "5.51",
+        "version": "5.52",
         "uptime_s": uptime_s,
         "shops": ["Varle.lt", "Elesen.lt", "Amazon.DE", "Amazon.PL"],
         "ai": {
