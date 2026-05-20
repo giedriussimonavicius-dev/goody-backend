@@ -2290,11 +2290,14 @@ def price_history_endpoint():
             "prices": [by_date[day].get(shop) for day in sorted_days],
         })
 
+    all_prices = [float(r.get("price", 0)) for r in rows if r.get("price", 0) > 0]
     return jsonify({
         "product_name": q,
         "labels": sorted_days,
         "datasets": datasets,
         "raw": rows[-100:],
+        "price_30d_min": round(min(all_prices), 2) if all_prices else None,
+        "price_30d_max": round(max(all_prices), 2) if all_prices else None,
     })
 
 
