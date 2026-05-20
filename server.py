@@ -214,8 +214,18 @@ def is_relevant_result(query: str, product_title: str) -> bool:
             return False
     model_tokens = re.findall(r'\b[a-z]*\d+[a-z0-9-]*\b', q)
     if model_tokens:
-        # Use word-boundary check so "s24" won't match "s240" or "s2480"
-        if not all(re.search(r'(?<![a-z0-9])' + re.escape(m) + r'(?![a-z0-9])', t) for m in model_tokens):
+        # Normalize model: strip hyphens for compact-model comparison (wh-1000xm5 → wh1000xm5)
+        t_nh = t.replace("-", "").replace(" ", "")
+        def _model_in_title(m):
+            m_nh = m.replace("-", "")
+            # Strict word-boundary check first
+            if re.search(r'(?<![a-z0-9])' + re.escape(m) + r'(?![a-z0-9])', t):
+                return True
+            # Compact model (e.g. WH1000XM5 contains 1000xm5 token)
+            if m_nh and m_nh in t_nh:
+                return True
+            return False
+        if not all(_model_in_title(m) for m in model_tokens):
             return False
         if brands_in_q:
             # Brand confirmed + all model tokens confirmed -> definite match

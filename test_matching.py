@@ -136,6 +136,14 @@ total_fails += run("LT priedai", "Philips dulkių siurblys", [
     ("Philips siurblių filtrai HR6999",                 False),  # filters → HIDE
 ])
 
+total_fails += run("Compact model (WH-1000XM5 vs WH1000XM5B)", "Sony WH-1000XM5", [
+    ("Sony WH-1000XM5 Wireless Headphones",         True),   # exact model
+    ("Sony WH1000XM5B Black ausinės",               True),   # compact (no hyphen)
+    ("Sony WH-1000XM5N Noise Cancelling",           True),   # suffix N
+    ("Sony WH-1000XM4 Wireless Headphones",         False),  # different model (XM4 not XM5)
+    ("Sony MDR-ZX310 headphones",                   False),  # different model entirely
+])
+
 print(f"\n{'='*60}")
 if total_fails == 0:
     print("  Visi testai praejo!")
