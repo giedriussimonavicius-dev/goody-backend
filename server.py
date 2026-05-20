@@ -1,5 +1,8 @@
 """
-Goody Backend v5.65 — search quality:
+Goody Backend v5.66 — AI and deal_score improvements:
+- build_ai_prompt: includes spread %, at-historical-low signal, 5 shops (was 4)
+- deal_score: extra +10 bonus when current price is at 30d historical low
+- v5.65 — search quality:
 - Cache version bumped to v64 (invalidates stale pre-Pigu/Topo results)
 - v5.64 — diacritics-insensitive LT query detection via _is_lt_query
 - v5.63 — translation improvements:
@@ -1805,28 +1808,31 @@ def build_ai_prompt(query: str, results: list, price_history: dict = None) -> st
     prices = [r.get("price", 0) for r in results if r.get("price", 0) > 0]
     p_min = min(prices) if prices else 0
     p_max = max(prices) if prices else 0
+    spread_pct = round((p_max - p_min) / p_max * 100) if p_max else 0
 
     shops_summary = "; ".join(
         f"{r.get('shop','')} €{r.get('price',0):.2f}"
         + (f" ★{r.get('rating')}" if r.get("rating") else "")
-        for r in sorted(results, key=lambda x: x.get("price", 999999))[:4]
+        for r in sorted(results, key=lambda x: x.get("price", 999999))[:5]
         if r.get("price", 0) > 0
     )
 
     hist = price_history or {}
     hist_line = ""
     if hist.get("lowest") and hist.get("count", 0) >= 2:
-        hist_line = f" History: low €{hist['lowest']}, high €{hist.get('highest','?')} ({hist['count']} samples)."
+        at_low = p_min <= hist["lowest"] * 1.03
+        hist_note = " (AT HISTORICAL LOW!)" if at_low else f", currently {round((p_min/hist['lowest']-1)*100)}% above low"
+        hist_line = f" 30d history: low €{hist['lowest']}, high €{hist.get('highest','?')}{hist_note}."
 
     return f"""Goody price comparison coach. Analyze and return JSON only.
 Product: {query}
 Shops: {shops_summary}
-Price range: €{p_min:.2f}–€{p_max:.2f} ({len(prices)} shops).{hist_line}
+Price range: €{p_min:.2f}–€{p_max:.2f} ({len(prices)} shops, {spread_pct}% spread).{hist_line}
 
-Rules: only use provided data. Be concise. Write in the language of the product query (LT/DE/PL/EN).
+Rules: use only provided data. Be concise. Respond in the query language (LT/DE/PL/EN).
 
 Return ONLY valid JSON:
-{{"verdict":"BUY|WAIT|OK","verdict_label":"1-3 words","verdict_reason":"one sentence","ai_summary":"1-2 sentences","alternative":"cheaper alternative if overpriced else empty","buy_recommendation":"1-2 sentences of specific advice","price_forecast":"one sentence or empty"}}"""
+{{"verdict":"BUY|WAIT|OK","verdict_label":"1-3 words","verdict_reason":"one sentence","ai_summary":"1-2 sentences","alternative":"cheaper alternative product name if clearly overpriced else empty string","buy_recommendation":"1-2 sentences","price_forecast":"one sentence or empty string"}}"""
 
 
 def openai_analyze(query: str, results: list, price_history: dict = None) -> dict:
@@ -1989,16 +1995,20 @@ def post_process(results: list, query: str, ai_data: dict = None, price_history:
     savings_pct = ((price_max - price_min) / price_max * 100) if price_max > 0 else 0
     base_score = min(100, int(savings_pct * 1.5 + 50))
 
-    # Adjust with price history: reward below-avg current prices, penalise above-avg
+    # Adjust with price history: reward below-avg/below-low current prices, penalise above-avg
     hist = price_history or {}
     hist_avg = hist.get("avg", 0)
+    hist_low = hist.get("lowest", 0)
     hist_bonus = 0
     if hist_avg and hist.get("count", 0) >= 2 and price_min > 0:
         ratio = price_min / hist_avg
-        if ratio < 0.90:    # ≥10% below historical avg → bonus
+        if ratio < 0.90:
             hist_bonus = min(15, int((1 - ratio) * 100))
-        elif ratio > 1.10:  # ≥10% above historical avg → mild penalty
+        elif ratio > 1.10:
             hist_bonus = -8
+    # Extra bonus for historical low (independent of avg bonus)
+    if hist_low and price_min > 0 and price_min <= hist_low * 1.02:
+        hist_bonus += 10
 
     deal_score = max(10, min(100, base_score + hist_bonus))
 
