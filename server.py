@@ -1234,7 +1234,13 @@ def scrape_varle(query: str) -> list:
                 name = title_anchor.get_text(strip=True)[:100] if title_anchor else query
                 href = title_anchor["href"] if title_anchor and title_anchor.get("href") else ""
                 link = href if href.startswith("http") else f"https://varle.lt{href}"
-                results.append(_make_result("Varle.lt", "🇱🇹", link, price, name, "varle"))
+                img_el = item.select_one("img[src]") or item.select_one("img[data-src]")
+                img_url = ""
+                if img_el:
+                    img_url = img_el.get("src") or img_el.get("data-src") or ""
+                    if not img_url.startswith("http"):
+                        img_url = ""
+                results.append(_make_result("Varle.lt", "🇱🇹", link, price, name, "varle", img_url))
             except Exception as e:
                 print(f"[Varle item] {e}")
 
