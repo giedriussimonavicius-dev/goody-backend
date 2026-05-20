@@ -1,5 +1,9 @@
 """
-Goody Backend v5.57 — affiliate click tracking:
+Goody Backend v5.58 — security + rate limiting hardening:
+- get_client_ip: rightmost XFF IP (Render-safe, blocks spoofing)
+- per-minute rate limit: 20 req/min per IP (burst protection)
+- /api/click-stats, /api/cache-stats, /api/popular-searches: require DEBUG_API_KEY
+- v5.57: affiliate click tracking:
 - /api/track POST: logs shop + query on each buy-button click (fire-and-forget)
 - /api/click-stats GET: returns click counts per shop
 - v5.56: speed + accuracy improvements:
@@ -546,11 +550,24 @@ def set_cache(key, data, ttl: int = None):
 
 
 def get_client_ip() -> str:
-    """Return the real client IP, honouring Render's X-Forwarded-For proxy header."""
+    """Return the real client IP. Render appends the real IP as the RIGHTMOST entry in
+    X-Forwarded-For, so we use [-1] — the leftmost is client-controlled and spoofable."""
     xff = request.headers.get("X-Forwarded-For", "")
     if xff:
-        return xff.split(",")[0].strip()
+        return xff.split(",")[-1].strip()
     return request.remote_addr or "unknown"
+
+
+_rate_minute_store: dict = {}  # ip → {minute: str, count: int}
+MINUTE_LIMIT = int(os.getenv("MINUTE_LIMIT", "20"))  # max 20 req/min per IP
+
+
+def _check_debug_auth() -> bool:
+    """Return True if DEBUG_API_KEY is set and request carries it."""
+    if not DEBUG_API_KEY:
+        return False
+    return request.headers.get("X-Debug-Key") == DEBUG_API_KEY or \
+           request.args.get("key") == DEBUG_API_KEY
 
 
 def rate_limit(f):
@@ -558,13 +575,29 @@ def rate_limit(f):
     def decorated(*args, **kwargs):
         ip = get_client_ip()
         today = time.strftime("%Y-%m-%d")
+        minute = time.strftime("%Y-%m-%dT%H:%M")
 
         # Purge yesterday's entries ~1% of requests to keep memory bounded
         if random.random() < 0.01:
             stale = [k for k, v in list(rate_store.items()) if v.get("date") != today]
             for k in stale:
                 rate_store.pop(k, None)
+            stale_m = [k for k, v in list(_rate_minute_store.items()) if v.get("minute") != minute]
+            for k in stale_m:
+                _rate_minute_store.pop(k, None)
 
+        # Per-minute limit (burst protection)
+        if ip not in _rate_minute_store or _rate_minute_store[ip]["minute"] != minute:
+            _rate_minute_store[ip] = {"minute": minute, "count": 0}
+        _rate_minute_store[ip]["count"] += 1
+        if _rate_minute_store[ip]["count"] > MINUTE_LIMIT:
+            return jsonify({
+                "error": "rate_limit",
+                "message": f"Per daug užklausų — palaukite minutę ({MINUTE_LIMIT}/min limitas).",
+                "remaining": 0,
+            }), 429
+
+        # Per-day limit
         if ip not in rate_store or rate_store[ip]["date"] != today:
             rate_store[ip] = {"date": today, "count": 0}
 
@@ -2443,6 +2476,8 @@ Rules:
 
 @app.route("/api/popular-searches", methods=["GET"])
 def popular_searches():
+    if not _check_debug_auth():
+        return jsonify({"error": "unauthorized"}), 401
     limit = min(int(request.args.get("limit", 10)), 20)
     sorted_q = sorted(_search_counts.items(), key=lambda x: x[1], reverse=True)[:limit]
     return jsonify({
@@ -2463,12 +2498,16 @@ def track_click():
 
 @app.route("/api/click-stats", methods=["GET"])
 def click_stats():
+    if not _check_debug_auth():
+        return jsonify({"error": "unauthorized"}), 401
     sorted_c = sorted(_click_counts.items(), key=lambda x: x[1], reverse=True)
     return jsonify({"clicks": [{"shop": s, "count": c} for s, c in sorted_c]})
 
 
 @app.route("/api/cache-stats", methods=["GET"])
 def cache_stats():
+    if not _check_debug_auth():
+        return jsonify({"error": "unauthorized"}), 401
     total = _cache_hits + _cache_misses
     hit_rate = round(_cache_hits / total * 100, 1) if total else 0.0
     uptime_h = round((time.time() - _server_start) / 3600, 1)
