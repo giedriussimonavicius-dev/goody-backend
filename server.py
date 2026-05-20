@@ -1927,11 +1927,13 @@ def search():
     # LT shops start immediately (they use the original query, no translation needed).
     # Translation runs in parallel; Amazon shops are added after it finishes.
     # This saves 1–3s on rare LT queries that miss the static dict and need Claude API.
-    executor = ThreadPoolExecutor(max_workers=6)
+    executor = ThreadPoolExecutor(max_workers=8)
     try:
         lt_futures = {
             executor.submit(scrape_varle,  query): "Varle",
             executor.submit(scrape_elesen, query): "Elesen",
+            executor.submit(scrape_pigu,   query): "Pigu",
+            executor.submit(scrape_topo,   query): "Topo",
         }
 
         q_lower = query.lower()
@@ -2074,7 +2076,7 @@ def search_stream():
 
         all_results = []
         shops_done = 0
-        SHOPS_TOTAL = 4  # Active shops: Varle, Elesen, Amazon.DE, Amazon.PL
+        SHOPS_TOTAL = 6  # Active shops: Varle, Elesen, Pigu, Topo, Amazon.DE, Amazon.PL
 
         def _send_partial():
             p = post_process(list(all_results), _query, None, {})
@@ -2090,11 +2092,13 @@ def search_stream():
 
         try:
             # LT shops start immediately; translation runs in parallel; Amazon added after.
-            stream_executor = ThreadPoolExecutor(max_workers=6)
+            stream_executor = ThreadPoolExecutor(max_workers=8)
             try:
                 lt_shop_futures = {
                     stream_executor.submit(scrape_varle,  _query): "Varle",
                     stream_executor.submit(scrape_elesen, _query): "Elesen",
+                    stream_executor.submit(scrape_pigu,   _query): "Pigu",
+                    stream_executor.submit(scrape_topo,   _query): "Topo",
                 }
 
                 q_lower = _query.lower()
@@ -2401,11 +2405,13 @@ Rules:
         scan_ph_fut = _scan_ph_exec.submit(get_price_history, product_name)
 
         all_results = []
-        scan_executor = ThreadPoolExecutor(max_workers=4)
+        scan_executor = ThreadPoolExecutor(max_workers=8)
         try:
             futures = {
                 scan_executor.submit(scrape_varle,   product_name):    "Varle",
                 scan_executor.submit(scrape_elesen,  product_name):    "Elesen",
+                scan_executor.submit(scrape_pigu,    product_name):    "Pigu",
+                scan_executor.submit(scrape_topo,    product_name):    "Topo",
                 scan_executor.submit(scrape_amazon,  query_de, "de"):  "Amazon.DE",
                 scan_executor.submit(scrape_amazon,  query_pl, "pl"):  "Amazon.PL",
             }
@@ -2683,7 +2689,7 @@ def health():
     )
     return jsonify({
         "status": "ok",
-        "version": "5.59",
+        "version": "5.60",
         "uptime_s": uptime_s,
         "shops": ["Varle.lt", "Elesen.lt", "Amazon.DE", "Amazon.PL"],
         "ai": {
@@ -2760,9 +2766,9 @@ if __name__ == "__main__":
 
     port = int(os.getenv("PORT", 5000))
 
-    print("\n🟢 Goody API v5.59")
+    print("\n🟢 Goody API v5.60")
     print(f"📊 Supabase: {'✅ configured' if SUPABASE_URL else '⚠️ not set'}")
-    print("📦 Active shops: Varle + Elesen + Amazon.DE + Amazon.PL")
+    print("📦 Active shops: Varle + Elesen + Pigu + Topo + Amazon.DE + Amazon.PL")
     print(f"🔑 ScraperAPI: {'✅ configured' if SCRAPER_API_KEY else '⚠️ not set'}")
     print(f"🔑 Zyte: {'✅ configured' if ZYTE_API_KEY else '⚠️ not set'}")
     print(f"🤖 Anthropic: {'✅ configured' if ANTHROPIC_API_KEY else '❌ missing'}")
