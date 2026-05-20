@@ -1,10 +1,10 @@
 """
-Goody Backend v5.52 — expanded LT translation dictionaries (40+ new product categories):
-- _LT_DE / _LT_PL: added air conditioner, fan, heater, electric toothbrush, epilator,
-  massager, scale, mattress, LED bulb, lawn mower, robot vacuum, cooker, dishwasher (alt)
-- _LT_CATEGORY_WORDS: added matching detection words for all new categories
-- These additions increase static-translation coverage and improve Amazon DE/PL search quality
-  for common household product searches by Lithuanian users
+Goody Backend v5.53 — price validation improvements, Supabase 90-day filter:
+- validate_price: dishwasher + freezer added to floor rules; laptop (>€80) and
+  air conditioner (>€150) floors added to reject centai misidentifications
+- fetch_price_history_from_supabase: .gte(checked_at, 90d cutoff) — returns only
+  last 90 days so old data doesn't crowd out recent price trends
+- v5.52: 40+ new LT→DE/PL translation entries (kondicionierius, čiužinys, lemputė...)
 - v5.51: Elesen direct-first, Amazon.DE flag fix, configurable affiliate env vars
 """
 
@@ -404,15 +404,18 @@ def save_prices_to_supabase(product_name: str, results: list):
 
 
 def fetch_price_history_from_supabase(product_name: str) -> list:
-    """Returns last 90 days of price rows for a product."""
+    """Returns last 90 days of price rows for a product, most recent first."""
     sb = get_supabase()
     if not sb:
         return []
     try:
+        cutoff = time.strftime("%Y-%m-%dT%H:%M:%SZ",
+                               time.gmtime(time.time() - 90 * 86400))
         resp = (
             sb.table("price_history")
             .select("shop, price, currency, checked_at")
             .eq("product_name", product_name.lower().strip())
+            .gte("checked_at", cutoff)
             .order("checked_at", desc=False)
             .limit(500)
             .execute()
@@ -627,8 +630,13 @@ _TV_WORDS   = ["tv ", " tv", "televizorius", "television", "oled", "qled", "nale
 _MACBOOK_W  = ["macbook"]
 _IPHONE_W   = ["iphone"]
 _GALAXY_W   = ["samsung galaxy s", "samsung galaxy a", "samsung galaxy z", "pixel 8", "pixel 9"]
-_WASHING_W  = ["skalbyklė", "skalbykle", "washing machine", "waschmaschine", "pralka"]
-_FRIDGE_W   = ["šaldytuvas", "saldytuvas", "refrigerator", "kühlschrank", "lodówka"]
+_WASHING_W  = ["skalbyklė", "skalbykle", "washing machine", "waschmaschine", "pralka",
+               "indaplovė", "indaplove", "dishwasher", "spülmaschine", "zmywarka"]
+_FRIDGE_W   = ["šaldytuvas", "saldytuvas", "refrigerator", "kühlschrank", "lodówka",
+               "šaldiklis", "saldiklis", "gefrierschrank", "zamrażarka"]
+_LAPTOP_W   = ["laptop", "notebook", "thinkpad", "ideapad", "vivobook", "zenbook",
+               "dell xps", "surface pro", "chromebook", "kompiuteris"]
+_AIRCON_W   = ["oro kondicionierius", "klimaanlage", "klimatyzator", "air conditioner"]
 _TV_SIZE_RE = re.compile(r"\b(43|50|55|65|75|85)\b")
 
 
@@ -665,8 +673,16 @@ def validate_price(price: float, query: str) -> float:
     if any(w in q for w in _WASHING_W) and price < 100:
         return 0.0
 
-    # Fridge: always > €100
+    # Fridge / freezer: always > €100
     if any(w in q for w in _FRIDGE_W) and price < 100:
+        return 0.0
+
+    # Laptop (non-MacBook): > €80
+    if any(w in q for w in _LAPTOP_W) and price < 80:
+        return 0.0
+
+    # Air conditioner: > €150
+    if any(w in q for w in _AIRCON_W) and price < 150:
         return 0.0
 
     # Global floor: anything below €0.50 is a parse artefact
@@ -2495,7 +2511,7 @@ def health():
     )
     return jsonify({
         "status": "ok",
-        "version": "5.52",
+        "version": "5.53",
         "uptime_s": uptime_s,
         "shops": ["Varle.lt", "Elesen.lt", "Amazon.DE", "Amazon.PL"],
         "ai": {
