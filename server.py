@@ -312,10 +312,57 @@ def suggest_simpler_query(query: str) -> str:
     return " ".join(words[:3]) if len(words) >= 5 else " ".join(words[:2])
 
 
+def _sb_upsert_search(query: str, count: int):
+    """Persist search count to Supabase `searches` table (fire-and-forget).
+    Table DDL: CREATE TABLE searches (query text PRIMARY KEY, count int DEFAULT 1,
+               last_seen timestamptz DEFAULT now());
+    """
+    sb = get_supabase()
+    if not sb:
+        return
+    try:
+        # Use max(existing, in-memory) so counts only ever increase
+        sb.table("searches").upsert(
+            {"query": query, "count": count, "last_seen": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime())},
+        ).execute()
+    except Exception:
+        pass
+
+
+def _sb_load_search_counts():
+    """Load persisted search counts from Supabase into in-memory dict on startup."""
+    rows = _sb_get_popular_searches(200)
+    for row in rows:
+        q = row.get("query", "")
+        c = int(row.get("count", 0))
+        if q and c > 0:
+            _search_counts[q] = max(_search_counts.get(q, 0), c)
+
+
+def _sb_get_popular_searches(limit: int = 10) -> list:
+    """Fetch most searched queries from Supabase."""
+    sb = get_supabase()
+    if not sb:
+        return []
+    try:
+        resp = (
+            sb.table("searches")
+            .select("query, count")
+            .order("count", desc=True)
+            .limit(limit)
+            .execute()
+        )
+        return resp.data or []
+    except Exception:
+        return []
+
+
 def track_search(query: str):
     key = re.sub(r'\s+', ' ', query.lower().strip())
     if key and len(key) >= 2:
         _search_counts[key] = _search_counts.get(key, 0) + 1
+        count = _search_counts[key]
+        threading.Thread(target=_sb_upsert_search, args=(key, count), daemon=True).start()
 
 USER_AGENTS = [
     "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36",
@@ -2709,8 +2756,8 @@ Rules:
 @app.route("/api/popular-searches", methods=["GET"])
 def popular_searches():
     limit = min(int(request.args.get("limit", 10)), 20)
+    # in-memory is pre-seeded from Supabase on startup
     sorted_q = sorted(_search_counts.items(), key=lambda x: x[1], reverse=True)[:limit]
-    # Only return queries searched 2+ times to avoid exposing single user queries
     public = [(q, c) for q, c in sorted_q if c >= 2][:limit]
     return jsonify({
         "searches": [{"query": q, "count": c} for q, c in public],
@@ -2960,6 +3007,7 @@ def _keepalive_worker():
 
 
 threading.Thread(target=_keepalive_worker, daemon=True).start()
+threading.Thread(target=_sb_load_search_counts, daemon=True).start()
 
 
 @app.errorhandler(500)
