@@ -844,14 +844,19 @@ def _walk_for_products(node, query, shop, flag, base_url, src_key, out, depth=0)
         return
     if isinstance(node, dict):
         name = (node.get("name") or node.get("title") or node.get("productName")
-                or node.get("fullName") or node.get("Product_name") or "")
+                or node.get("fullName") or node.get("Product_name")
+                or node.get("product_name") or node.get("label") or "")
         price_val = None
         for pf in ("price", "finalPrice", "priceWithVat", "currentPrice",
-                   "salePrice", "regularPrice", "Price", "priceValue"):
+                   "salePrice", "regularPrice", "Price", "priceValue",
+                   "discountedPrice", "listPrice", "basePrice", "priceIncVat"):
             if pf in node:
                 price_val = node[pf]; break
         if price_val is None and isinstance(node.get("prices"), dict):
-            price_val = node["prices"].get("final") or node["prices"].get("regular")
+            price_val = (node["prices"].get("final") or node["prices"].get("regular")
+                         or node["prices"].get("current") or node["prices"].get("priceWithVat"))
+        if price_val is None and isinstance(node.get("price"), dict):
+            price_val = node["price"].get("amount") or node["price"].get("value")
 
         if name and price_val is not None:
             try:
@@ -859,7 +864,9 @@ def _walk_for_products(node, query, shop, flag, base_url, src_key, out, depth=0)
                 vp = validate_price(p, query)
                 if vp:
                     slug = (node.get("url") or node.get("slug") or
-                            node.get("urlKey") or node.get("link") or "")
+                            node.get("urlKey") or node.get("link") or
+                            node.get("href") or node.get("productUrl") or
+                            node.get("canonical") or "")
                     link = slug if slug.startswith("http") else f"{base_url.rstrip('/')}/{slug.lstrip('/')}"
                     out.append(_make_result(shop, flag, link, vp, str(name)[:100], src_key))
             except (ValueError, TypeError):
@@ -902,11 +909,14 @@ def _extract_spa_products(html: str, query: str, shop: str, flag: str,
             continue
         for pat in [
             r'window\.__(?:INITIAL|PRELOADED|NUXT|APP|REACT_QUERY|REDUX)_?STATE__\s*=\s*(\{.+?\})\s*;',
+            r'window\.__NUXT__\s*=\s*(\{.+?\})\s*(?:;|$)',  # Nuxt 2 (pigu.lt)
             r'window\.(?:state|store|appState|pageData|__data)\s*=\s*(\{.+?\})\s*;',
             r'"products"\s*:\s*(\[.+?\])',
             r'"items"\s*:\s*(\[.+?\])',
             r'"results"\s*:\s*(\[.+?\])',
             r'"hits"\s*:\s*(\[.+?\])',
+            r'"productList"\s*:\s*(\[.+?\])',
+            r'"searchResults"\s*:\s*(\[.+?\])',
         ]:
             m = re.search(pat, txt, re.DOTALL)
             if not m:
