@@ -2743,7 +2743,9 @@ Rules:
             pass
         _scan_ph_exec.shutdown(wait=False)
 
-        deduped_for_scan_ai = deduplicate_by_shop(all_results)
+        _scan_rel = [r for r in all_results if r.get("price", 0) > 0
+                     and is_relevant_result(product_name, r.get("product_title", ""))] or all_results
+        deduped_for_scan_ai = deduplicate_by_shop(_scan_rel)
         ai_data = analyze_deal_with_ai(product_name, deduped_for_scan_ai, price_history)
         result = post_process(all_results, product_name, ai_data, price_history)
 
