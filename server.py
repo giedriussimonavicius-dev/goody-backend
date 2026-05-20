@@ -1,5 +1,5 @@
 """
-Goody Backend v5.81 — localized no-results + post_process lang detection:
+Goody Backend v5.82 — localized buy_recommendation fallback in post_process:
 - Relevance filter now runs BEFORE dedup (keeps cheapest relevant result per shop)
 - Barcode results cached in-memory permanently (barcodes don't change)
 - SPA extractor: +Nuxt2 window.__NUXT__, +productList/searchResults, +more price/URL fields
@@ -2198,6 +2198,17 @@ def post_process(results: list, query: str, ai_data: dict = None, price_history:
     ]["is_best_value"] = True
 
     ai = ai_data or {}
+    q_low2 = query.lower()
+    _is_lt2 = _is_lt_query(query) or any(ord(c) > 127 for c in query[:20])
+    _is_de2 = any(c in q_low2 for c in ("ä", "ö", "ü", "ß")) or any(w in q_low2 for w in ("waschmaschine", "kühlschrank", "fernseher"))
+    _is_pl2 = any(c in q_low2 for c in ("ę", "ó", "ń")) or any(w in q_low2 for w in ("pralka", "odkurzacz", "lodówka"))
+    _lang2 = "lt" if _is_lt2 else ("de" if _is_de2 else ("pl" if _is_pl2 else "en"))
+    _best_price_fallback = {
+        "lt": f"Geriausia rasta kaina €{price_min:.2f}. Palyginkite pristatymą ir pardavėją.",
+        "de": f"Bester gefundener Preis €{price_min:.2f}. Versandkosten und Händler vergleichen.",
+        "pl": f"Najlepsza znaleziona cena €{price_min:.2f}. Porównaj dostawę i sprzedawcę.",
+        "en": f"Best price found: €{price_min:.2f}. Compare delivery and seller before buying.",
+    }[_lang2]
     savings_pct = ((price_max - price_min) / price_max * 100) if price_max > 0 else 0
     base_score = min(100, int(savings_pct * 1.5 + 50))
 
@@ -2224,10 +2235,7 @@ def post_process(results: list, query: str, ai_data: dict = None, price_history:
         "verdict_label": ai.get("verdict_label", "Normal"),
         "verdict_reason": ai.get("verdict_reason", ""),
         "ai_summary": ai.get("ai_summary", ""),
-        "buy_recommendation": ai.get(
-            "buy_recommendation",
-            f"Best price found: €{price_min:.2f}"
-        ),
+        "buy_recommendation": ai.get("buy_recommendation", _best_price_fallback),
         "alternative": ai.get("alternative", ""),
         "price_forecast": ai.get("price_forecast", ""),
         "deal_score": deal_score,
