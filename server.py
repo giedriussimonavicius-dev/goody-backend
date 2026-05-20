@@ -2349,7 +2349,7 @@ def search():
 
     track_search(query)
     set_cache(cache_key, result, ttl=get_cache_ttl(query))
-    threading.Thread(target=save_prices_to_supabase, args=(query, all_results), daemon=True).start()
+    threading.Thread(target=save_prices_to_supabase, args=(query, result.get("results", all_results)), daemon=True).start()
 
     ip = get_client_ip()
     used = rate_store.get(ip, {}).get("count", 1)
@@ -2511,7 +2511,8 @@ def search_stream():
 
             track_search(_query)
             set_cache(cache_key, result, ttl=get_cache_ttl(_query))
-            threading.Thread(target=save_prices_to_supabase, args=(_query, all_results), daemon=True).start()
+            # Save only relevant/deduped results to keep price history clean
+            threading.Thread(target=save_prices_to_supabase, args=(_query, result.get("results", all_results)), daemon=True).start()
 
             yield _sse("complete", result)
 
@@ -2868,7 +2869,7 @@ Rules:
         set_cache(cache_key, result)
 
         track_search(product_name)
-        threading.Thread(target=save_prices_to_supabase, args=(product_name, all_results), daemon=True).start()
+        threading.Thread(target=save_prices_to_supabase, args=(product_name, result.get("results", all_results)), daemon=True).start()
 
         _ip = get_client_ip()
         used = rate_store.get(_ip, {}).get("count", 1)
