@@ -1463,6 +1463,14 @@ def _make_result(shop, flag, link, price, name, source):
 # ── TRANSLATION ──
 _translate_cache: dict = {}
 
+_LT_NORM_TABLE = str.maketrans("ąčęėįšųūžĄČĘĖĮŠŲŪŽ", "aceeisuuzACEEISUUZ")
+
+
+def _norm_lt(s: str) -> str:
+    """Strip Lithuanian diacritics for accent-insensitive matching."""
+    return s.translate(_LT_NORM_TABLE)
+
+
 # Lithuanian category words that trigger translation for Amazon DE/PL search
 _LT_CATEGORY_WORDS = [
     "ausines", "ausinės", "ausinis", "siurblys", "siurblio", "dulkių",
@@ -1500,6 +1508,14 @@ _LT_CATEGORY_WORDS = [
     # Gaming, fitness, multimedia
     "žaidimų", "bėgimo", "grotuvas", "įkroviklis", "projektorius",
 ]
+# Normalized (no diacritics) version so accent-free queries also trigger translation
+_LT_CATEGORY_WORDS_NORM = [_norm_lt(w) for w in _LT_CATEGORY_WORDS]
+
+
+def _is_lt_query(q: str) -> bool:
+    """Return True if q contains any Lithuanian product category word (with or without diacritics)."""
+    q_norm = _norm_lt(q.lower())
+    return any(w in q_norm for w in _LT_CATEGORY_WORDS_NORM)
 
 # Static word-for-word replacement — avoids Claude API for common LT product searches.
 # Words are sorted longest-first so "dulkių siurblys" matches before "siurblys".
@@ -1658,13 +1674,6 @@ _LT_PL: list[tuple[str, str]] = sorted([
 ], key=lambda t: -len(t[0]))
 
 
-_LT_NORM_TABLE = str.maketrans("ąčęėįšųūžĄČĘĖĮŠŲŪŽ", "aceeisuuzACEEISUUZ")
-
-def _norm_lt(s: str) -> str:
-    """Strip Lithuanian diacritics for accent-insensitive matching."""
-    return s.translate(_LT_NORM_TABLE)
-
-
 def _static_translate(query: str, target_lang: str) -> str:
     """Replace LT category words with target-language equivalents. Free and instant.
     Normalizes LT diacritics first (ą→a, č→c, etc.) so typed-without-accents queries work."""
@@ -1690,10 +1699,8 @@ def claude_translate(query: str, target_lang: str = "en") -> str:
         for k in keys[:200]:
             del _translate_cache[k]
 
-    q_lower = query.lower()
-
     # Fast path: no Lithuanian words → brand/model works in any language
-    if not any(w in q_lower for w in _LT_CATEGORY_WORDS):
+    if not _is_lt_query(query):
         _translate_cache[cache_key] = query
         return query
 
@@ -2075,8 +2082,7 @@ def search():
             executor.submit(scrape_topo,   query): "Topo",
         }
 
-        q_lower = query.lower()
-        is_lt_query = any(w in q_lower for w in _LT_CATEGORY_WORDS)
+        is_lt_query = _is_lt_query(query)
         query_de = query
         query_pl = query
         if is_lt_query:
@@ -2240,8 +2246,7 @@ def search_stream():
                     stream_executor.submit(scrape_topo,   _query): "Topo",
                 }
 
-                q_lower = _query.lower()
-                _is_lt = any(w in q_lower for w in _LT_CATEGORY_WORDS)
+                _is_lt = _is_lt_query(_query)
                 q_de = _query
                 q_pl = _query
                 if _is_lt:
