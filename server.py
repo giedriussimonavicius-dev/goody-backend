@@ -1,5 +1,5 @@
 """
-Goody Backend v5.89 — rule_based AI uses price history for BUY/WAIT signals:
+Goody Backend v5.90 — health endpoint version + shops list corrected:
 - Relevance filter now runs BEFORE dedup (keeps cheapest relevant result per shop)
 - Barcode results cached in-memory permanently (barcodes don't change)
 - SPA extractor: +Nuxt2 window.__NUXT__, +productList/searchResults, +more price/URL fields
@@ -3284,9 +3284,9 @@ def health():
     )
     return jsonify({
         "status": "ok",
-        "version": "5.61",
+        "version": "5.90",
         "uptime_s": uptime_s,
-        "shops": ["Varle.lt", "Elesen.lt", "Amazon.DE", "Amazon.PL"],
+        "shops": ["Varle.lt", "Elesen.lt", "Pigu.lt", "Topo centras", "Amazon.DE", "Amazon.PL"],
         "ai": {
             "provider": AI_PROVIDER,
             "model": AI_MODEL_CLAUDE if AI_PROVIDER == "claude" else AI_MODEL_OPENAI,
