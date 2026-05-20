@@ -1,5 +1,8 @@
 """
-Goody Backend v5.56 — speed + accuracy improvements:
+Goody Backend v5.57 — affiliate click tracking:
+- /api/track POST: logs shop + query on each buy-button click (fire-and-forget)
+- /api/click-stats GET: returns click counts per shop
+- v5.56: speed + accuracy improvements:
 - LT shops (Varle/Elesen) now start immediately in parallel with translation; Amazon
   added after translation completes → saves 1-3s when static dict misses and Claude API
   is called (applies to both /api/search and /api/search-stream)
@@ -208,6 +211,7 @@ cache = {}
 rate_store = {}
 _fx_cache = {"ts": 0, "rates": {"PLN": 0.233, "GBP": 1.17}}
 _search_counts: dict = {}
+_click_counts: dict = {}   # shop → number of buy-button clicks
 _cache_hits: int = 0
 _cache_misses: int = 0
 _server_start: float = time.time()
@@ -2445,6 +2449,22 @@ def popular_searches():
         "searches": [{"query": q, "count": c} for q, c in sorted_q],
         "total_unique": len(_search_counts)
     })
+
+
+@app.route("/api/track", methods=["POST"])
+def track_click():
+    data = request.get_json(silent=True) or {}
+    shop = (data.get("shop") or "")[:50].strip()
+    query = (data.get("q") or "")[:100].strip()
+    if shop:
+        _click_counts[shop] = _click_counts.get(shop, 0) + 1
+    return "", 204
+
+
+@app.route("/api/click-stats", methods=["GET"])
+def click_stats():
+    sorted_c = sorted(_click_counts.items(), key=lambda x: x[1], reverse=True)
+    return jsonify({"clicks": [{"shop": s, "count": c} for s, c in sorted_c]})
 
 
 @app.route("/api/cache-stats", methods=["GET"])
