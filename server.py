@@ -1854,7 +1854,10 @@ def search():
     if cached:
         if request.headers.get("If-None-Match") == etag:
             return "", 304
+        age_s = int(time.time() - cache.get(cache_key, {}).get("ts", time.time()))
+        cached = dict(cached)
         cached["_cached"] = True
+        cached["_cache_age_s"] = age_s
         resp = jsonify(cached)
         resp.headers["ETag"] = etag
         resp.headers["Cache-Control"] = "private, max-age=900"
@@ -2010,6 +2013,7 @@ def search_stream():
         if cached:
             cached = dict(cached)
             cached["_cached"] = True
+            cached["_cache_age_s"] = int(time.time() - cache.get(cache_key, {}).get("ts", time.time()))
             cached["_rate"] = rate_info
             yield _sse("complete", cached)
             return
