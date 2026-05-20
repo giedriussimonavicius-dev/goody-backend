@@ -1919,14 +1919,29 @@ def empty_ai():
 
 
 def rule_based_ai_analyze(query: str, results: list, price_history: dict = None) -> dict:
+    # Detect query language for localised rule-based output
+    is_lt = _is_lt_query(query) or any(ord(c) > 127 for c in query[:20])
+    q_low = query.lower()
+    is_de = any(c in q_low for c in ("ä", "ö", "ü", "ß")) or any(w in q_low for w in ("waschmaschine", "kühlschrank", "fernseher", "drucker"))
+    is_pl = any(c in q_low for c in ("ę", "ó", "ń")) or any(w in q_low for w in ("pralka", "odkurzacz", "lodówka", "golarka", "ekspres"))
+    lang = "lt" if is_lt else ("de" if is_de else ("pl" if is_pl else "en"))
+
+    _L = {
+        "lt": {"no_price": "Kainų nerasta.", "try_specific": "Pabandykite tikslesnį pavadinimą.", "refine": "Patikslinkite paiešką.", "one_seller": "Rastas tik 1 pardavėjas — palyginti negalime.", "cheap_pct": "Pigiausia kaina yra {pct:.0f}% žemiau brangiausios.", "near_avg": "Geriausia kaina artima rinkos vidurkiui.", "normal": "Kaina atrodo normali.", "rec": "Geriausia rasta kaina €{pmin:.2f}. Palyginkite pristatymą ir pardavėją prieš pirkdami.", "summary": "Goody rado {n} kainų. Pigiausia: €{pmin:.2f}, vidurkis: €{pavg:.2f}."},
+        "de": {"no_price": "Keine Preise gefunden.", "try_specific": "Bitte genaueren Produktnamen eingeben.", "refine": "Suche verfeinern.", "one_seller": "Nur 1 Händler gefunden — kein Preisvergleich möglich.", "cheap_pct": "Das günstigste Angebot liegt {pct:.0f}% unter dem teuersten.", "near_avg": "Der beste Preis liegt nahe am Marktdurchschnitt.", "normal": "Der Preis sieht angemessen aus.", "rec": "Bester gefundener Preis €{pmin:.2f}. Versandkosten und Händler vergleichen.", "summary": "Goody fand {n} Preise. Günstigster: €{pmin:.2f}, Durchschnitt: €{pavg:.2f}."},
+        "pl": {"no_price": "Nie znaleziono cen.", "try_specific": "Wpisz dokładniejszą nazwę produktu.", "refine": "Doprecyzuj wyszukiwanie.", "one_seller": "Znaleziono tylko 1 sprzedawcę — porównanie niemożliwe.", "cheap_pct": "Najtańsza oferta jest {pct:.0f}% poniżej najdroższej.", "near_avg": "Najlepsza cena bliska średniej rynkowej.", "normal": "Cena wygląda normalnie.", "rec": "Najlepsza znaleziona cena €{pmin:.2f}. Porównaj dostawę i sprzedawcę.", "summary": "Goody znalazło {n} cen. Najtańsza: €{pmin:.2f}, średnia: €{pavg:.2f}."},
+        "en": {"no_price": "No prices found.", "try_specific": "Try a more specific product name.", "refine": "Refine your search.", "one_seller": "Only one seller found — price comparison unavailable.", "cheap_pct": "The cheapest offer is {pct:.0f}% below the highest found price.", "near_avg": "The best price is close to the current market average.", "normal": "The current price looks reasonable.", "rec": "Best found price is €{pmin:.2f}. Compare delivery and seller reliability before buying.", "summary": "Goody found {n} price(s). Lowest: €{pmin:.2f}, average: €{pavg:.2f}."},
+    }
+    L = _L.get(lang, _L["en"])
+
     if not results:
         return {
             "verdict": "WAIT",
             "verdict_label": "Not found",
-            "verdict_reason": "No prices found.",
-            "ai_summary": "Try a more specific product name.",
+            "verdict_reason": L["no_price"],
+            "ai_summary": L["try_specific"],
             "alternative": "",
-            "buy_recommendation": "Refine your search.",
+            "buy_recommendation": L["refine"],
             "price_forecast": ""
         }
 
@@ -1943,28 +1958,28 @@ def rule_based_ai_analyze(query: str, results: list, price_history: dict = None)
     if len(prices) == 1:
         verdict = "OK"
         label = "Normal"
-        reason = "Only one valid price was found, so comparison confidence is limited."
+        reason = L["one_seller"]
     elif spread_pct >= 20:
         verdict = "BUY"
         label = "Buy now"
-        reason = f"The cheapest offer is about {spread_pct:.0f}% below the highest found price."
+        reason = L["cheap_pct"].format(pct=spread_pct)
     elif price_min > price_avg * 0.97:
         verdict = "WAIT"
         label = "Wait"
-        reason = "The best price is close to the current market average."
+        reason = L["near_avg"]
     else:
         verdict = "OK"
         label = "Normal"
-        reason = "The current price looks reasonable, but not exceptional."
+        reason = L["normal"]
 
     return {
         "verdict": verdict,
         "verdict_label": label,
         "verdict_reason": reason,
-        "ai_summary": f"Goody found {len(prices)} valid price point(s). Lowest price: €{price_min:.2f}, average: €{price_avg:.2f}.",
+        "ai_summary": L["summary"].format(n=len(prices), pmin=price_min, pavg=price_avg),
         "alternative": "",
-        "buy_recommendation": f"Best found price is €{price_min:.2f}. Compare delivery and seller reliability before buying.",
-        "price_forecast": "No strong price history signal available."
+        "buy_recommendation": L["rec"].format(pmin=price_min),
+        "price_forecast": "",
     }
 
 
