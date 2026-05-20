@@ -1,5 +1,8 @@
 """
-Goody Backend v5.63 — translation improvements:
+Goody Backend v5.65 — search quality:
+- Cache version bumped to v64 (invalidates stale pre-Pigu/Topo results)
+- v5.64 — diacritics-insensitive LT query detection via _is_lt_query
+- v5.63 — translation improvements:
 - _static_translate: diacritics-insensitive matching (ą→a, č→c, etc.) — no-accent queries now work
 - Added 20+ new LT product categories: smartwatch, earbuds, juicer, hair straightener, food processor,
   humidifier, thermometer, game console, treadmill, bread maker, player, charger, projector
@@ -2044,7 +2047,7 @@ def search():
     original_query = query
     query = resolve_query(query)
 
-    cache_key = hashlib.md5(f"v60:{query.lower()}".encode()).hexdigest()
+    cache_key = hashlib.md5(f"v64:{query.lower()}".encode()).hexdigest()
     etag = f'"{cache_key}"'
     cached = get_cache(cache_key)
 
@@ -2196,7 +2199,7 @@ def search_stream():
     used = rate_store.get(ip, {}).get("count", 1)
     rate_info = {"used": used, "limit": DAILY_FREE_LIMIT, "remaining": max(0, DAILY_FREE_LIMIT - used)}
 
-    cache_key = hashlib.md5(f"v60:{query.lower()}".encode()).hexdigest()
+    cache_key = hashlib.md5(f"v64:{query.lower()}".encode()).hexdigest()
 
     # Freeze query strings for generator closure
     _query = query
@@ -2527,7 +2530,7 @@ Rules:
                 "confidence": confidence
             }), 422
 
-        cache_key = hashlib.md5(f"scan_v60:{product_name.lower()}".encode()).hexdigest()
+        cache_key = hashlib.md5(f"scan_v64:{product_name.lower()}".encode()).hexdigest()
         cached = get_cache(cache_key)
 
         if cached:
