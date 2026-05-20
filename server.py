@@ -2398,6 +2398,51 @@ def price_history_endpoint():
     })
 
 
+@app.route("/api/watchlist-check", methods=["POST"])
+def watchlist_check():
+    """Check Supabase price history for watchlist items — no ScraperAPI credits used."""
+    data = request.get_json(silent=True) or {}
+    items = data.get("items", [])
+    if not items or not isinstance(items, list):
+        return jsonify({"alerts": []}), 200
+    if not (SUPABASE_URL and SUPABASE_KEY):
+        return jsonify({"alerts": []}), 200
+
+    # Only check within last 7 days (recent enough to be useful)
+    cutoff = time.time() - 7 * 86400
+    alerts = []
+    for item in items[:20]:  # cap at 20 to avoid abuse
+        name = (item.get("name") or "").strip()[:200]
+        target = item.get("target")
+        if not name:
+            continue
+        try:
+            rows = fetch_price_history_from_supabase(name)
+            recent = [r for r in rows if r.get("checked_at", "") and
+                      time.mktime(time.strptime(r["checked_at"][:19], "%Y-%m-%dT%H:%M:%S")) > cutoff]
+            if not recent:
+                continue
+            prices = [float(r.get("price", 0)) for r in recent if float(r.get("price", 0)) > 0]
+            if not prices:
+                continue
+            cur_min = min(prices)
+            best_row = min(recent, key=lambda r: float(r.get("price", 0) or 999999))
+            alert = {"name": name, "current_price": round(cur_min, 2), "shop": best_row.get("shop", "")}
+            if target and float(target) > 0:
+                if cur_min <= float(target):
+                    alert["hit_target"] = True
+                    alerts.append(alert)
+            else:
+                # No target: notify if price dropped vs stored item.price
+                original = item.get("price")
+                if original and float(original) > 0 and cur_min < float(original) - 1:
+                    alert["drop"] = round(float(original) - cur_min, 2)
+                    alerts.append(alert)
+        except Exception as e:
+            print(f"[watchlist-check] {name}: {e}")
+    return jsonify({"alerts": alerts}), 200
+
+
 @app.route("/api/classify", methods=["POST"])
 @rate_limit
 def classify_route():
