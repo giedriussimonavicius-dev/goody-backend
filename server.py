@@ -1,5 +1,6 @@
 """
-Goody Backend v6.25 — _ph_exec.shutdown in finally (GeneratorExit cleanup fix):
+Goody Backend v6.26 — alarm/lamp backend icons; vaizdo/veiksmo LT triggers; scan executor cleanup:
+- v6.25 — _ph_exec.shutdown in finally (GeneratorExit cleanup fix):
 - v6.24 — žadintuvas→Wecker/budzik; lempa→Lampe/lampa; router/mic/keyboard icons:
 - v6.23 — mikrofonas→Mikrofon/mikrofon; maršrutizatorius→Router; išmanioji→Smart:
 - v6.16 — garų→Dampf/parowy standalone; nešiojamas+product translation fixes:
@@ -348,6 +349,9 @@ _CATEGORY_ICON_MAP = [
     (["mikrofonas", "microphone", "mikrofon", "condenser mic", "podcast"], "🎙️"),
     (["marsrutizatorius", "router", "mesh wifi", "access point", "switch", "tinklo"], "🌐"),
     (["klaviatura", "klaviatūra", "keyboard", "klawiatura", "tastatur", "mechanine"], "⌨️"),
+    (["zadintuvas", "zadintuva", "wecker", "budzik", "alarm clock"], "⏰"),
+    (["lempa", "lampe", "lampa", "led juosta", "led strip", "led lamp", "smart lamp",
+      "sviestuvas", "šviestuvai", "prožektorius"], "💡"),
     (["nokia"], "📱"),
 ]
 
@@ -1914,6 +1918,8 @@ _LT_CATEGORY_WORDS = [
     "lempa",
     # Keyboard (trigger for icon; klaviatūra already translates it)
     "klaviatura",
+    # Video / action camera (dict has entries but triggers were missing)
+    "vaizdo", "veiksmo",
 ]
 # Normalized (no diacritics) version so accent-free queries also trigger translation
 _LT_CATEGORY_WORDS_NORM = [_norm_lt(w) for w in _LT_CATEGORY_WORDS]
@@ -3302,6 +3308,7 @@ Rules:
                 print(f"[Scan timeout] {e}")
         finally:
             scan_executor.shutdown(wait=False)
+            _scan_ph_exec.shutdown(wait=False)
 
         if isinstance(price_visible, (int, float)) and price_visible > 1:
             all_results.insert(0, {
@@ -3331,7 +3338,6 @@ Rules:
             price_history = scan_ph_fut.result(timeout=1)
         except Exception:
             pass
-        _scan_ph_exec.shutdown(wait=False)
 
         _scan_rel = [r for r in all_results if r.get("price", 0) > 0
                      and is_relevant_result(product_name, r.get("product_title", ""))] or all_results
@@ -3568,7 +3574,7 @@ def health():
     )
     return jsonify({
         "status": "ok",
-        "version": "6.25",
+        "version": "6.26",
         "uptime_s": uptime_s,
         "shops": ["Varle.lt", "Elesen.lt", "Pigu.lt", "Topo centras", "Amazon.DE", "Amazon.PL"],
         "ai": {
@@ -3646,7 +3652,7 @@ if __name__ == "__main__":
 
     port = int(os.getenv("PORT", 5000))
 
-    print("\n🟢 Goody API v6.25")
+    print("\n🟢 Goody API v6.26")
     print(f"📊 Supabase: {'✅ configured' if SUPABASE_URL else '⚠️ not set'}")
     print("📦 Active shops: Varle + Elesen + Pigu + Topo + Amazon.DE + Amazon.PL")
     print(f"🔑 ScraperAPI: {'✅ configured' if SCRAPER_API_KEY else '⚠️ not set'}")
