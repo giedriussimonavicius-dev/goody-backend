@@ -1,5 +1,6 @@
 """
-Goody Backend v6.32 — icon fixes: nesiojamas→nesiojamas kompiuteris💻; lempute💡; robotinis🤖:
+Goody Backend v6.33 — LT shop render_js fallback (Varle/Pigu/Topo/Elesen CSR fix):
+- v6.32 — icon fixes: nesiojamas→nesiojamas kompiuteris💻; lempute💡; robotinis🤖:
 - v6.31 — phone📱 brands (motorola/honor/realme/oppo/vivo); ps5/ps4🎮; fix aparat→aparat foto📷:
 - v6.30 — icon keyword fixes: bügeleisen👕 umlaut; sviestuvai/prozektorius💡 norm:
 - v6.29 — ☕coffee/kettle split from 🍳; 🤖robot vacuum; 🛴scooter split; DE/PL icon gaps:
@@ -1265,127 +1266,137 @@ def _varle_from_next_data(html: str, query: str) -> list:
     return results
 
 
-def scrape_varle(query: str) -> list:
-    results = []
-
-    try:
-        url = f"https://varle.lt/search/?q={requests.utils.quote(query)}"
-        # Varle's ld+json is server-rendered; try direct first (2s max so ScraperAPI fallback
-        # still completes within the 11s pool timeout: 2s direct + 7s scraper = 9s total)
+def _scrape_varle_from_html(html: str, query: str) -> list:
+    """Extract Varle results from HTML using all available strategies."""
+    results = _varle_from_next_data(html, query)
+    if results:
+        return results
+    results = _extract_spa_products(html, query, "Varle.lt", "🇱🇹", "https://varle.lt", "varle")
+    if results:
+        return results
+    soup = BeautifulSoup(html, "html.parser")
+    items = (soup.select(".GRID_ITEM") or
+             soup.select("[class*='product-card']") or
+             soup.select("[class*='product-item']") or
+             soup.select("[data-product-id]"))
+    print(f"[Varle DOM] {len(items)} items")
+    for item in items[:8]:
         try:
-            resp = _http.get(url, headers=get_headers("lt"), timeout=2, allow_redirects=True)
-            if resp.status_code != 200:
-                resp = None
-        except Exception:
-            resp = None
-        if not resp:
-            resp = fetch_url(url, "lt", render_js=False, scraper_timeout=7)
-
-        if not resp or resp.status_code != 200:
-            print(f"[Varle] failed {resp.status_code if resp else 'no response'}")
-            return results
-
-        # Strategy 1: parse __NEXT_DATA__ JSON (prices fully populated in SSR payload)
-        results = _varle_from_next_data(resp.text, query)
-        if results:
-            return results
-
-        # Strategy 2: ld+json (Varle embeds Product + Offers with prices in schema.org script)
-        results = _extract_spa_products(resp.text, query, "Varle.lt", "🇱🇹",
-                                        "https://varle.lt", "varle")
-        if results:
-            return results
-
-        # Strategy 3: DOM fallback (prices may be empty without JS)
-        soup = BeautifulSoup(resp.text, "html.parser")
-        items = soup.select(".GRID_ITEM")
-        print(f"[Varle DOM] {len(items)} items")
-
-        for item in items[:8]:
-            try:
-                price_el = item.select_one(".price-tag") or item.select_one(".price-value")
-                if not price_el:
-                    continue
-                price = validate_price(parse_price(price_el.get_text()), query)
-                if not price:
-                    continue
-                title_anchor = item.select_one(".product-title a")
-                name = title_anchor.get_text(strip=True)[:100] if title_anchor else query
-                if not is_relevant_result(query, name):
-                    continue
-                href = title_anchor["href"] if title_anchor and title_anchor.get("href") else ""
-                link = href if href.startswith("http") else f"https://varle.lt{href}"
-                img_el = item.select_one("img[src]") or item.select_one("img[data-src]")
-                img_url = ""
-                if img_el:
-                    img_url = img_el.get("src") or img_el.get("data-src") or ""
-                    if not img_url.startswith("http"):
-                        img_url = ""
-                results.append(_make_result("Varle.lt", "🇱🇹", link, price, name, "varle", img_url))
-            except Exception as e:
-                print(f"[Varle item] {e}")
-
-    except Exception as e:
-        print(f"[Varle] {e}")
-
+            price_el = (item.select_one(".price-tag") or item.select_one(".price-value") or
+                        item.select_one("[class*='price']"))
+            if not price_el:
+                continue
+            price = validate_price(parse_price(price_el.get_text()), query)
+            if not price:
+                continue
+            title_anchor = (item.select_one(".product-title a") or
+                            item.select_one("h2 a") or item.select_one("h3 a") or
+                            item.select_one("a[href*='/prekes/']") or item.select_one("a[href]"))
+            name = title_anchor.get_text(strip=True)[:100] if title_anchor else query
+            if not is_relevant_result(query, name):
+                continue
+            href = title_anchor["href"] if title_anchor and title_anchor.get("href") else ""
+            link = href if href.startswith("http") else f"https://varle.lt{href}"
+            img_el = item.select_one("img[src]") or item.select_one("img[data-src]")
+            img_url = ""
+            if img_el:
+                img_url = img_el.get("src") or img_el.get("data-src") or ""
+                if not img_url.startswith("http"):
+                    img_url = ""
+            results.append(_make_result("Varle.lt", "🇱🇹", link, price, name, "varle", img_url))
+        except Exception as e:
+            print(f"[Varle item] {e}")
     return results
+
+
+def scrape_varle(query: str) -> list:
+    url = f"https://varle.lt/search/?q={requests.utils.quote(query)}"
+    try:
+        resp = _http.get(url, headers=get_headers("lt"), timeout=3, allow_redirects=True)
+        if resp.status_code != 200:
+            resp = None
+    except Exception:
+        resp = None
+    if not resp:
+        resp = fetch_url(url, "lt", render_js=False, scraper_timeout=7)
+
+    if resp and resp.status_code == 200:
+        results = _scrape_varle_from_html(resp.text, query)
+        if results:
+            return results
+        # Static HTML had no results — try JS-rendered version (Varle may have shifted to CSR)
+        print("[Varle] static=0, retrying with render_js=True")
+        resp_js = fetch_url(url, "lt", render_js=True, scraper_timeout=8)
+        if resp_js and resp_js.status_code == 200:
+            return _scrape_varle_from_html(resp_js.text, query)
+    else:
+        print(f"[Varle] failed {resp.status_code if resp else 'no response'}")
+    return []
 
 
 # ── PIGU.LT ──
-def scrape_pigu(query: str) -> list:
-    results = []
-    try:
-        # Pigu uses searchPhrase param; try direct first (free), then ScraperAPI
-        url = f"https://pigu.lt/lt/search?searchPhrase={requests.utils.quote(query)}"
-        resp = None
+def _scrape_pigu_from_html(html: str, query: str) -> list:
+    results = _extract_spa_products(html, query, "Pigu.lt", "🇱🇹", "https://pigu.lt", "pigu")
+    if results:
+        return results
+    soup = BeautifulSoup(html, "html.parser")
+    cards = (soup.select(".search-result-item") or
+             soup.select(".product-block") or
+             soup.select("[class*='product-card']") or
+             soup.select("[class*='product-item']") or
+             soup.select("[class*='search-item']") or
+             soup.select("[data-product-id]"))
+    for card in cards[:8]:
         try:
-            resp = _http.get(url, headers=get_headers("lt"), timeout=2, allow_redirects=True)
-            if resp.status_code != 200:
-                resp = None
-        except Exception:
-            resp = None
-        if not resp:
-            resp = fetch_url(url, "lt", render_js=False, scraper_timeout=6)
-        if not resp or resp.status_code != 200:
-            print(f"[Pigu] failed {resp.status_code if resp else 'no resp'}")
-            return results
-        results = _extract_spa_products(resp.text, query, "Pigu.lt", "🇱🇹",
-                                        "https://pigu.lt", "pigu")
-        if not results:
-            # DOM fallback: pigu search result cards
-            soup = BeautifulSoup(resp.text, "html.parser")
-            cards = (soup.select(".search-result-item") or
-                     soup.select(".product-block") or
-                     soup.select("[class*='product-card']") or
-                     soup.select("[class*='search-item']"))
-            for card in cards[:8]:
-                try:
-                    p_el = (card.select_one("[class*='price']") or
-                            card.select_one("[itemprop='price']"))
-                    price = validate_price(parse_price(p_el.get_text() if p_el else ""), query)
-                    if not price:
-                        continue
-                    name_el = (card.select_one("h2") or card.select_one("h3") or
-                               card.select_one("[class*='title']") or card.select_one("a"))
-                    name = name_el.get_text(strip=True)[:100] if name_el else query
-                    if not is_relevant_result(query, name):
-                        continue
-                    a_el = card.select_one("a[href]")
-                    href = a_el["href"] if a_el else ""
-                    link = href if href.startswith("http") else f"https://pigu.lt{href}"
-                    img_el = card.select_one("img[src]") or card.select_one("img[data-src]")
+            p_el = card.select_one("[class*='price']") or card.select_one("[itemprop='price']")
+            price = validate_price(parse_price(p_el.get_text() if p_el else ""), query)
+            if not price:
+                continue
+            name_el = (card.select_one("h2") or card.select_one("h3") or
+                       card.select_one("[class*='title']") or card.select_one("a"))
+            name = name_el.get_text(strip=True)[:100] if name_el else query
+            if not is_relevant_result(query, name):
+                continue
+            a_el = card.select_one("a[href]")
+            href = a_el["href"] if a_el else ""
+            link = href if href.startswith("http") else f"https://pigu.lt{href}"
+            img_el = card.select_one("img[src]") or card.select_one("img[data-src]")
+            img_url = ""
+            if img_el:
+                img_url = img_el.get("src") or img_el.get("data-src") or ""
+                if not img_url.startswith("http"):
                     img_url = ""
-                    if img_el:
-                        img_url = img_el.get("src") or img_el.get("data-src") or ""
-                        if not img_url.startswith("http"):
-                            img_url = ""
-                    results.append(_make_result("Pigu.lt", "🇱🇹", link, price, name, "pigu", img_url))
-                except Exception:
-                    pass
-    except Exception as e:
-        print(f"[Pigu] {e}")
-    print(f"[Pigu] {len(results)} results")
+            results.append(_make_result("Pigu.lt", "🇱🇹", link, price, name, "pigu", img_url))
+        except Exception:
+            pass
     return results
+
+
+def scrape_pigu(query: str) -> list:
+    url = f"https://pigu.lt/lt/search?searchPhrase={requests.utils.quote(query)}"
+    resp = None
+    try:
+        resp = _http.get(url, headers=get_headers("lt"), timeout=3, allow_redirects=True)
+        if resp.status_code != 200:
+            resp = None
+    except Exception:
+        resp = None
+    if not resp:
+        resp = fetch_url(url, "lt", render_js=False, scraper_timeout=7)
+    if resp and resp.status_code == 200:
+        results = _scrape_pigu_from_html(resp.text, query)
+        if results:
+            print(f"[Pigu] {len(results)} results")
+            return results
+        print("[Pigu] static=0, retrying with render_js=True")
+        resp_js = fetch_url(url, "lt", render_js=True, scraper_timeout=8)
+        if resp_js and resp_js.status_code == 200:
+            results = _scrape_pigu_from_html(resp_js.text, query)
+            print(f"[Pigu] {len(results)} results (rendered)")
+            return results
+    else:
+        print(f"[Pigu] failed {resp.status_code if resp else 'no resp'}")
+    return []
 
 
 # ── SENUKAI.LT ──
@@ -1443,170 +1454,159 @@ def scrape_senukai(query: str) -> list:
 
 
 # ── TOPOCENTRAS.LT ──
-def scrape_topo(query: str) -> list:
-    results = []
-    try:
-        url = f"https://www.topocentras.lt/search?q={requests.utils.quote(query)}"
-        # Try direct first (free, 2s), then ScraperAPI
-        resp = None
+def _scrape_topo_from_html(html: str, query: str) -> list:
+    results = _extract_spa_products(html, query, "Topo centras", "🇱🇹",
+                                    "https://www.topocentras.lt", "topo")
+    if results:
+        return results
+    soup = BeautifulSoup(html, "html.parser")
+    cards = (soup.select(".product-card") or
+             soup.select("[class*='product-item']") or
+             soup.select("[class*='product-card']") or
+             soup.select("[class*='search-result']") or
+             soup.select("[data-product-id]"))
+    for card in cards[:8]:
         try:
-            resp = _http.get(url, headers=get_headers("lt"), timeout=2, allow_redirects=True)
-            if resp.status_code != 200:
-                resp = None
-        except Exception:
-            resp = None
-        if not resp:
-            resp = fetch_url(url, "lt", render_js=False, scraper_timeout=6)
-        if not resp or resp.status_code != 200:
-            print(f"[Topo] failed {resp.status_code if resp else 'no resp'}")
-            return results
-        results = _extract_spa_products(resp.text, query, "Topo centras", "🇱🇹",
-                                        "https://www.topocentras.lt", "topo")
-        if not results:
-            soup = BeautifulSoup(resp.text, "html.parser")
-            cards = (soup.select(".product-card") or
-                     soup.select("[class*='product-item']") or
-                     soup.select("[class*='search-result']"))
-            for card in cards[:8]:
-                try:
-                    p_el = card.select_one("[class*='price']") or card.select_one("[itemprop='price']")
-                    price = validate_price(parse_price(p_el.get_text() if p_el else ""), query)
-                    if not price:
-                        continue
-                    name_el = card.select_one("h2") or card.select_one("h3") or card.select_one("[class*='name']")
-                    name = name_el.get_text(strip=True)[:100] if name_el else query
-                    if not is_relevant_result(query, name):
-                        continue
-                    a_el = card.select_one("a[href]")
-                    href = a_el["href"] if a_el else ""
-                    link = href if href.startswith("http") else f"https://www.topocentras.lt{href}"
-                    img_el = card.select_one("img[src]") or card.select_one("img[data-src]")
+            p_el = card.select_one("[class*='price']") or card.select_one("[itemprop='price']")
+            price = validate_price(parse_price(p_el.get_text() if p_el else ""), query)
+            if not price:
+                continue
+            name_el = (card.select_one("h2") or card.select_one("h3") or
+                       card.select_one("[class*='name']") or card.select_one("[class*='title']"))
+            name = name_el.get_text(strip=True)[:100] if name_el else query
+            if not is_relevant_result(query, name):
+                continue
+            a_el = card.select_one("a[href]")
+            href = a_el["href"] if a_el else ""
+            link = href if href.startswith("http") else f"https://www.topocentras.lt{href}"
+            img_el = card.select_one("img[src]") or card.select_one("img[data-src]")
+            img_url = ""
+            if img_el:
+                img_url = img_el.get("src") or img_el.get("data-src") or ""
+                if not img_url.startswith("http"):
                     img_url = ""
-                    if img_el:
-                        img_url = img_el.get("src") or img_el.get("data-src") or ""
-                        if not img_url.startswith("http"):
-                            img_url = ""
-                    results.append(_make_result("Topo centras", "🇱🇹", link, price, name, "topo", img_url))
-                except Exception:
-                    pass
-    except Exception as e:
-        print(f"[Topo] {e}")
-    print(f"[Topo] {len(results)} results")
+            results.append(_make_result("Topo centras", "🇱🇹", link, price, name, "topo", img_url))
+        except Exception:
+            pass
     return results
+
+
+def scrape_topo(query: str) -> list:
+    url = f"https://www.topocentras.lt/search?q={requests.utils.quote(query)}"
+    resp = None
+    try:
+        resp = _http.get(url, headers=get_headers("lt"), timeout=3, allow_redirects=True)
+        if resp.status_code != 200:
+            resp = None
+    except Exception:
+        resp = None
+    if not resp:
+        resp = fetch_url(url, "lt", render_js=False, scraper_timeout=7)
+    if resp and resp.status_code == 200:
+        results = _scrape_topo_from_html(resp.text, query)
+        if results:
+            print(f"[Topo] {len(results)} results")
+            return results
+        print("[Topo] static=0, retrying with render_js=True")
+        resp_js = fetch_url(url, "lt", render_js=True, scraper_timeout=8)
+        if resp_js and resp_js.status_code == 200:
+            results = _scrape_topo_from_html(resp_js.text, query)
+            print(f"[Topo] {len(results)} results (rendered)")
+            return results
+    else:
+        print(f"[Topo] failed {resp.status_code if resp else 'no resp'}")
+    return []
 
 
 # ── ELESEN.LT ──
-def scrape_elesen(query: str) -> list:
+def _scrape_elesen_from_html(html: str, query: str) -> list:
+    """Extract Elesen results: SPA JSON first, then DOM."""
+    spa = _extract_spa_products(html, query, "Elesen.lt", "🇱🇹", "https://www.elesen.lt", "elesen")
+    if spa:
+        return spa
+    soup = BeautifulSoup(html, "html.parser")
+    items = (
+        soup.select("article.product-card") or
+        soup.select(".product-card.vertical") or
+        soup.select(".product-card") or
+        soup.select("[class*='product-item']") or
+        soup.select("[class*='catalog-item']") or
+        soup.select(".item-box") or
+        soup.select("[data-product-id]")
+    )
+    print(f"[Elesen] {len(items)} items")
     results = []
-
-    try:
-        url = f"https://www.elesen.lt/paieska?q={requests.utils.quote(query)}"
-        # Try direct first (2s, free) before falling back to ScraperAPI (costs credits)
+    for item in items[:8]:
         try:
-            resp = _http.get(url, headers=get_headers("lt"), timeout=2, allow_redirects=True)
-            if resp.status_code != 200:
-                resp = None
-        except Exception:
-            resp = None
-        if not resp:
-            resp = fetch_url(url, "lt", render_js=False, scraper_timeout=7)
-
-        if not resp or resp.status_code != 200:
-            print("[Elesen] failed")
-            return results
-
-        soup = BeautifulSoup(resp.text, "html.parser")
-
-        # Elesen uses article.product-card for each product card
-        items = (
-            soup.select("article.product-card") or
-            soup.select(".product-card.vertical") or
-            soup.select(".product-card") or
-            soup.select("[class*='product-item']") or
-            soup.select("[class*='catalog-item']") or
-            soup.select(".item-box") or
-            soup.select("[data-product-id]")
-        )
-        # Fall back to SPA JSON extraction if DOM scraping found nothing
-        if not items:
-            spa = _extract_spa_products(resp.text, query, "Elesen.lt", "🇱🇹",
-                                        "https://www.elesen.lt", "elesen")
-            if spa:
-                print(f"[Elesen] {len(spa)} via SPA JSON fallback")
-                return spa
-
-        print(f"[Elesen] {len(items)} items")
-
-        for item in items[:8]:
-            try:
-                price_el = (
-                    item.select_one(".price") or
-                    item.select_one("[class*='price']")
-                )
-
-                if not price_el:
-                    continue
-
-                price_text = price_el.get_text()
-                raw_price = parse_price(price_text)
-                if not raw_price:
-                    continue
-
-                # Elesen mixes euros and centai:
-                #   "Kaina:3999 €"                → 3999 centai = €39.99 (integer-only values < 50000)
-                #   "Kaina su nuolaida6999 €85.99" → 6999 centai = €69.99
-                #   "Kaina su nuolaida1349 €1599 €"→ 1349 euros  (MacBook — raw passes validate)
-                # Rule: if raw integer ≥ 100 AND raw/100 passes validate but raw doesn't → use centai.
-                #       if both pass → centai only if < €5000 (common appliance range).
-                #       if raw already passes and centai doesn't → keep raw (expensive product like MacBook).
-                if raw_price >= 100 and raw_price == int(raw_price):
-                    centai = round(raw_price / 100, 2)
-                    p_eur = validate_price(raw_price, query)
-                    p_cnt = validate_price(centai, query)
-                    if p_cnt and not p_eur:
-                        raw_price = centai          # centai is the only valid interpretation
-                    elif p_cnt and p_eur and raw_price < 50000:
-                        # Both valid: prefer centai for typical appliance prices (< €500)
-                        # but keep euro if centai is implausibly cheap (< €5)
-                        if centai >= 5:
-                            raw_price = centai
-
-                price = validate_price(raw_price, query)
-                if not price:
-                    continue
-
-                name_el = (
-                    item.select_one(".product-card__title") or
-                    item.select_one(".product_name") or
-                    item.select_one("[class*='name']") or
-                    item.select_one("h2") or
-                    item.select_one("h3")
-                )
-
-                name = name_el.get_text(strip=True)[:100] if name_el else query
-                if not is_relevant_result(query, name):
-                    continue
-
-                link_el = item.select_one("a[href]")
-                href = link_el["href"] if link_el else ""
-                link = href if href.startswith("http") else f"https://www.elesen.lt{href}"
-
-                img_el = item.select_one("img[src]") or item.select_one("img[data-src]")
-                img_url = ""
-                if img_el:
-                    img_url = img_el.get("src") or img_el.get("data-src") or ""
-                    if not img_url.startswith("http"):
-                        img_url = ""
-
-                results.append(_make_result("Elesen.lt", "🇱🇹", link, price, name, "elesen", img_url))
-            except Exception as e:
-                print(f"[Elesen item] {e}")
-
-    except Exception as e:
-        print(f"[Elesen] {e}")
-
-    print(f"[Elesen] {len(results)} results")
+            price_el = item.select_one(".price") or item.select_one("[class*='price']")
+            if not price_el:
+                continue
+            price_text = price_el.get_text()
+            raw_price = parse_price(price_text)
+            if not raw_price:
+                continue
+            # Elesen mixes euros and centai (integer prices < 50000 are in centai)
+            if raw_price >= 100 and raw_price == int(raw_price):
+                centai = round(raw_price / 100, 2)
+                p_eur = validate_price(raw_price, query)
+                p_cnt = validate_price(centai, query)
+                if p_cnt and not p_eur:
+                    raw_price = centai
+                elif p_cnt and p_eur and raw_price < 50000 and centai >= 5:
+                    raw_price = centai
+            price = validate_price(raw_price, query)
+            if not price:
+                continue
+            name_el = (
+                item.select_one(".product-card__title") or
+                item.select_one(".product_name") or
+                item.select_one("[class*='name']") or
+                item.select_one("h2") or
+                item.select_one("h3")
+            )
+            name = name_el.get_text(strip=True)[:100] if name_el else query
+            if not is_relevant_result(query, name):
+                continue
+            link_el = item.select_one("a[href]")
+            href = link_el["href"] if link_el else ""
+            link = href if href.startswith("http") else f"https://www.elesen.lt{href}"
+            img_el = item.select_one("img[src]") or item.select_one("img[data-src]")
+            img_url = ""
+            if img_el:
+                img_url = img_el.get("src") or img_el.get("data-src") or ""
+                if not img_url.startswith("http"):
+                    img_url = ""
+            results.append(_make_result("Elesen.lt", "🇱🇹", link, price, name, "elesen", img_url))
+        except Exception as e:
+            print(f"[Elesen item] {e}")
     return results
+
+
+def scrape_elesen(query: str) -> list:
+    url = f"https://www.elesen.lt/paieska?q={requests.utils.quote(query)}"
+    resp = None
+    try:
+        resp = _http.get(url, headers=get_headers("lt"), timeout=3, allow_redirects=True)
+        if resp.status_code != 200:
+            resp = None
+    except Exception:
+        resp = None
+    if not resp:
+        resp = fetch_url(url, "lt", render_js=False, scraper_timeout=7)
+    if resp and resp.status_code == 200:
+        results = _scrape_elesen_from_html(resp.text, query)
+        if results:
+            print(f"[Elesen] {len(results)} results")
+            return results
+        print("[Elesen] static=0, retrying with render_js=True")
+        resp_js = fetch_url(url, "lt", render_js=True, scraper_timeout=8)
+        if resp_js and resp_js.status_code == 200:
+            results = _scrape_elesen_from_html(resp_js.text, query)
+            print(f"[Elesen] {len(results)} results (rendered)")
+            return results
+    else:
+        print(f"[Elesen] failed {resp.status_code if resp else 'no resp'}")
+    return []
 
 
 # ── 1A.LT ──
@@ -3591,7 +3591,7 @@ def health():
     )
     return jsonify({
         "status": "ok",
-        "version": "6.32",
+        "version": "6.33",
         "uptime_s": uptime_s,
         "shops": ["Varle.lt", "Elesen.lt", "Pigu.lt", "Topo centras", "Amazon.DE", "Amazon.PL"],
         "ai": {
@@ -3669,7 +3669,7 @@ if __name__ == "__main__":
 
     port = int(os.getenv("PORT", 5000))
 
-    print("\n🟢 Goody API v6.32")
+    print("\n🟢 Goody API v6.33")
     print(f"📊 Supabase: {'✅ configured' if SUPABASE_URL else '⚠️ not set'}")
     print("📦 Active shops: Varle + Elesen + Pigu + Topo + Amazon.DE + Amazon.PL")
     print(f"🔑 ScraperAPI: {'✅ configured' if SCRAPER_API_KEY else '⚠️ not set'}")
