@@ -1,5 +1,6 @@
 """
-Goody Backend v7.01 — _ACCESSORY: +fernbedienung/entkalker/descaler; _CATEGORY_ICON_MAP: +grill/grilis/bbq/weber🍳:
+Goody Backend v7.02 — _LT_DE/PL: +akumuliatorius→Akku/akumulator; _LT_CATEGORY_WORDS: +akumuliatorius/akumuliatoriaus:
+- v7.01 — _ACCESSORY: +fernbedienung/entkalker/descaler; _CATEGORY_ICON_MAP: +grill/grilis/bbq/weber🍳:
 - v7.00 — validate_price: +printer€20/power tool€10; _LT_DE/PL: +planšetinis/nešiojamasis; lg icon bug fix:
 - v6.99 — fix: remove lg from TV icon entry (LG washing machine showed 📺); _LT_DE/PL: +planšetinis/nešiojamasis; validate_price: +shaver€10:
 - v6.98 — _CATEGORY_ICON_MAP: dyson🧹/intel+amd🖥️/nvidia🎮/bose+sennheiser🎧/jbl🔊/braun🪒/tefal🍳/delonghi☕/lg📺/huawei📱/siemens+zanussi🫧:
@@ -2260,6 +2261,8 @@ _LT_CATEGORY_WORDS = [
     "planšetinis",
     # Laptop (alternative grammatical form)
     "nešiojamasis",
+    # Battery (power tool / standalone battery pack nominative form — genitive "akumuliatoriaus" also common)
+    "akumuliatorius", "akumuliatoriaus",
 ]
 # Normalized (no diacritics) version so accent-free queries also trigger translation
 _LT_CATEGORY_WORDS_NORM = [_norm_lt(w) for w in _LT_CATEGORY_WORDS]
@@ -2488,6 +2491,8 @@ _LT_DE: list[tuple[str, str]] = sorted([
     ("planšetinis kompiuteris", "Tablet"), ("planšetinis", "Tablet"),
     # Laptop (alternative grammatical form nešiojamasis vs nešiojamas)
     ("nešiojamasis kompiuteris", "Laptop"), ("nešiojamasis", "Laptop"),
+    # Battery / accumulator (power tool batteries sold as standalone products)
+    ("akumuliatorius", "Akku"), ("akumuliatoriaus", "Akku"),
 ], key=lambda t: -len(t[0]))
 
 _LT_PL: list[tuple[str, str]] = sorted([
@@ -2703,6 +2708,8 @@ _LT_PL: list[tuple[str, str]] = sorted([
     ("planšetinis kompiuteris", "tablet"), ("planšetinis", "tablet"),
     # Laptop (alternative grammatical form)
     ("nešiojamasis kompiuteris", "laptop"), ("nešiojamasis", "laptop"),
+    # Battery / accumulator
+    ("akumuliatorius", "akumulator"), ("akumuliatoriaus", "akumulator"),
 ], key=lambda t: -len(t[0]))
 
 
@@ -4030,7 +4037,7 @@ def health():
     )
     return jsonify({
         "status": "ok",
-        "version": "7.01",
+        "version": "7.02",
         "uptime_s": uptime_s,
         "shops": ["Varle.lt", "Elesen.lt", "Pigu.lt", "Topo centras", "Amazon.DE", "Amazon.PL"],
         "ai": {
@@ -4108,7 +4115,7 @@ if __name__ == "__main__":
 
     port = int(os.getenv("PORT", 5000))
 
-    print("\n🟢 Goody API v7.01")
+    print("\n🟢 Goody API v7.02")
     print(f"📊 Supabase: {'✅ configured' if SUPABASE_URL else '⚠️ not set'}")
     print("📦 Active shops: Varle + Elesen + Pigu + Topo + Amazon.DE + Amazon.PL")
     print(f"🔑 ScraperAPI: {'✅ configured' if SCRAPER_API_KEY else '⚠️ not set'}")
