@@ -1,5 +1,5 @@
 """
-Goody Backend v6.1 — Power tool LT vocab: grąžtas/pjūklas/perforatorius DE/PL translation + trigger words:
+Goody Backend v6.2 — Early relevance filter in _walk_for_products: irrelevant SPA items skipped before filling 8-slot cap:
 - v5.96 — Amazon scraper: scan up to 8 items (was 5) for better relevance filtering:
 - v5.95 — fix get_category_icon: normalize LT diacritics; add siurblys/ausinukai/gruzdintuve icons:
 - v5.94 — fix LT trigger words: gruzdintuvė, plakiklis, garso, namų, kino, vandens, robotinis:
@@ -1015,14 +1015,18 @@ def _walk_for_products(node, query, shop, flag, base_url, src_key, out, depth=0)
                                 orig_price = op
                         except (ValueError, TypeError):
                             pass
-                    r = _make_result(shop, flag, link, vp, str(name)[:100], src_key, img)
-                    if rating_val > 0:
-                        r["rating"] = rating_val
-                    if review_count > 0:
-                        r["review_count"] = review_count
-                    if orig_price > 0:
-                        r["original_price"] = orig_price
-                    out.append(r)
+                    name_str = str(name)[:100]
+                    if not is_relevant_result(query, name_str):
+                        pass  # skip irrelevant SPA items early so they don't fill the 8-slot cap
+                    else:
+                        r = _make_result(shop, flag, link, vp, name_str, src_key, img)
+                        if rating_val > 0:
+                            r["rating"] = rating_val
+                        if review_count > 0:
+                            r["review_count"] = review_count
+                        if orig_price > 0:
+                            r["original_price"] = orig_price
+                        out.append(r)
             except (ValueError, TypeError):
                 pass
         for v in node.values():
@@ -3360,7 +3364,7 @@ def health():
     )
     return jsonify({
         "status": "ok",
-        "version": "6.1",
+        "version": "6.2",
         "uptime_s": uptime_s,
         "shops": ["Varle.lt", "Elesen.lt", "Pigu.lt", "Topo centras", "Amazon.DE", "Amazon.PL"],
         "ai": {
