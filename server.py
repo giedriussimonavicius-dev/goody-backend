@@ -1,5 +1,6 @@
 """
-Goody Backend v5.94 — fix LT trigger words: gruzdintuvė, plakiklis, garso, namų, kino, vandens, robotinis:
+Goody Backend v5.95 — fix get_category_icon: normalize LT diacritics; add siurblys/ausinukai/gruzdintuve icons:
+- v5.94 — fix LT trigger words: gruzdintuvė, plakiklis, garso, namų, kino, vandens, robotinis:
 - v5.93 — LT translation dict: robot vacuum, soundbar, video camera, air fryer:
 - v5.92 — user-agent refresh (Chrome 136) + startup version fix:
 - v5.91 — streaming _trans_pool cleanup on client disconnect (try/finally):
@@ -288,15 +289,15 @@ _CATEGORY_ICON_MAP = [
     (["ipad", "galaxy tab", "tablet"], "📱"),
     (["oled", "qled", " tv ", " tv", "tv ", "television", "televizorius", "monitor",
       "ekranas", "screen", "55\"", "65\"", "43\""], "📺"),
-    (["headphone", "earphone", "earbuds", "ausines", "airpods", "wh-1000", "bose qc", "jabra"], "🎧"),
+    (["headphone", "earphone", "earbuds", "ausines", "ausinukai", "airpods", "wh-1000", "bose qc", "jabra"], "🎧"),
     (["playstation", "xbox", "nintendo", "lego", "gamepad", "rtx 4", "rtx 3",
       "geforce", "gaming"], "🎮"),
     (["camera", "nikon", "canon", "sony zv", "fotoaparatas", "mirrorless", "dslr"], "📷"),
-    (["dulkiu siurblys", "vacuum", "dyson v", "roomba", "miele"], "🧹"),
+    (["dulkiu siurblys", "siurblys", "vacuum", "dyson v", "roomba", "miele"], "🧹"),
     (["skalbykle", "washing machine", "indaplove", "dishwasher", "bosch wan",
       "samsung ww"], "🫧"),
     (["keptuve", "virdulys", "kettle", "blender", "mikser", "multicooker",
-      "air fryer", "kavos aparatas", "nespresso"], "🍳"),
+      "air fryer", "gruzdintuve", "kavos aparatas", "nespresso"], "🍳"),
     (["lego", "zaislai", "pampers", "chicco", "fisher-price", "baby"], "🧸"),
     (["ssd", "nvme", "hdd", "ram ddr", "corsair", "kingston fury",
       "procesorius", "cpu", "ryzen", "core i"], "🖥️"),
@@ -306,7 +307,7 @@ _CATEGORY_ICON_MAP = [
 
 
 def get_category_icon(query: str, product_type: str = "MAIN") -> str:
-    q = query.lower()
+    q = _norm_lt(query.lower())
     for keywords, icon in _CATEGORY_ICON_MAP:
         if any(kw in q for kw in keywords):
             return icon
@@ -3324,7 +3325,7 @@ def health():
     )
     return jsonify({
         "status": "ok",
-        "version": "5.94",
+        "version": "5.95",
         "uptime_s": uptime_s,
         "shops": ["Varle.lt", "Elesen.lt", "Pigu.lt", "Topo centras", "Amazon.DE", "Amazon.PL"],
         "ai": {
@@ -3402,7 +3403,7 @@ if __name__ == "__main__":
 
     port = int(os.getenv("PORT", 5000))
 
-    print("\n🟢 Goody API v5.94")
+    print("\n🟢 Goody API v5.95")
     print(f"📊 Supabase: {'✅ configured' if SUPABASE_URL else '⚠️ not set'}")
     print("📦 Active shops: Varle + Elesen + Pigu + Topo + Amazon.DE + Amazon.PL")
     print(f"🔑 ScraperAPI: {'✅ configured' if SCRAPER_API_KEY else '⚠️ not set'}")
