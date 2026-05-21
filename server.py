@@ -1,5 +1,6 @@
 """
-Goody Backend v7.20 — _CATEGORY_ICON_MAP: +panasonic/toshiba📺; +hitachi🫧; +avm🌐; +mitsubishi electric🌬️:
+Goody Backend v7.21 — _LT_DE/PL: +masažo pistoletas→Massagepistole; +masažo→Massage; icon +massage gun🩺:
+- v7.20 — _CATEGORY_ICON_MAP: +panasonic/toshiba📺; +hitachi🫧; +avm🌐; +mitsubishi electric🌬️:
 - v7.19 — validate_price: _ROBOT_VAC_W +ilife/cecotec; +_GARDENTOOL_W €5; +_DEHUMID_W €15; +_MASSAGE_W €50:
 - v7.18 — _LT_DE/PL: +trimeris/masažo kėdė/drėgmės surinktuvas; icon +rasentrimmer🔨 +massagesessel🩺:
 - v7.17 — _LT_DE/PL: +ryžių viryklė/maisto džiovintuvas/arbatinukas/galios bankas; _LT_CATEGORY_WORDS:
@@ -588,7 +589,8 @@ _CATEGORY_ICON_MAP = [
     (["beurer", "omron", "medisana", "withings", "blood pressure", "kraujospy dis",
       "tensiometro", "cisnienomierz",
       "nebulizatorius", "nebulizator", "inhalator", "inhaler",
-      "massagesessel", "massage chair", "fotel masujacy", "masazo kede"], "🩺"),
+      "massagesessel", "massage chair", "fotel masujacy", "masazo kede",
+      "massage gun", "massagepistole", "pistolet do masazu"], "🩺"),
     (["philips shav", "braun series", "gillette", "oral-b", "skustuvas", "epilator",
       "toothbrush", "zahnbürste", "sepetelis", "šepetėlis", "szczoteczka", "braun"], "🪒"),
     (["laikrodis", "smartwatch", "apple watch", "garmin", "fitbit", "samsung watch", "fossil", "polar", "suunto",
@@ -2550,9 +2552,11 @@ _LT_DE: list[tuple[str, str]] = sorted([
     ("žibintas", "Taschenlampe"), ("zibintas", "Taschenlampe"),
     # Nebulizer / inhaler
     ("nebulizatorius", "Inhalator"), ("nebulizatoriaus", "Inhalator"),
-    # Massage chair
+    # Massage chair / massage gun
     ("masažo kėdė", "Massagesessel"), ("masazo kede", "Massagesessel"),
     ("masažo kede", "Massagesessel"),
+    ("masažo pistoletas", "Massagepistole"), ("masazo pistoletas", "Massagepistole"),
+    ("masažo", "Massage"),
     # Dehumidifier
     ("drėgmės surinktuvas", "Luftentfeuchter"), ("dregmes surinktuvas", "Luftentfeuchter"),
     ("surinktuvas drėgmei", "Luftentfeuchter"), ("surinktuvas dregmei", "Luftentfeuchter"),
@@ -2815,9 +2819,11 @@ _LT_PL: list[tuple[str, str]] = sorted([
     ("žibintas", "latarka"), ("zibintas", "latarka"),
     # Nebulizer / inhaler
     ("nebulizatorius", "nebulizator"), ("nebulizatoriaus", "nebulizator"),
-    # Massage chair
+    # Massage chair / massage gun
     ("masažo kėdė", "fotel masujący"), ("masazo kede", "fotel masujący"),
     ("masažo kede", "fotel masujący"),
+    ("masažo pistoletas", "pistolet do masażu"), ("masazo pistoletas", "pistolet do masażu"),
+    ("masažo", "masaż"),
     # Dehumidifier
     ("drėgmės surinktuvas", "pochłaniacz wilgoci"), ("dregmes surinktuvas", "pochłaniacz wilgoci"),
     # Air compressor
@@ -4248,7 +4254,7 @@ def health():
     )
     return jsonify({
         "status": "ok",
-        "version": "7.20",
+        "version": "7.21",
         "uptime_s": uptime_s,
         "shops": ["Varle.lt", "Elesen.lt", "Pigu.lt", "Topo centras", "Amazon.DE", "Amazon.PL"],
         "ai": {
@@ -4326,7 +4332,7 @@ if __name__ == "__main__":
 
     port = int(os.getenv("PORT", 5000))
 
-    print("\n🟢 Goody API v7.20")
+    print("\n🟢 Goody API v7.21")
     print(f"📊 Supabase: {'✅ configured' if SUPABASE_URL else '⚠️ not set'}")
     print("📦 Active shops: Varle + Elesen + Pigu + Topo + Amazon.DE + Amazon.PL")
     print(f"🔑 ScraperAPI: {'✅ configured' if SCRAPER_API_KEY else '⚠️ not set'}")
