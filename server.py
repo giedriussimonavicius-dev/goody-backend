@@ -1,5 +1,5 @@
 """
-Goody Backend v5.97 — Translation fixes: missing trigger words (spaustuvas, apyrankė, žiūronai, garbanojimo); add binoculars + hair curler to DE/PL dicts:
+Goody Backend v5.98 — Add ⌚ watch/smartwatch icon (laikrodis, garmin, fitbit, apple watch, fossil):
 - v5.96 — Amazon scraper: scan up to 8 items (was 5) for better relevance filtering:
 - v5.95 — fix get_category_icon: normalize LT diacritics; add siurblys/ausinukai/gruzdintuve icons:
 - v5.94 — fix LT trigger words: gruzdintuvė, plakiklis, garso, namų, kino, vandens, robotinis:
@@ -305,6 +305,7 @@ _CATEGORY_ICON_MAP = [
       "procesorius", "cpu", "ryzen", "core i"], "🖥️"),
     (["spausdintuvas", "printer", "scanner", "hp laserjet", "epson"], "🖨️"),
     (["philips shav", "braun series", "gillette", "skustuvas", "epilator"], "🪒"),
+    (["laikrodis", "smartwatch", "apple watch", "garmin", "fitbit", "samsung watch", "fossil"], "⌚"),
 ]
 
 
@@ -3345,7 +3346,7 @@ def health():
     )
     return jsonify({
         "status": "ok",
-        "version": "5.97",
+        "version": "5.98",
         "uptime_s": uptime_s,
         "shops": ["Varle.lt", "Elesen.lt", "Pigu.lt", "Topo centras", "Amazon.DE", "Amazon.PL"],
         "ai": {
