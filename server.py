@@ -1,5 +1,6 @@
 """
-Goody Backend v6.31 — phone📱 brands (motorola/honor/realme/oppo/vivo); ps5/ps4🎮; fix aparat→aparat foto📷:
+Goody Backend v6.32 — icon fixes: nesiojamas→nesiojamas kompiuteris💻; lempute💡; robotinis🤖:
+- v6.31 — phone📱 brands (motorola/honor/realme/oppo/vivo); ps5/ps4🎮; fix aparat→aparat foto📷:
 - v6.30 — icon keyword fixes: bügeleisen👕 umlaut; sviestuvai/prozektorius💡 norm:
 - v6.29 — ☕coffee/kettle split from 🍳; 🤖robot vacuum; 🛴scooter split; DE/PL icon gaps:
 - v6.28 — TV📺/vacuum🧹/washing🫧 DE+PL icon keywords; fridge cleanup:
@@ -322,7 +323,7 @@ _CATEGORY_ICON_MAP = [
     (["iphone", "samsung galaxy", "xiaomi", "oneplus", "pixel", "telefon", "smartphone",
       "galaxy s", "galaxy a", "redmi", "poco", "motorola", "honor", "realme", "oppo", "vivo"], "📱"),
     (["macbook", "laptop", "notebook", "thinkpad", "dell xps", "asus", "surface pro",
-      "chromebook", "nesiojamas"], "💻"),
+      "chromebook", "nesiojamas kompiuteris"], "💻"),
     (["ipad", "galaxy tab", "tablet"], "📱"),
     (["oled", "qled", " tv ", " tv", "tv ", "television", "televizorius", "fernseher",
       "telewizor", "monitor", "ekranas", "screen", "55\"", "65\"", "43\""], "📺"),
@@ -332,7 +333,7 @@ _CATEGORY_ICON_MAP = [
       "geforce", "gaming", "spielkonsole", "konsola", "konsole"], "🎮"),
     (["camera", "nikon", "canon", "sony zv", "sony alpha", "fotoaparatas", "mirrorless", "dslr",
       "gopro", "dji", "aparat foto", "aparat cyfr", "fujifilm", "olympus"], "📷"),
-    (["roomba", "roborock", "irobot", "robot siurblys", "saugroboter"], "🤖"),
+    (["roomba", "roborock", "irobot", "robot siurblys", "robotinis", "saugroboter"], "🤖"),
     (["dulkiu siurblys", "siurblys", "vacuum", "dyson v", "miele",
       "staubsauger", "odkurzacz"], "🧹"),
     (["skalbykle", "washing machine", "waschmaschine", "pralka", "indaplove",
@@ -366,7 +367,7 @@ _CATEGORY_ICON_MAP = [
     (["marsrutizatorius", "router", "mesh wifi", "access point", "switch", "tinklo"], "🌐"),
     (["klaviatura", "klaviatūra", "keyboard", "klawiatura", "tastatur", "mechanine"], "⌨️"),
     (["zadintuvas", "zadintuva", "wecker", "budzik", "alarm clock"], "⏰"),
-    (["lempa", "lampe", "lampa", "led juosta", "led strip", "led lamp", "smart lamp",
+    (["lempa", "lampe", "lampa", "lempute", "lemputes", "led juosta", "led strip", "led lamp", "smart lamp",
       "sviestuvas", "sviestuvai", "prozektorius"], "💡"),
     (["nokia"], "📱"),
 ]
@@ -3590,7 +3591,7 @@ def health():
     )
     return jsonify({
         "status": "ok",
-        "version": "6.31",
+        "version": "6.32",
         "uptime_s": uptime_s,
         "shops": ["Varle.lt", "Elesen.lt", "Pigu.lt", "Topo centras", "Amazon.DE", "Amazon.PL"],
         "ai": {
@@ -3668,7 +3669,7 @@ if __name__ == "__main__":
 
     port = int(os.getenv("PORT", 5000))
 
-    print("\n🟢 Goody API v6.31")
+    print("\n🟢 Goody API v6.32")
     print(f"📊 Supabase: {'✅ configured' if SUPABASE_URL else '⚠️ not set'}")
     print("📦 Active shops: Varle + Elesen + Pigu + Topo + Amazon.DE + Amazon.PL")
     print(f"🔑 ScraperAPI: {'✅ configured' if SCRAPER_API_KEY else '⚠️ not set'}")
