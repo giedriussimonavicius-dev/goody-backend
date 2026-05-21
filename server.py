@@ -1,5 +1,5 @@
 """
-Goody Backend v6.17 — elektrinis/išmanusis translations; Varle DOM relevance filter fix:
+Goody Backend v6.18 — laikrodukas→Uhr/zegarek translation; elektrinis/išmanusis standalones:
 - v6.16 — garų→Dampf/parowy standalone; nešiojamas+product translation fixes:
 - v6.15 — nešiojamas+product fixes: kondicionierius/siurblys/pjūklas no longer→Laptop:
 - v6.14 — relevance filter in Elesen/Pigu/Topo DOM scrapers (was only in SPA/Amazon):
@@ -2049,6 +2049,8 @@ _LT_DE: list[tuple[str, str]] = sorted([
     # Electric/smart adjective standalones (multi-word phrases above match first)
     ("elektrinis", "elektrisch"), ("elektrine", "elektrisch"),
     ("ismanusis", "Smart"), ("ismanius", "Smart"),
+    # Diminutive watch form (laikrodis → Uhr already exists; laikrodukas = small watch)
+    ("laikrodukas", "Uhr"),
 ], key=lambda t: -len(t[0]))
 
 _LT_PL: list[tuple[str, str]] = sorted([
@@ -2192,6 +2194,8 @@ _LT_PL: list[tuple[str, str]] = sorted([
     # Electric/smart adjective standalones
     ("elektrinis", "elektryczny"), ("elektrine", "elektryczna"),
     ("ismanusis", "smart"), ("ismanius", "smart"),
+    # Diminutive watch form
+    ("laikrodukas", "zegarek"),
 ], key=lambda t: -len(t[0]))
 
 
@@ -3514,7 +3518,7 @@ def health():
     )
     return jsonify({
         "status": "ok",
-        "version": "6.17",
+        "version": "6.18",
         "uptime_s": uptime_s,
         "shops": ["Varle.lt", "Elesen.lt", "Pigu.lt", "Topo centras", "Amazon.DE", "Amazon.PL"],
         "ai": {
@@ -3592,7 +3596,7 @@ if __name__ == "__main__":
 
     port = int(os.getenv("PORT", 5000))
 
-    print("\n🟢 Goody API v6.17")
+    print("\n🟢 Goody API v6.18")
     print(f"📊 Supabase: {'✅ configured' if SUPABASE_URL else '⚠️ not set'}")
     print("📦 Active shops: Varle + Elesen + Pigu + Topo + Amazon.DE + Amazon.PL")
     print(f"🔑 ScraperAPI: {'✅ configured' if SCRAPER_API_KEY else '⚠️ not set'}")
