@@ -1,5 +1,6 @@
 """
-Goody Backend v6.58 — validate_price: +vacuum €15/smartwatch €20 floors (centai fix for Dyson/Garmin):
+Goody Backend v6.59 — validate_price: +fernseher/telewizor to _TV_WORDS (translated Amazon TV floor fix):
+- v6.58 — validate_price: +vacuum €15/smartwatch €20 floors (centai fix for Dyson/Garmin):
 - v6.57 — _LT_DE/PL: +boileris/plovykla→Hochdruckreiniger; icon: +karcher/stihl🔨 sonos/harman kardon🔊:
 - v6.56 — _KNOWN_BRANDS: +sonos/harman kardon/stihl/husqvarna/worx/metabo/parkside/greenworks/ilife/cecotec/blaupunkt:
 - v6.55 — _LT_DE/PL: +garų siurblys→Dampfsauger/odkurzacz parowy, +garų valytuvas→Dampfreiniger/myjka parowa:
@@ -924,7 +925,8 @@ def parse_price(text: str) -> float:
     return 0.0
 
 
-_TV_WORDS   = ["tv ", " tv", "televizorius", "television", "oled", "qled", "naled", "mini led", "smarttv"]
+_TV_WORDS   = ["tv ", " tv", "televizorius", "television", "oled", "qled", "naled", "mini led", "smarttv",
+               "fernseher", "telewizor"]
 _MACBOOK_W  = ["macbook"]
 _IPHONE_W   = ["iphone"]
 _GALAXY_W   = ["samsung galaxy s", "samsung galaxy a", "samsung galaxy z", "pixel 8", "pixel 9"]
@@ -3688,7 +3690,7 @@ def health():
     )
     return jsonify({
         "status": "ok",
-        "version": "6.58",
+        "version": "6.59",
         "uptime_s": uptime_s,
         "shops": ["Varle.lt", "Elesen.lt", "Pigu.lt", "Topo centras", "Amazon.DE", "Amazon.PL"],
         "ai": {
@@ -3766,7 +3768,7 @@ if __name__ == "__main__":
 
     port = int(os.getenv("PORT", 5000))
 
-    print("\n🟢 Goody API v6.58")
+    print("\n🟢 Goody API v6.59")
     print(f"📊 Supabase: {'✅ configured' if SUPABASE_URL else '⚠️ not set'}")
     print("📦 Active shops: Varle + Elesen + Pigu + Topo + Amazon.DE + Amazon.PL")
     print(f"🔑 ScraperAPI: {'✅ configured' if SCRAPER_API_KEY else '⚠️ not set'}")
