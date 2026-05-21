@@ -1,5 +1,6 @@
 """
-Goody Backend v7.23 — _LT_CATEGORY_WORDS: +kūdikio/lovelė/pistoletas; _LT_DE/PL: +glue/paint gun; +lovelė/kūdikio:
+Goody Backend v7.24 — _LT_DE/PL: standalone +kištukas→Steckdose; +jungiklis→Schalter; +skambutis→Türklingel:
+- v7.23 — _LT_CATEGORY_WORDS: +kūdikio/lovelė/pistoletas; _LT_DE/PL: +glue/paint gun; +lovelė/kūdikio:
 - v7.22 — _ACCESSORY: +scherkopf/zamienny/zapasowy; _NOISE_WORDS: +najtanszy/bestpreis/opinie:
 - v7.21 — _LT_DE/PL: +masažo pistoletas→Massagepistole; +masažo→Massage; icon +massage gun🩺:
 - v7.20 — _CATEGORY_ICON_MAP: +panasonic/toshiba📺; +hitachi🫧; +avm🌐; +mitsubishi electric🌬️:
@@ -2663,7 +2664,11 @@ _LT_DE: list[tuple[str, str]] = sorted([
     ("išmanusis termoregliatorius", "Smart Thermostat"), ("ismanysis termoregliatorius", "Smart Thermostat"),
     ("termoregliatorius", "Thermostat"), ("termoreguliatorius", "Thermostat"),
     ("išmanusis kištukas", "Smarte Steckdose"), ("ismanysis kistukas", "Smarte Steckdose"),
+    ("kištukas", "Steckdose"), ("kistukas", "Steckdose"),
     ("išmanusis jungiklis", "Smart Schalter"), ("ismanysis jungiklis", "Smart Schalter"),
+    ("jungiklis", "Schalter"),
+    # Doorbell standalone (durų skambutis already in dict; this catches bare "skambutis")
+    ("skambutis", "Türklingel"),
     # Baby / child products
     ("kūdikio monitorius", "Babyphone"), ("kudikio monitorius", "Babyphone"),
     ("automobilinė vaikiška kėdutė", "Kindersitz"), ("automobiliné vaiskia kédute", "Kindersitz"),
@@ -2935,7 +2940,11 @@ _LT_PL: list[tuple[str, str]] = sorted([
     ("išmanusis termoregliatorius", "inteligentny termostat"), ("ismanysis termoregliatorius", "inteligentny termostat"),
     ("termoregliatorius", "termostat"), ("termoreguliatorius", "termostat"),
     ("išmanusis kištukas", "inteligentne gniazdko"), ("ismanysis kistukas", "inteligentne gniazdko"),
+    ("kištukas", "gniazdko"), ("kistukas", "gniazdko"),
     ("išmanusis jungiklis", "smart włącznik"), ("ismanysis jungiklis", "smart włącznik"),
+    ("jungiklis", "włącznik"),
+    # Doorbell standalone
+    ("skambutis", "dzwonek do drzwi"),
     # Baby / child products
     ("kūdikio monitorius", "niania elektroniczna"), ("kudikio monitorius", "niania elektroniczna"),
     ("automobilinė vaikiška kėdutė", "fotelik samochodowy"), ("vaikiška kėdutė", "fotelik samochodowy"),
@@ -4281,7 +4290,7 @@ def health():
     )
     return jsonify({
         "status": "ok",
-        "version": "7.23",
+        "version": "7.24",
         "uptime_s": uptime_s,
         "shops": ["Varle.lt", "Elesen.lt", "Pigu.lt", "Topo centras", "Amazon.DE", "Amazon.PL"],
         "ai": {
@@ -4359,7 +4368,7 @@ if __name__ == "__main__":
 
     port = int(os.getenv("PORT", 5000))
 
-    print("\n🟢 Goody API v7.23")
+    print("\n🟢 Goody API v7.24")
     print(f"📊 Supabase: {'✅ configured' if SUPABASE_URL else '⚠️ not set'}")
     print("📦 Active shops: Varle + Elesen + Pigu + Topo + Amazon.DE + Amazon.PL")
     print(f"🔑 ScraperAPI: {'✅ configured' if SCRAPER_API_KEY else '⚠️ not set'}")
