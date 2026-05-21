@@ -553,6 +553,9 @@ _cache_misses: int = 0
 _server_start: float = time.time()
 
 _CATEGORY_ICON_MAP = [
+    # Scooter / moped — before 📱 to prevent xiaomi matching phone icon
+    (["motoroleris", "motorolerio", "e-scooter", "elektrinis motoroleris",
+      "skuter", "roller", "moped"], "🛵"),
     (["iphone", "samsung galaxy", "xiaomi", "oneplus", "pixel", "telefon", "smartphone",
       "galaxy s", "galaxy a", "redmi", "poco", "motorola", "honor", "realme", "oppo", "vivo", "nothing phone",
       "huawei"], "📱"),
@@ -622,8 +625,11 @@ _CATEGORY_ICON_MAP = [
     (["svarstykles", "körperwaage", "korperwaage", "body scale", "body fat scale",
       "personenwaage", "waga lazienkowa"], "⚖️"),
     (["beurer", "omron", "medisana", "withings", "blood pressure", "kraujospy dis",
-      "tensiometro", "cisnienomierz",
-      "nebulizatorius", "nebulizator", "inhalator", "inhaler",
+      "tensiometro", "cisnienomierz", "blutdruckmessgerats", "tonometras", "tonometro",
+      "pulsometras", "pulsometro", "pulsmesser", "pulsometr",
+      "inhalatorius", "inhaliatoriaus", "inhalationsgerats", "nebulizatorius", "nebulizator", "inhalator", "inhaler",
+      "gliukometras", "gliukometro", "blutzuckermessgerats", "glukometr",
+      "burnos dusas", "munddusche", "irygator",
       "massagesessel", "massage chair", "fotel masujacy", "masazo kede",
       "massage gun", "massagepistole", "pistolet do masazu"], "🩺"),
     (["philips shav", "braun series", "gillette", "oral-b", "skustuvas", "epilator",
@@ -643,6 +649,9 @@ _CATEGORY_ICON_MAP = [
     (["makita", "dewalt", "bosch gsr", "graztas", "pjuklas", "power tool", "drill", "grąžtas",
       "šlifuoklis", "slifuoklis", "suktukas", "kampinis", "winkelschleifer", "schleifer",
       "schrauber", "bohrmaschine", "szlifierka", "wiertarka", "wkrętarka", "perforatorius",
+      "greztuvas", "gréztuvas", "atsuktuvas", "suvirintuvas", "schweissgeräts", "spawarka",
+      "mesmalė", "mesmalę", "fleischwolf", "maszynka do miesa",
+      "bandsäge", "bandsage", "pilarka tasmowa",
       "karcher", "kärcher", "hochdruckreiniger", "myjka cisnieniowa", "plovykla",
       "stihl", "husqvarna", "gardena", "milwaukee", "ryobi", "festool", "einhell", "metabo",
       "worx", "parkside", "greenworks",
@@ -681,6 +690,22 @@ _CATEGORY_ICON_MAP = [
       "galios stotelė", "galios stotele",
       "generatorius", "generator", "agregat pradotwor", "inverter generator"], "🔋"),
     (["nokia"], "📱"),
+    # Outdoor / camping / travel
+    (["palapine", "palapinė", "zelt", "namiot", "tent",
+      "miegmaisis", "miegmaišis", "schlafsack", "spiwor", "sleeping bag",
+      "lagaminas", "lagamino", "koffer", "walizka", "suitcase"], "⛺"),
+    # Office furniture / ergonomics
+    (["ofiso kede", "ofiso kėdė", "burotuhl", "burostuhl", "krzeslo biurowe",
+      "stovintis stalas", "stehschreibtisch", "biurko stojace",
+      "ergonomine", "ergonomiškas"], "🪑"),
+    # Alarm / detector / security
+    (["signalizacija", "signalizacijos", "alarmanlage", "alarm",
+      "dumu detektorius", "rauchmelder", "czujnik dymu",
+      "co-melder", "czujnik co", "monoksido detektorius",
+      "detektorius", "detektor"], "🚨"),
+    # Christmas / seasonal
+    (["kaledine", "kalėdinė", "eglute", "eglutė", "weihnachtsbaum", "choinka",
+      "christmas"], "🎄"),
 ]
 
 
