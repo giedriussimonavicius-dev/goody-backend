@@ -1,5 +1,6 @@
 """
-Goody Backend v7.43 — _static_translate→None fix; _LT_DE/PL +gitara/pianinas/bügnai/smuikas/batutas/slidės/pačiūžos/meškerė/žvejybos/plaukimo/pienukė/lova/spinta/kilimas/vaizdo registratorius:
+Goody Backend v7.44 — _LT_DE/PL +vitaminas/magnio/kreatinas/batai/kedai/sportbaciai/lele/peilis/zirkles/pjaustytuvas/padangos/tepalas/matavimo juosta:
+- v7.43 — _static_translate→None fix; _LT_DE/PL +gitara/pianinas/bügnai/smuikas/batutas/slidės/pačiūžos/meškerė/žvejybos/plaukimo/pienukė/lova/spinta/kilimas/vaizdo registratorius:
 - v7.42 — _LT_DE/PL +mažas/titanas/akumuliatoriumi/absoliutus/slėgio/aukšto slėgio:
 - v7.41 — _LT_DE/PL +atsuktuvas/automobilio/lagaminas/kalėdinė/šunų/kačių/domkratas/elektroninė/durų/baltymų/kolagenas:
 - v7.40 — _LT_DE/PL +portativinis/didelis/kompaktiškas/gamintuvas/termosas/makaronų/picos/popierius/benzininis/monitoriaus/grandiklis/dėžutė/ledų/jogurto/sūrio:
@@ -732,6 +733,32 @@ _CATEGORY_ICON_MAP = [
     # Milk frother (v7.43)
     (["pienuke", "pienuku", "pienu putuke", "milchaufschäumer", "milchaufschaeumer",
       "spieniacz do mleka", "milk frother", "aeroccino"], "☕"),
+    # Shoes / footwear (v7.44)
+    (["batai", "batu", "kedai", "sportbaciai", "sportiniai batai",
+      "schuhe", "sneaker", "buty", "trampki", "adidas", "nike", "puma", "new balance",
+      "skechers", "converse", "vans", "reebok", "asics", "salomon"], "👟"),
+    # Vitamins / supplements (v7.44)
+    (["vitaminas", "vitaminu", "vitaminai", "vitamin", "witamina",
+      "kreatinas", "kreatin", "kreatyna",
+      "magnio", "magnis", "magnesium", "magnez",
+      "omega 3", "omega-3", "kolagenas", "kollagen", "kolagen",
+      "baltymu", "protein", "bialko", "suplement"], "💊"),
+    # Kitchen knife / scissors (v7.44)
+    (["peilis", "peilio", "peiliai", "messer", "nóż", "noz",
+      "zirkles", "zirkliu", "schere", "nozyczki", "nożyczki",
+      "fiskars", "victorinox", "wusthof", "zwilling", "henckels"], "🍴"),
+    # Car tyres (v7.44)
+    (["padangos", "padanga", "reifen", "opony", "opona",
+      "winterreifen", "sommerreifen", "opony zimowe", "opony letnie",
+      "michelin", "continental", "bridgestone", "pirelli", "goodyear", "nokian"], "🚗"),
+    # Lubricant / engine oil (v7.44)
+    (["tepalas", "tepalo", "motorol", "motoröl", "olej silnikowy",
+      "schmiermittel", "castrol", "mobil 1", "shell helix", "liqui moly"], "🔧"),
+    # Doll (v7.44)
+    (["lele", "leles", "puppe", "lalka", "barbie", "baby born"], "🪆"),
+    # Food slicer (v7.44)
+    (["pjaustytuvas", "pjaustytuvo", "aufschnittmaschine", "krajalnica",
+      "food slicer", "meat slicer"], "🍕"),
 ]
 
 
@@ -2802,6 +2829,27 @@ _LT_CATEGORY_WORDS = [
     "kilimas", "kilimo",
     # Dashcam
     "registratorius", "registratoriaus",
+    # v7.44 — Vitamins / supplements
+    "vitaminas", "vitaminu", "vitaminai",
+    "magnio", "magnis",
+    "kreatinas", "kreatino",
+    # Shoes / footwear
+    "batai", "batu",
+    "kedai", "kedai",
+    "sportbaciai", "sportbacio",
+    # Doll
+    "lele", "leles",
+    # Kitchen knife / scissors
+    "peilis", "peilio", "peiliai",
+    "zirkles", "zirkliu",
+    # Food slicer
+    "pjaustytuvas", "pjaustytuvo",
+    # Car tyres
+    "padangos", "padanga",
+    # Engine oil / lubricant
+    "tepalas", "tepalo",
+    # Tape measure
+    "matavimo",
 ]
 # Normalized (no diacritics) version so accent-free queries also trigger translation
 _LT_CATEGORY_WORDS_NORM = [_norm_lt(w) for w in _LT_CATEGORY_WORDS]
@@ -3501,6 +3549,40 @@ _LT_DE: list[tuple[str, str]] = sorted([
     ("baltymų produktas", "Proteinprodukt"), ("baltymu produktas", "Proteinprodukt"),
     ("baltymų", "Protein"), ("baltymu", "Protein"),
     ("kolagenas", "Kollagen"), ("kolageno", "Kollagen"),
+    # v7.44 — Vitamins / supplements (compound phrases before standalone)
+    ("vitaminu kompleksas", "Vitaminkomplex"), ("vitaminu komplekse", "Vitaminkomplex"),
+    ("vitaminu papildas", "Vitaminpräparat"), ("vitaminu papildo", "Vitaminpräparat"),
+    ("vitaminas", "Vitamin"), ("vitaminu", "Vitamin"), ("vitaminai", "Vitamin"),
+    ("magnio gele", "Magnesiumgel"), ("magnio tabletes", "Magnesiumtabletten"),
+    ("magnio", "Magnesium"), ("magnis", "Magnesium"),
+    ("kreatinas", "Kreatin"), ("kreatino", "Kreatin"),
+    # Shoes / footwear
+    ("sportiniai batai", "Sportschuhe"), ("sportbaciai", "Sportschuhe"), ("sportbacio", "Sportschuhe"),
+    ("vaiku batai", "Kinderschuhe"), ("vaiku batu", "Kinderschuhe"),
+    ("kedai", "Sneaker"),
+    ("batai", "Schuhe"), ("batu", "Schuhe"),
+    # Doll / toy doll (lėlė — before "lele" disambiguation)
+    ("lele Barbie", "Barbie Puppe"), ("leles Barbie", "Barbie Puppe"),
+    ("lele", "Puppe"), ("leles", "Puppe"),
+    # Kitchen knife
+    ("peiliu blokas", "Messerblock"), ("peilio bloko", "Messerblock"),
+    ("virtuvinis peilis", "Küchenmesser"), ("keptuves peilis", "Pfannenwender"),
+    ("peilis", "Messer"), ("peilio", "Messer"), ("peiliai", "Messer"),
+    # Scissors (garden scissors handled by sodo→Garten prefix already)
+    ("sodo zirkles", "Gartenschere"), ("sodo zirkliu", "Gartenschere"),
+    ("zirkles", "Schere"), ("zirkliu", "Schere"),
+    # Food slicer
+    ("pjaustytuvas", "Aufschnittmaschine"), ("pjaustytuvo", "Aufschnittmaschine"),
+    # Car tyres (padangos compound first — automobilio padangos already covered via automobilio→Auto)
+    ("automobilio padangos", "Autoreifen"), ("automobilio padanga", "Autoreifen"),
+    ("ziemos padangos", "Winterreifen"), ("vasaros padangos", "Sommerreifen"),
+    ("padangos", "Reifen"), ("padanga", "Reifen"),
+    # Lubricant / engine oil
+    ("variklio tepalas", "Motoröl"), ("variklio tepalo", "Motoröl"),
+    ("tepalas", "Schmiermittel"), ("tepalo", "Schmiermittel"),
+    # Tape measure (matavimo juosta first — "matavimo" standalone kept generic)
+    ("matavimo juosta", "Maßband"), ("matavimo juostos", "Maßband"),
+    ("matavimo", "Mess"),
     # v7.43 — Music instruments (compound first, then standalone)
     ("elektrinis pianinas", "E-Piano"), ("elektrine pianinas", "E-Piano"),
     ("elektrinis sintezatorius", "Elektrischer Synthesizer"),
@@ -4210,6 +4292,40 @@ _LT_PL: list[tuple[str, str]] = sorted([
     ("baltymų produktas", "produkt białkowy"), ("baltymu produktas", "produkt białkowy"),
     ("baltymų", "białko"), ("baltymu", "białko"),
     ("kolagenas", "kolagen"), ("kolageno", "kolagen"),
+    # v7.44 — Vitamins / supplements
+    ("vitaminu kompleksas", "kompleks witamin"), ("vitaminu komplekse", "kompleks witamin"),
+    ("vitaminu papildas", "suplement witaminowy"), ("vitaminu papildo", "suplement witaminowy"),
+    ("vitaminas", "witamina"), ("vitaminu", "witamina"), ("vitaminai", "witaminy"),
+    ("magnio gele", "żel magnezowy"), ("magnio tabletes", "tabletki magnezowe"),
+    ("magnio", "magnez"), ("magnis", "magnez"),
+    ("kreatinas", "kreatyna"), ("kreatino", "kreatyny"),
+    # Shoes / footwear
+    ("sportiniai batai", "buty sportowe"), ("sportbaciai", "buty sportowe"), ("sportbacio", "buty sportowe"),
+    ("vaiku batai", "buty dziecięce"), ("vaiku batu", "buty dziecięce"),
+    ("kedai", "trampki"),
+    ("batai", "buty"), ("batu", "buty"),
+    # Doll
+    ("lele Barbie", "lalka Barbie"), ("leles Barbie", "lalka Barbie"),
+    ("lele", "lalka"), ("leles", "lalka"),
+    # Kitchen knife
+    ("peiliu blokas", "blok do noży"), ("peilio bloko", "blok do noży"),
+    ("virtuvinis peilis", "nóż kuchenny"), ("keptuves peilis", "łopatka do patelni"),
+    ("peilis", "nóż"), ("peilio", "noża"), ("peiliai", "noże"),
+    # Scissors
+    ("sodo zirkles", "nożyce ogrodowe"), ("sodo zirkliu", "nożyce ogrodowe"),
+    ("zirkles", "nożyczki"), ("zirkliu", "nożyczek"),
+    # Food slicer
+    ("pjaustytuvas", "krajalnica"), ("pjaustytuvo", "krajalnica"),
+    # Car tyres
+    ("automobilio padangos", "opony samochodowe"), ("automobilio padanga", "opona samochodowa"),
+    ("ziemos padangos", "opony zimowe"), ("vasaros padangos", "opony letnie"),
+    ("padangos", "opony"), ("padanga", "opona"),
+    # Lubricant / engine oil
+    ("variklio tepalas", "olej silnikowy"), ("variklio tepalo", "olej silnikowy"),
+    ("tepalas", "olej"), ("tepalo", "olej"),
+    # Tape measure
+    ("matavimo juosta", "miara taśmowa"), ("matavimo juostos", "miara taśmowa"),
+    ("matavimo", "pomiarowy"),
     # v7.43 — Music instruments (same-PL words included to prevent Claude fallback)
     ("elektrinis pianinas", "pianino elektryczne"), ("elektrine pianinas", "pianino elektryczne"),
     ("elektrinis sintezatorius", "syntezator elektryczny"),
@@ -5571,7 +5687,7 @@ def health():
     )
     return jsonify({
         "status": "ok",
-        "version": "7.43",
+        "version": "7.44",
         "uptime_s": uptime_s,
         "shops": ["Varle.lt", "Elesen.lt", "Pigu.lt", "Topo centras", "Amazon.DE", "Amazon.PL"],
         "ai": {
@@ -5649,7 +5765,7 @@ if __name__ == "__main__":
 
     port = int(os.getenv("PORT", 5000))
 
-    print("\n🟢 Goody API v7.43")
+    print("\n🟢 Goody API v7.44")
     print(f"📊 Supabase: {'✅ configured' if SUPABASE_URL else '⚠️ not set'}")
     print("📦 Active shops: Varle + Elesen + Pigu + Topo + Amazon.DE + Amazon.PL")
     print(f"🔑 ScraperAPI: {'✅ configured' if SCRAPER_API_KEY else '⚠️ not set'}")
