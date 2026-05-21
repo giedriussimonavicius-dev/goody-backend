@@ -1,5 +1,6 @@
 """
-Goody Backend v7.33 — _NOISE_WORDS +jaki/welcher/testsieger; _LT_DE/PL +depiliatorius/garo/plyteliu:
+Goody Backend v7.34 — _LT_DE/PL +gręžtuvas/palapinė/miegmaišis/tonometras/inhalatorius/suvirintuvas/mėsmalė/purkštuvas/signalizacija/elipsinis:
+- v7.33 — _NOISE_WORDS +jaki/welcher/testsieger; _LT_DE/PL +depiliatorius/garo/plyteliu:
 - v7.32 — _LT_DE/PL +motopjuklas/grindų/pramoninis/muzikos/statybinis; plovykla fix:
 - v7.31 — _LT_DE/PL +žarna/laistymo/pompa/šalmas/šašlykų; 🚲 helmet/bike pump:
 - v7.30 — _LT_DE/PL +šepetys/valiklis/ausų/generatorius/buitinis; 🔋 generator:
@@ -2494,6 +2495,30 @@ _LT_CATEGORY_WORDS = [
     "garo",
     # Tiles (plytelių valytuvas = tile cleaner)
     "plyteliu", "plyteles",
+    # Drill
+    "gręžtuvas", "grežtuvas", "gręžtuko", "greztuko",
+    # Tent
+    "palapinė", "palapine", "palapinės", "palapines",
+    # Sleeping bag
+    "miegmaišis", "miegmaisio",
+    # Blood pressure monitor
+    "tonometras", "tonometro",
+    # Pulse monitor / fitness tracker
+    "pulsometras", "pulsometro",
+    # Inhaler / nebulizer
+    "inhalatorius", "inhaliatoriaus",
+    # Welder
+    "suvirintuvas", "suvirintuvo",
+    # Meat grinder
+    "mėsmalė", "mėsmalės", "mesmalė", "mesmale",
+    # Sprayer (garden / plant)
+    "purkštuvas", "purkštuvo",
+    # Alarm system
+    "signalizacija", "signalizacijos",
+    # High chair (maitinimo kėdutė = feeding high chair)
+    "maitinimo",
+    # Elliptical trainer prefix (elipsinis treniruoklis)
+    "elipsinis", "elipsine",
 ]
 # Normalized (no diacritics) version so accent-free queries also trigger translation
 _LT_CATEGORY_WORDS_NORM = [_norm_lt(w) for w in _LT_CATEGORY_WORDS]
@@ -2887,6 +2912,36 @@ _LT_DE: list[tuple[str, str]] = sorted([
     # Tiles (plytelių valytuvas = tile cleaner)
     ("plyteliu valytuvas", "Fliesenreiniger"), ("plyteles valytuvas", "Fliesenreiniger"),
     ("plyteliu", "Fliesen"), ("plyteles", "Fliesen"),
+    # Drill
+    ("gręžtuvas", "Bohrmaschine"), ("grežtuvas", "Bohrmaschine"),
+    ("gręžtuko", "Bohrmaschine"), ("greztuko", "Bohrmaschine"),
+    # Tent
+    ("palapinė", "Zelt"), ("palapine", "Zelt"),
+    ("palapinės", "Zelt"), ("palapines", "Zelt"),
+    # Sleeping bag
+    ("miegmaišis", "Schlafsack"), ("miegmaisio", "Schlafsack"),
+    # Blood pressure monitor
+    ("tonometras", "Blutdruckmessgerät"), ("tonometro", "Blutdruckmessgerät"),
+    # Pulse / heart rate monitor
+    ("pulsometras", "Pulsmesser"), ("pulsometro", "Pulsmesser"),
+    # Inhaler / nebulizer
+    ("inhalatorius", "Inhalationsgerät"), ("inhaliatoriaus", "Inhalationsgerät"),
+    # Welder
+    ("suvirintuvas", "Schweißgerät"), ("suvirintuvo", "Schweißgerät"),
+    # Meat grinder
+    ("mėsmalė", "Fleischwolf"), ("mėsmalės", "Fleischwolf"),
+    ("mesmalė", "Fleischwolf"), ("mesmale", "Fleischwolf"),
+    # Garden/plant sprayer
+    ("augalų purkštuvas", "Gartenspritze"), ("purkštuvas", "Sprühgerät"),
+    ("purkštuvo", "Sprühgerät"),
+    # Alarm system
+    ("signalizacija", "Alarmanlage"), ("signalizacijos", "Alarmanlage"),
+    # High chair (feeding chair)
+    ("maitinimo kėdutė", "Hochstuhl"), ("maitinimo kedute", "Hochstuhl"),
+    ("maitinimo", "Fütterprogramm"),
+    # Elliptical trainer
+    ("elipsinis treniruoklis", "Ellipsentrainer"), ("elipsinis treniruoklio", "Ellipsentrainer"),
+    ("elipsinis", "Elliptisch"), ("elipsine", "Elliptisch"),
 ], key=lambda t: -len(t[0]))
 
 _LT_PL: list[tuple[str, str]] = sorted([
@@ -3264,6 +3319,36 @@ _LT_PL: list[tuple[str, str]] = sorted([
     # Tiles
     ("plyteliu valytuvas", "myjka do płytek"), ("plyteles valytuvas", "myjka do płytek"),
     ("plyteliu", "do płytek"), ("plyteles", "do płytek"),
+    # Drill
+    ("gręžtuvas", "wiertarka"), ("grežtuvas", "wiertarka"),
+    ("gręžtuko", "wiertarka"), ("greztuko", "wiertarka"),
+    # Tent
+    ("palapinė", "namiot"), ("palapine", "namiot"),
+    ("palapinės", "namiot"), ("palapines", "namiot"),
+    # Sleeping bag
+    ("miegmaišis", "śpiwór"), ("miegmaisio", "śpiwór"),
+    # Blood pressure monitor
+    ("tonometras", "ciśnieniomierz"), ("tonometro", "ciśnieniomierz"),
+    # Pulse / heart rate monitor
+    ("pulsometras", "pulsometr"), ("pulsometro", "pulsometr"),
+    # Inhaler / nebulizer
+    ("inhalatorius", "nebulizator"), ("inhaliatoriaus", "nebulizator"),
+    # Welder
+    ("suvirintuvas", "spawarka"), ("suvirintuvo", "spawarka"),
+    # Meat grinder
+    ("mėsmalė", "maszynka do mięsa"), ("mėsmalės", "maszynka do mięsa"),
+    ("mesmalė", "maszynka do mięsa"), ("mesmale", "maszynka do mięsa"),
+    # Garden/plant sprayer
+    ("augalų purkštuvas", "opryskiwacz"), ("purkštuvas", "opryskiwacz"),
+    ("purkštuvo", "opryskiwacz"),
+    # Alarm system
+    ("signalizacija", "alarm"), ("signalizacijos", "alarm"),
+    # High chair (feeding chair)
+    ("maitinimo kėdutė", "krzesełko do karmienia"), ("maitinimo kedute", "krzesełko do karmienia"),
+    ("maitinimo", "karmienie"),
+    # Elliptical trainer
+    ("elipsinis treniruoklis", "orbitrek"), ("elipsinis treniruoklio", "orbitrek"),
+    ("elipsinis", "eliptyczny"), ("elipsine", "eliptyczny"),
 ], key=lambda t: -len(t[0]))
 
 
@@ -4591,7 +4676,7 @@ def health():
     )
     return jsonify({
         "status": "ok",
-        "version": "7.33",
+        "version": "7.34",
         "uptime_s": uptime_s,
         "shops": ["Varle.lt", "Elesen.lt", "Pigu.lt", "Topo centras", "Amazon.DE", "Amazon.PL"],
         "ai": {
@@ -4669,7 +4754,7 @@ if __name__ == "__main__":
 
     port = int(os.getenv("PORT", 5000))
 
-    print("\n🟢 Goody API v7.33")
+    print("\n🟢 Goody API v7.34")
     print(f"📊 Supabase: {'✅ configured' if SUPABASE_URL else '⚠️ not set'}")
     print("📦 Active shops: Varle + Elesen + Pigu + Topo + Amazon.DE + Amazon.PL")
     print(f"🔑 ScraperAPI: {'✅ configured' if SCRAPER_API_KEY else '⚠️ not set'}")
