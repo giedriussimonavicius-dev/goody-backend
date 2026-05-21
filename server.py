@@ -1,5 +1,6 @@
 """
-Goody Backend v7.34 — _LT_DE/PL +gręžtuvas/palapinė/miegmaišis/tonometras/inhalatorius/suvirintuvas/mėsmalė/purkštuvas/signalizacija/elipsinis:
+Goody Backend v7.35 — _LT_DE/PL +lygintuvė/lyginimo/multimetras/objektyvas/trikojis/grafikos/procesorius/burnos/žolės/apsaugos/interneto/tinklo/elektros:
+- v7.34 — _LT_DE/PL +gręžtuvas/palapinė/miegmaišis/tonometras/inhalatorius/suvirintuvas/mėsmalė/purkštuvas/signalizacija/elipsinis:
 - v7.33 — _NOISE_WORDS +jaki/welcher/testsieger; _LT_DE/PL +depiliatorius/garo/plyteliu:
 - v7.32 — _LT_DE/PL +motopjuklas/grindų/pramoninis/muzikos/statybinis; plovykla fix:
 - v7.31 — _LT_DE/PL +žarna/laistymo/pompa/šalmas/šašlykų; 🚲 helmet/bike pump:
@@ -2519,6 +2520,32 @@ _LT_CATEGORY_WORDS = [
     "maitinimo",
     # Elliptical trainer prefix (elipsinis treniruoklis)
     "elipsinis", "elipsine",
+    # Iron (feminine form)
+    "lygintuvė", "lygintuve",
+    # Ironing (lyginimo lenta = ironing board)
+    "lyginimo",
+    # Multimeter
+    "multimetras", "multimetro",
+    # Camera lens
+    "objektyvas", "objektyvo",
+    # Tripod
+    "trikojis", "trikojo",
+    # Graphics card
+    "grafikos",
+    # CPU
+    "procesorius", "procesoriaus",
+    # Oral irrigator (burnos dušas = water flosser)
+    "burnos",
+    # Lawn (žolės pjovimo mašina = lawn mower alternative phrasing)
+    "žolės", "zoles",
+    # Security genitive (apsaugos kamera = security camera)
+    "apsaugos",
+    # Internet genitive (interneto maršrutizatorius)
+    "interneto",
+    # Network genitive (tinklo jungiklis = network switch)
+    "tinklo",
+    # Electric genitive (elektros pjūklas = electric saw)
+    "elektros",
 ]
 # Normalized (no diacritics) version so accent-free queries also trigger translation
 _LT_CATEGORY_WORDS_NORM = [_norm_lt(w) for w in _LT_CATEGORY_WORDS]
@@ -2942,6 +2969,37 @@ _LT_DE: list[tuple[str, str]] = sorted([
     # Elliptical trainer
     ("elipsinis treniruoklis", "Ellipsentrainer"), ("elipsinis treniruoklio", "Ellipsentrainer"),
     ("elipsinis", "Elliptisch"), ("elipsine", "Elliptisch"),
+    # Iron (feminine form / alternative ending)
+    ("lygintuvė", "Bügeleisen"), ("lygintuve", "Bügeleisen"),
+    # Ironing board
+    ("lyginimo lenta", "Bügelbrett"), ("lyginimo", "Bügel"),
+    # Multimeter
+    ("multimetras", "Multimeter"), ("multimetro", "Multimeter"),
+    # Camera lens
+    ("fotoaparato objektyvas", "Kameraobjektiv"), ("objektyvas", "Objektiv"),
+    ("objektyvo", "Objektiv"),
+    # Tripod
+    ("trikojis", "Stativ"), ("trikojo", "Stativ"),
+    # Graphics card
+    ("grafikos plokštė", "Grafikkarte"), ("grafikos kortele", "Grafikkarte"),
+    ("grafikos", "Grafik"),
+    # CPU
+    ("procesorius", "Prozessor"), ("procesoriaus", "Prozessor"),
+    # Oral irrigator / water flosser
+    ("burnos dušas", "Munddusche"), ("burnos", "Mund"),
+    # Lawn / grass (žolės pjovimo mašina = lawn mower)
+    ("žolės pjovimo mašina", "Rasenmäher"), ("zoles pjovimo masina", "Rasenmäher"),
+    ("žolės", "Rasen"), ("zoles", "Rasen"),
+    # Security camera
+    ("apsaugos kamera", "Sicherheitskamera"), ("apsaugos", "Sicherheits"),
+    # Internet router
+    ("interneto maršrutizatorius", "Internet-Router"), ("interneto marsrutizatorius", "Internet-Router"),
+    ("interneto", "Internet"),
+    # Network switch
+    ("tinklo jungiklis", "Netzwerk-Switch"), ("tinklo", "Netzwerk"),
+    # Electric genitive (elektros pjūklas = electric saw)
+    ("elektros pjūklas", "Elektrosäge"), ("elektros pjuklas", "Elektrosäge"),
+    ("elektros", "Elektro"),
 ], key=lambda t: -len(t[0]))
 
 _LT_PL: list[tuple[str, str]] = sorted([
@@ -3349,6 +3407,37 @@ _LT_PL: list[tuple[str, str]] = sorted([
     # Elliptical trainer
     ("elipsinis treniruoklis", "orbitrek"), ("elipsinis treniruoklio", "orbitrek"),
     ("elipsinis", "eliptyczny"), ("elipsine", "eliptyczny"),
+    # Iron (feminine form)
+    ("lygintuvė", "żelazko"), ("lygintuve", "żelazko"),
+    # Ironing board
+    ("lyginimo lenta", "deska do prasowania"), ("lyginimo", "do prasowania"),
+    # Multimeter
+    ("multimetras", "multimetr"), ("multimetro", "multimetr"),
+    # Camera lens
+    ("fotoaparato objektyvas", "obiektyw do aparatu"), ("objektyvas", "obiektyw"),
+    ("objektyvo", "obiektyw"),
+    # Tripod
+    ("trikojis", "statyw"), ("trikojo", "statyw"),
+    # Graphics card
+    ("grafikos plokštė", "karta graficzna"), ("grafikos kortele", "karta graficzna"),
+    ("grafikos", "graficzny"),
+    # CPU
+    ("procesorius", "procesor"), ("procesoriaus", "procesor"),
+    # Oral irrigator
+    ("burnos dušas", "irygator"), ("burnos", "jamy ustnej"),
+    # Lawn mower (alternative phrasing)
+    ("žolės pjovimo mašina", "kosiarka"), ("zoles pjovimo masina", "kosiarka"),
+    ("žolės", "trawnik"), ("zoles", "trawnik"),
+    # Security camera
+    ("apsaugos kamera", "kamera bezpieczeństwa"), ("apsaugos", "bezpieczeństwa"),
+    # Internet router
+    ("interneto maršrutizatorius", "router internetowy"), ("interneto marsrutizatorius", "router internetowy"),
+    ("interneto", "internetowy"),
+    # Network switch
+    ("tinklo jungiklis", "switch sieciowy"), ("tinklo", "sieciowy"),
+    # Electric saw
+    ("elektros pjūklas", "piła elektryczna"), ("elektros pjuklas", "piła elektryczna"),
+    ("elektros", "elektryczny"),
 ], key=lambda t: -len(t[0]))
 
 
@@ -3362,7 +3451,7 @@ def _static_translate(query: str, target_lang: str) -> str:
     q_low = result.lower()
     for lt_word, target_word in mapping:
         lt_norm = _norm_lt(lt_word)
-        pat = r'(?<![a-z0-9])' + re.escape(lt_norm) + r'(?![a-z0-9])'
+        pat = r'(?<!\w)' + re.escape(lt_norm) + r'(?!\w)'
         if not re.search(pat, q_low):
             continue
         result = re.sub(pat, target_word, result, flags=re.IGNORECASE)
@@ -4676,7 +4765,7 @@ def health():
     )
     return jsonify({
         "status": "ok",
-        "version": "7.34",
+        "version": "7.35",
         "uptime_s": uptime_s,
         "shops": ["Varle.lt", "Elesen.lt", "Pigu.lt", "Topo centras", "Amazon.DE", "Amazon.PL"],
         "ai": {
@@ -4754,7 +4843,7 @@ if __name__ == "__main__":
 
     port = int(os.getenv("PORT", 5000))
 
-    print("\n🟢 Goody API v7.34")
+    print("\n🟢 Goody API v7.35")
     print(f"📊 Supabase: {'✅ configured' if SUPABASE_URL else '⚠️ not set'}")
     print("📦 Active shops: Varle + Elesen + Pigu + Topo + Amazon.DE + Amazon.PL")
     print(f"🔑 ScraperAPI: {'✅ configured' if SCRAPER_API_KEY else '⚠️ not set'}")
