@@ -1,5 +1,6 @@
 """
-Goody Backend v6.56 — _KNOWN_BRANDS: +sonos/harman kardon/stihl/husqvarna/worx/metabo/parkside/greenworks/ilife/cecotec/blaupunkt:
+Goody Backend v6.57 — _LT_DE/PL: +boileris/plovykla→Hochdruckreiniger; icon: +karcher/stihl🔨 sonos/harman kardon🔊:
+- v6.56 — _KNOWN_BRANDS: +sonos/harman kardon/stihl/husqvarna/worx/metabo/parkside/greenworks/ilife/cecotec/blaupunkt:
 - v6.55 — _LT_DE/PL: +garų siurblys→Dampfsauger/odkurzacz parowy, +garų valytuvas→Dampfreiniger/myjka parowa:
 - v6.54 — _ACCESSORY_MATCH_WORDS: +systainer (Festool carry case); 97 tests:
 - v6.53 — validate_price: +robot vacuum €50/gaming console €100 price floors:
@@ -403,12 +404,13 @@ _CATEGORY_ICON_MAP = [
     (["kondicionierius", "oro kondicionierius", "klimaanlage", "klimatyzator"], "🌬️"),
     (["makita", "dewalt", "bosch gsr", "graztas", "pjuklas", "power tool", "drill", "grąžtas",
       "šlifuoklis", "slifuoklis", "suktukas", "kampinis", "winkelschleifer", "schleifer",
-      "schrauber", "bohrmaschine", "szlifierka", "wiertarka", "wkrętarka", "perforatorius"], "🔨"),
+      "schrauber", "bohrmaschine", "szlifierka", "wiertarka", "wkrętarka", "perforatorius",
+      "karcher", "hochdruckreiniger", "myjka cisnieniowa", "plovykla", "stihl", "husqvarna"], "🔨"),
     (["begimu takelis", "begimo takelis", "laufband", "treadmill", "treniruoklis", "bieżnia"], "🏃"),
     (["projektorius", "projector", "projektor", "beamer"], "📽️"),
     (["sulciaspaude", "sulciu", "juicer", "entsafter", "wyciskarka"], "🥤"),
     (["garsiakalbis", "garsine", "kolonele", "soundbar", "lautsprecher", "głośnik", "speaker",
-      "tragbarer lautsprecher", "głośnik przenośny"], "🔊"),
+      "tragbarer lautsprecher", "głośnik przenośny", "sonos", "harman kardon"], "🔊"),
     (["pelė", "pele", "maus", "mouse", "mysz"], "🖱️"),
     (["laidynas", "lygintuvas", "bügeleisen", "bugeleisen", "żelazko", "dampfbügeleisen", "dampfbugeleisen"], "👕"),
     (["ziuronai", "fernglas", "lornetka", "binocular"], "🔭"),
@@ -1996,6 +1998,10 @@ _LT_CATEGORY_WORDS = [
     "čiužinio",     # genitive of čiužinys (mattress)
     "kietojo",      # genitive of kietasis diskas (HDD)
     "indų",         # indų plovyklė → dishwasher (indaplovė only covers nominative)
+    # Water heater / boiler (common LT purchase)
+    "boileris", "šildytuvas",
+    # Pressure washer
+    "plovykla", "slėginė",
 ]
 # Normalized (no diacritics) version so accent-free queries also trigger translation
 _LT_CATEGORY_WORDS_NORM = [_norm_lt(w) for w in _LT_CATEGORY_WORDS]
@@ -2139,6 +2145,12 @@ _LT_DE: list[tuple[str, str]] = sorted([
     ("lygintuvas", "Bügeleisen"),
     ("garų valytuvas", "Dampfreiniger"), ("garu valytuvas", "Dampfreiniger"),
     ("garų siurblys", "Dampfsauger"), ("garu siurblys", "Dampfsauger"),
+    # Water heater / boiler
+    ("vandens šildytuvas", "Warmwasserbereiter"), ("vandens sildytuvas", "Warmwasserbereiter"),
+    ("boileris", "Boiler"),
+    # Pressure washer
+    ("aukštojo slėgio plovykla", "Hochdruckreiniger"), ("slėginė plovykla", "Hochdruckreiniger"),
+    ("slegine plovykla", "Hochdruckreiniger"), ("plovykla", "Hochdruckreiniger"),
     # Standalone fallbacks for trigger words missing direct translations
     # (these fire only when the more-specific multi-word phrases above don't match)
     ("bėgimo", "Lauf"),
@@ -2301,6 +2313,12 @@ _LT_PL: list[tuple[str, str]] = sorted([
     ("lygintuvas", "żelazko"),
     ("garų valytuvas", "myjka parowa"), ("garu valytuvas", "myjka parowa"),
     ("garų siurblys", "odkurzacz parowy"), ("garu siurblys", "odkurzacz parowy"),
+    # Water heater / boiler
+    ("vandens šildytuvas", "podgrzewacz wody"), ("vandens sildytuvas", "podgrzewacz wody"),
+    ("boileris", "bojler"),
+    # Pressure washer
+    ("aukštojo slėgio plovykla", "myjka ciśnieniowa"), ("slėginė plovykla", "myjka ciśnieniowa"),
+    ("slegine plovykla", "myjka ciśnieniowa"), ("plovykla", "myjka ciśnieniowa"),
     # Standalone fallbacks for trigger words missing direct translations
     ("bėgimo", "bieganie"),
     ("garų", "parowy"),
@@ -3659,7 +3677,7 @@ def health():
     )
     return jsonify({
         "status": "ok",
-        "version": "6.56",
+        "version": "6.57",
         "uptime_s": uptime_s,
         "shops": ["Varle.lt", "Elesen.lt", "Pigu.lt", "Topo centras", "Amazon.DE", "Amazon.PL"],
         "ai": {
@@ -3737,7 +3755,7 @@ if __name__ == "__main__":
 
     port = int(os.getenv("PORT", 5000))
 
-    print("\n🟢 Goody API v6.56")
+    print("\n🟢 Goody API v6.57")
     print(f"📊 Supabase: {'✅ configured' if SUPABASE_URL else '⚠️ not set'}")
     print("📦 Active shops: Varle + Elesen + Pigu + Topo + Amazon.DE + Amazon.PL")
     print(f"🔑 ScraperAPI: {'✅ configured' if SCRAPER_API_KEY else '⚠️ not set'}")
