@@ -1,5 +1,6 @@
 """
-Goody Backend v6.50 — _KNOWN_BRANDS: +epson/dreame/ecovacs/eufy/milwaukee/ryobi/festool/einhell/weber/instant/vitamix:
+Goody Backend v6.51 — _ACCESSORY_MATCH_WORDS: +strap/dirželis/armband/pasek (watch strap gaps):
+- v6.50 — _KNOWN_BRANDS: +epson/dreame/ecovacs/eufy/milwaukee/ryobi/festool/einhell/weber/instant/vitamix:
 - v6.49 — _NOISE_WORDS: +kaip nusipirkti/kur rasti/palyginti/compare/vergleichen (cache hit boost):
 - v6.48 — _LT_CATEGORY_WORDS/DE/PL: +žaislai (toy plural) translation miss fix:
 - v6.47 — _KNOWN_BRANDS: +poco/redmi/nothing; icon map: +nothing phone:
@@ -236,13 +237,13 @@ _ACCESSORY_MATCH_WORDS = frozenset({
     'stylus', 'remote control', 'controller',
     # NOTE: 'headset' intentionally omitted — over-ear headphones are often marketed as headsets
     # (e.g. "Sony WH-1000XM5 Wireless Headset") and would be incorrectly filtered.
-    'watch band', 'sport band', 'fitness band', 'wristband', 'band',
-    'dėklas', 'maišelis', 'rankinė', 'stovas', 'laikiklis',
+    'watch band', 'sport band', 'fitness band', 'wristband', 'band', 'strap',
+    'dėklas', 'maišelis', 'rankinė', 'stovas', 'laikiklis', 'dirželis',
     'kroviklis', 'kabelis', 'plėvelė', 'stikliukas', 'apsauga',
     'etui', 'obudowa', 'pokrowiec', 'ładowarka', 'kabel', 'szkło', 'folia',
-    'uchwyt', 'podstawka', 'naklejka', 'ochraniacz', 'filtr',
+    'uchwyt', 'podstawka', 'naklejka', 'ochraniacz', 'filtr', 'pasek',
     'hülle', 'tasche', 'schutzhülle', 'ladegerät', 'halterung', 'schutzglas',
-    'ersatz', 'zubehör',
+    'ersatz', 'zubehör', 'armband',
     # LT plural accessory forms
     'maišeliai', 'filtrai', 'filtras', 'priedai', 'priedas', 'laikiklis',
     # Multi-word accessory phrases
@@ -3630,7 +3631,7 @@ def health():
     )
     return jsonify({
         "status": "ok",
-        "version": "6.50",
+        "version": "6.51",
         "uptime_s": uptime_s,
         "shops": ["Varle.lt", "Elesen.lt", "Pigu.lt", "Topo centras", "Amazon.DE", "Amazon.PL"],
         "ai": {
@@ -3708,7 +3709,7 @@ if __name__ == "__main__":
 
     port = int(os.getenv("PORT", 5000))
 
-    print("\n🟢 Goody API v6.50")
+    print("\n🟢 Goody API v6.51")
     print(f"📊 Supabase: {'✅ configured' if SUPABASE_URL else '⚠️ not set'}")
     print("📦 Active shops: Varle + Elesen + Pigu + Topo + Amazon.DE + Amazon.PL")
     print(f"🔑 ScraperAPI: {'✅ configured' if SCRAPER_API_KEY else '⚠️ not set'}")

@@ -163,6 +163,16 @@ total_fails += run("watch band filter", "Apple Watch Series 11", [
     ("Apple Watch Sport Band 45mm Series 11",       False),  # sport band = accessory
 ])
 
+# ── Strap / Armband / Pasek accessory filter ─────────────────
+total_fails += run("strap filter", "Samsung Galaxy Watch6", [
+    ("Samsung Galaxy Watch6 Classic 47mm Black",       True),
+    ("Samsung Galaxy Watch6 44mm Gold GPS",            True),
+    ("Samsung Galaxy Watch6 Leather Strap 20mm",       False),  # strap = accessory
+    ("Samsung Galaxy Watch6 Armband Silikon",          False),  # DE armband = accessory
+    ("Pasek Samsung Galaxy Watch6 Sport",              False),  # PL pasek = accessory
+    ("Samsung Galaxy Watch6 Dirželis Odinis",          False),  # LT dirželis = accessory
+])
+
 print(f"\n{'='*60}")
 if total_fails == 0:
     print("  Visi testai praejo!")
