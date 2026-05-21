@@ -193,6 +193,29 @@ total_fails += run("festool brand", "Festool TSC 55", [
     ("Systainer for Festool TSC 55",                   False),  # carry case
 ])
 
+# ── Sonos brand filtering ─────────────────────────────────────
+total_fails += run("sonos brand", "Sonos Arc", [
+    ("Sonos Arc Soundbar 5.0.2 Premium Smart Speaker",  True),
+    ("Sonos Arc Ultra Premium Soundbar",                True),
+    ("Bose Soundbar 600",                               False),  # different brand
+    ("Wall Mount for Sonos Arc",                        False),  # accessory
+])
+
+# ── Stihl brand filtering ─────────────────────────────────────
+total_fails += run("stihl brand", "Stihl MS 180", [
+    ("Stihl MS 180 C-BE Chainsaw 35cm",                True),
+    ("Stihl MS 180 14\" Bar Petrol Chainsaw",          True),
+    ("Husqvarna 135 Chainsaw",                         False),  # different brand
+    ("Replacement Chain for Stihl MS 180",             False),  # replacement = accessory
+])
+
+# ── Husqvarna brand filtering ─────────────────────────────────
+total_fails += run("husqvarna brand", "Husqvarna Automower 315", [
+    ("Husqvarna Automower 315 Robotic Lawn Mower",     True),
+    ("Husqvarna Automower 315X",                       True),   # suffix variant (like WH-1000XM5N)
+    ("Worx Landroid M700 Plus",                        False),  # different brand
+])
+
 print(f"\n{'='*60}")
 if total_fails == 0:
     print("  Visi testai praejo!")
