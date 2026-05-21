@@ -1,5 +1,6 @@
 """
-Goody Backend v6.93 — _ACCESSORY_MATCH_WORDS: +notebooktasche/laptoptasche/kameratasche/rucksack/ladestation/akkuladegerät (DE compound accessory fix):
+Goody Backend v6.94 — _LT_DE/PL: +dronas→Drohne/dron; _ACCESSORY: +torba/plecak(PL)/krepšys/kuprinė(LT); icon: +drone📷/kindle📱:
+- v6.93 — _ACCESSORY_MATCH_WORDS: +notebooktasche/laptoptasche/kameratasche/rucksack/ladestation/akkuladegerät (DE compound accessory fix):
 - v6.92 — _KNOWN_BRANDS: +steelseries/hyperx/rode/klipsch; icons: steelseries/hyperx🎮 rode🎙️ klipsch🔊; _LT_DE/PL: +rekuperatorius/garų stotis:
 - v6.91 — _ACCESSORY: +netzadapter; validate_price: +projector€50/treadmill€50; _NOISE_WORDS: +atsiliepimai/apžvalgos; icon: russell hobbs→russell:
 - v6.90 — _CATEGORY_ICON_MAP: +kenwood/kitchenaid/ninja/smeg🍳; +sage/russell/breville/melitta☕; +whirlpool/hotpoint/grundig🫧; +leica📷; +shure🎙️; +logitech🖱️; +razer/corsair🎮:
@@ -364,6 +365,10 @@ _ACCESSORY_MATCH_WORDS = frozenset({
     'notebooktasche', 'laptoptasche', 'kameratasche', 'fototasche', 'tabletasche',
     # Backpack (laptop/camera context; passes if query also contains rucksack)
     'rucksack',
+    # Polish bag/backpack accessories
+    'torba', 'plecak',
+    # Lithuanian bag/backpack accessories
+    'krepšys', 'krepsys', 'kuprinė', 'kuprine',
 })
 _VARIANT_WORDS = frozenset({
     'pro', 'max', 'ultra', 'plus', 'lite', 'mini', 'fe', 'edge',
@@ -473,7 +478,7 @@ _CATEGORY_ICON_MAP = [
       "galaxy s", "galaxy a", "redmi", "poco", "motorola", "honor", "realme", "oppo", "vivo", "nothing phone"], "📱"),
     (["macbook", "laptop", "notebook", "thinkpad", "dell xps", "asus", "surface pro",
       "chromebook", "nesiojamas kompiuteris"], "💻"),
-    (["ipad", "galaxy tab", "tablet"], "📱"),
+    (["ipad", "galaxy tab", "tablet", "kindle", "kobo", "e-reader", "e-book reader"], "📱"),
     (["oled", "qled", " tv ", " tv", "tv ", "television", "televizorius", "fernseher",
       "telewizor", "ekranas", "screen", "55\"", "65\"", "43\""], "📺"),
     (["headphone", "earphone", "earbuds", "ausines", "ausinukai", "airpods", "wh-1000", "bose qc",
@@ -483,7 +488,8 @@ _CATEGORY_ICON_MAP = [
       "gigabyte", "msi", "zotac", "sapphire", "razer", "corsair",
       "steelseries", "hyperx"], "🎮"),
     (["camera", "nikon", "canon", "sony zv", "sony alpha", "fotoaparatas", "mirrorless", "dslr",
-      "gopro", "dji", "aparat foto", "aparat cyfr", "fujifilm", "olympus", "leica"], "📷"),
+      "gopro", "dji", "aparat foto", "aparat cyfr", "fujifilm", "olympus", "leica",
+      "dronas", "drohne", "dron"], "📷"),
     (["roomba", "roborock", "irobot", "robot siurblys", "robotinis", "saugroboter",
       "dreame", "ecovacs", "eufy"], "🤖"),
     # Heat pump must come before generic "siurblys"→🧹 so "silumos siurblys" matches here first
@@ -2202,6 +2208,10 @@ _LT_CATEGORY_WORDS = [
     "rekuperatorius", "rekuperatoriaus",
     # Steam station (pro iron with detached boiler)
     "stotis",
+    # Drone
+    "dronas",
+    # E-reader
+    "e-knygu",
 ]
 # Normalized (no diacritics) version so accent-free queries also trigger translation
 _LT_CATEGORY_WORDS_NORM = [_norm_lt(w) for w in _LT_CATEGORY_WORDS]
@@ -2422,6 +2432,10 @@ _LT_DE: list[tuple[str, str]] = sorted([
     ("garų stotis", "Dampfstation"), ("garu stotis", "Dampfstation"),
     # Heat recovery ventilation (rekuperatorius)
     ("rekuperatorius", "Lüftungsanlage"), ("rekuperatoriaus", "Lüftungsanlage"),
+    # Drone (common purchase; DJI = most popular brand)
+    ("dronas su kamera", "Drohne mit Kamera"), ("dronas", "Drohne"),
+    # E-reader
+    ("e-knygu skaitvtuvas", "E-Reader"), ("e-knygu", "E-Reader"),
 ], key=lambda t: -len(t[0]))
 
 _LT_PL: list[tuple[str, str]] = sorted([
@@ -2629,6 +2643,10 @@ _LT_PL: list[tuple[str, str]] = sorted([
     ("garų stotis", "stacja pary"), ("garu stotis", "stacja pary"),
     # Heat recovery ventilation
     ("rekuperatorius", "rekuperator"), ("rekuperatoriaus", "rekuperator"),
+    # Drone
+    ("dronas su kamera", "dron z kamerą"), ("dronas", "dron"),
+    # E-reader
+    ("e-knygu skaitvtuvas", "czytnik e-booków"), ("e-knygu", "e-book"),
 ], key=lambda t: -len(t[0]))
 
 
@@ -3956,7 +3974,7 @@ def health():
     )
     return jsonify({
         "status": "ok",
-        "version": "6.93",
+        "version": "6.94",
         "uptime_s": uptime_s,
         "shops": ["Varle.lt", "Elesen.lt", "Pigu.lt", "Topo centras", "Amazon.DE", "Amazon.PL"],
         "ai": {
@@ -4034,7 +4052,7 @@ if __name__ == "__main__":
 
     port = int(os.getenv("PORT", 5000))
 
-    print("\n🟢 Goody API v6.93")
+    print("\n🟢 Goody API v6.94")
     print(f"📊 Supabase: {'✅ configured' if SUPABASE_URL else '⚠️ not set'}")
     print("📦 Active shops: Varle + Elesen + Pigu + Topo + Amazon.DE + Amazon.PL")
     print(f"🔑 ScraperAPI: {'✅ configured' if SCRAPER_API_KEY else '⚠️ not set'}")
