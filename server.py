@@ -1,5 +1,6 @@
 """
-Goody Backend v6.64 — _LT_DE/PL: +sniego valytuvas→Schneefräse/odśnieżarka; trigger: +sniego:
+Goody Backend v6.65 — _CATEGORY_ICON_MAP: +kärcher (umlaut) to power tools🔨:
+- v6.64 — _LT_DE/PL: +sniego valytuvas→Schneefräse/odśnieżarka; trigger: +sniego:
 - v6.63 — _LT_DE/PL: +vejapjovė→Rasenmäher/kosiarka; +kompresorius→Kompressor/kompresor:
 - v6.62 — _ACCESSORY_MATCH_WORDS: +battery pack/replacement battery/akkupack/netzteil:
 - v6.61 — _NOISE_WORDS: +kainos/apžvalga/pigiausias/pirkti/internetu/kur nusipirkti (cache hit boost):
@@ -415,7 +416,7 @@ _CATEGORY_ICON_MAP = [
     (["makita", "dewalt", "bosch gsr", "graztas", "pjuklas", "power tool", "drill", "grąžtas",
       "šlifuoklis", "slifuoklis", "suktukas", "kampinis", "winkelschleifer", "schleifer",
       "schrauber", "bohrmaschine", "szlifierka", "wiertarka", "wkrętarka", "perforatorius",
-      "karcher", "hochdruckreiniger", "myjka cisnieniowa", "plovykla", "stihl", "husqvarna"], "🔨"),
+      "karcher", "kärcher", "hochdruckreiniger", "myjka cisnieniowa", "plovykla", "stihl", "husqvarna"], "🔨"),
     (["begimu takelis", "begimo takelis", "laufband", "treadmill", "treniruoklis", "bieżnia"], "🏃"),
     (["projektorius", "projector", "projektor", "beamer"], "📽️"),
     (["sulciaspaude", "sulciu", "juicer", "entsafter", "wyciskarka"], "🥤"),
@@ -3724,7 +3725,7 @@ def health():
     )
     return jsonify({
         "status": "ok",
-        "version": "6.64",
+        "version": "6.65",
         "uptime_s": uptime_s,
         "shops": ["Varle.lt", "Elesen.lt", "Pigu.lt", "Topo centras", "Amazon.DE", "Amazon.PL"],
         "ai": {
@@ -3802,7 +3803,7 @@ if __name__ == "__main__":
 
     port = int(os.getenv("PORT", 5000))
 
-    print("\n🟢 Goody API v6.64")
+    print("\n🟢 Goody API v6.65")
     print(f"📊 Supabase: {'✅ configured' if SUPABASE_URL else '⚠️ not set'}")
     print("📦 Active shops: Varle + Elesen + Pigu + Topo + Amazon.DE + Amazon.PL")
     print(f"🔑 ScraperAPI: {'✅ configured' if SCRAPER_API_KEY else '⚠️ not set'}")
