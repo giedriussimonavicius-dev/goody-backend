@@ -1,5 +1,6 @@
 """
-Goody Backend v7.11 — _LT_DE/PL: +krūmapjovė/lapų pūstuvas/žibintas/nebulizatorius; icon +heckenschere/laubbläser🔨 +taschenlampe💡:
+Goody Backend v7.12 — validate_price: +e-bike €150 floor; +air purifier €25 floor:
+- v7.11 — _LT_DE/PL: +krūmapjovė/lapų pūstuvas/žibintas/nebulizatorius; icon +heckenschere/laubbläser🔨 +taschenlampe💡:
 - v7.10 — _CATEGORY_ICON_MAP: +sharp/blaupunkt📺; +aeg🫧; +rowenta👕; +instant🍳; +vitamix🥤; +gree🌬️; +seagate/wd/sandisk🖥️:
 - v7.09 — validate_price: +air fryer €20 floor; _CATEGORY_ICON_MAP: +frytkownica/heißluftfritteuse🍳:
 - v7.08 — _LT_DE/PL: +oras vanduo→Luft-Wasser/powietrze-woda; +oras oras→Luft-Luft:
@@ -1145,6 +1146,10 @@ _MONITOR_W  = ["monitorius", "gaming monitor", "computer monitor", "pc monitor",
                "bildschirm", "ekran komputerowy", "ekran do komputera"]  # PC monitors ≥ €25
 _AIRFRYER_W = ["gruzdintuvė", "gruzdintuve", "air fryer", "heißluftfritteuse", "heissluftfritteuse",
                "frytkownica beztłuszczowa", "frytkownica"]  # air fryers ≥ €20
+_EBIKE_W    = ["elektrinis dviratis", "e-bike", "ebike", "e fahrrad", "e-fahrrad",
+               "pedelec", "rower elektryczny"]  # e-bikes ≥ €150
+_AIRPUR_W   = ["air purifier", "luftreiniger", "oczyszczacz powietrza", "oro valytuvas",
+               "levoit", "blueair", "coway", "winix"]  # air purifiers ≥ €25
 _TV_SIZE_RE = re.compile(r"\b(43|50|55|65|75|85)\b")
 
 
@@ -1247,6 +1252,14 @@ def validate_price(price: float, query: str) -> float:
 
     # Air fryer: cheapest entry models start at ~€20
     if any(w in q for w in _AIRFRYER_W) and price < 20:
+        return 0.0
+
+    # E-bike: cheapest entry pedal-assist starts at ~€300; floor at €150 to catch centai
+    if any(w in q for w in _EBIKE_W) and price < 150:
+        return 0.0
+
+    # Air purifier: cheapest desktop HEPA starts at ~€30
+    if any(w in q for w in _AIRPUR_W) and price < 25:
         return 0.0
 
     # Global floor: anything below €0.50 is a parse artefact
@@ -4098,7 +4111,7 @@ def health():
     )
     return jsonify({
         "status": "ok",
-        "version": "7.11",
+        "version": "7.12",
         "uptime_s": uptime_s,
         "shops": ["Varle.lt", "Elesen.lt", "Pigu.lt", "Topo centras", "Amazon.DE", "Amazon.PL"],
         "ai": {
@@ -4176,7 +4189,7 @@ if __name__ == "__main__":
 
     port = int(os.getenv("PORT", 5000))
 
-    print("\n🟢 Goody API v7.11")
+    print("\n🟢 Goody API v7.12")
     print(f"📊 Supabase: {'✅ configured' if SUPABASE_URL else '⚠️ not set'}")
     print("📦 Active shops: Varle + Elesen + Pigu + Topo + Amazon.DE + Amazon.PL")
     print(f"🔑 ScraperAPI: {'✅ configured' if SCRAPER_API_KEY else '⚠️ not set'}")
