@@ -1,5 +1,6 @@
 """
-Goody Backend v6.90 — _CATEGORY_ICON_MAP: +kenwood/kitchenaid/ninja/smeg🍳; +sage/russell/breville/melitta☕; +whirlpool/hotpoint/grundig🫧; +leica📷; +shure🎙️; +logitech🖱️; +razer/corsair🎮:
+Goody Backend v6.91 — _ACCESSORY: +netzadapter; validate_price: +projector€50/treadmill€50; _NOISE_WORDS: +atsiliepimai/apžvalgos; icon: russell hobbs→russell:
+- v6.90 — _CATEGORY_ICON_MAP: +kenwood/kitchenaid/ninja/smeg🍳; +sage/russell/breville/melitta☕; +whirlpool/hotpoint/grundig🫧; +leica📷; +shure🎙️; +logitech🖱️; +razer/corsair🎮:
 - v6.89 — _KNOWN_BRANDS: +midea/hoover; _CATEGORY_ICON_MAP: liebherr❄️/indesit+candy+beko+gorenje+haier🫧/hoover🧹/midea🌬️:
 - v6.88 — _ACCESSORY_MATCH_WORDS: +ladekabel/aufladekabel/netzkabel (DE cable compounds); _LT_DE/PL: +dantų iryklė→Munddusche/irygator:
 - v6.87 — _CATEGORY_ICON_MAP: +neff🍳/asko🫧/bauknecht🫧/severin🍳/bomann🍳; _ROBOT_VAC_W: +dreame/ecovacs/eufy; _NOISE_WORDS: +pigiausia/best deal/kur pigiausia:
@@ -349,6 +350,8 @@ _ACCESSORY_MATCH_WORDS = frozenset({
     'tonerkassette',
     # German charging/power cables (compound words — "kabel" whole-word would miss these)
     'ladekabel', 'aufladekabel', 'netzkabel', 'verbindungskabel', 'anschlusskabel',
+    # German power adapter (compound — "adapter" whole-word would miss it)
+    'netzadapter',
 })
 _VARIANT_WORDS = frozenset({
     'pro', 'max', 'ultra', 'plus', 'lite', 'mini', 'fe', 'edge',
@@ -482,7 +485,7 @@ _CATEGORY_ICON_MAP = [
       "asko", "bauknecht", "constructa", "indesit", "candy", "beko", "gorenje", "haier",
       "whirlpool", "hotpoint", "grundig"], "🫧"),
     (["virdulys", "kettle", "kavos", "nespresso", "wasserkocher", "kaffeemaschine",
-      "czajnik", "ekspres", "sage", "russell hobbs", "breville", "melitta"], "☕"),
+      "czajnik", "ekspres", "sage", "russell", "breville", "melitta"], "☕"),
     (["keptuve", "blender", "mikser", "multicooker", "air fryer", "gruzdintuve",
       "robot kuchenny", "kuchenny", "thermomix", "küchenmaschine", "maisto procesorius",
       "gasherd", "kuchenka gazowa", "duju virykle", "virykle", "induktion",
@@ -549,6 +552,7 @@ _NOISE_WORDS = re.compile(
     r'\b(buy|kur pirkti|kaip nusipirkti|kur rasti|where to buy|cheap|pigiau|best price|geriausia kaina|'
     r'billig|günstig|online|price|kaina|kainos|preis|cena|review|atsiliepimas|apžvalga|bewertung|opinia|'
     r'pigiausiai|pigiausias|pigiausia|kur pigiausia|cheapest|best deal|billigste|najtaniej|order|bestellen|zamów|'
+    r'atsiliepimai|apžvalgos|apzvalgos|'
     r'compare|palyginti|vergleichen|porównaj|'
     r'discount|sale|angebote|oferta|rabat|akcija|nuolaida|nuolaidos|'
     r'pirkti|internetu|kur nusipirkti|išpardavimas|'
@@ -1062,6 +1066,8 @@ _PRESSURE_W = ["hochdruckreiniger", "myjka cisnieniowa", "pressure washer", "kar
                "plovykla", "aukstojo sleglio"]  # cheapest pressure washers ~€30
 _MOWER_W    = ["rasenmäher", "rasenmaher", "kosiarka", "žoliapjovė", "zoliapjove",
                "vejapjovė", "vejapjove"]  # cheapest electric mowers ~€80
+_PROJECTOR_W = ["projektorius", "projector", "projektor", "beamer"]  # cheapest ~€50
+_TREADMILL_W = ["laufband", "treadmill", "bieżnia", "bėgimo takelis", "begimo takelis"]  # cheapest ~€100
 _TV_SIZE_RE = re.compile(r"\b(43|50|55|65|75|85)\b")
 
 
@@ -1136,6 +1142,14 @@ def validate_price(price: float, query: str) -> float:
 
     # Lawn mowers: even cheapest electric mower ~€80 — prevents centai (3000 ct → €30)
     if any(w in q for w in _MOWER_W) and price < 30:
+        return 0.0
+
+    # Projector: cheapest pico projector ~€50 — prevents centai misidentification
+    if any(w in q for w in _PROJECTOR_W) and price < 20:
+        return 0.0
+
+    # Treadmill: even cheapest folding treadmill ~€100
+    if any(w in q for w in _TREADMILL_W) and price < 40:
         return 0.0
 
     # Global floor: anything below €0.50 is a parse artefact
@@ -3917,7 +3931,7 @@ def health():
     )
     return jsonify({
         "status": "ok",
-        "version": "6.90",
+        "version": "6.91",
         "uptime_s": uptime_s,
         "shops": ["Varle.lt", "Elesen.lt", "Pigu.lt", "Topo centras", "Amazon.DE", "Amazon.PL"],
         "ai": {
@@ -3995,7 +4009,7 @@ if __name__ == "__main__":
 
     port = int(os.getenv("PORT", 5000))
 
-    print("\n🟢 Goody API v6.90")
+    print("\n🟢 Goody API v6.91")
     print(f"📊 Supabase: {'✅ configured' if SUPABASE_URL else '⚠️ not set'}")
     print("📦 Active shops: Varle + Elesen + Pigu + Topo + Amazon.DE + Amazon.PL")
     print(f"🔑 ScraperAPI: {'✅ configured' if SCRAPER_API_KEY else '⚠️ not set'}")
