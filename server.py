@@ -1,5 +1,6 @@
 """
-Goody Backend v6.81 — _KNOWN_BRANDS +gigabyte/msi/fritzbox; _CATEGORY_ICON_MAP +gigabyte/msi🎮/fritzbox🌐:
+Goody Backend v6.82 — _NOISE_WORDS: +lietuva/vokietija/lenkija/deutschland/polska (cache hit boost):
+- v6.81 — _KNOWN_BRANDS +gigabyte/msi/fritzbox; _CATEGORY_ICON_MAP +gigabyte/msi🎮/fritzbox🌐:
 - v6.80 — _LT_DE/PL: +colių→Zoll/cali (inch) TV size translation:
 - v6.79 — _LT_DE/PL: +kavos malūnėlis/automatinis kavos aparatas translations:
 - v6.78 — _CATEGORY_ICON_MAP: +dreame/ecovacs/eufy🤖; _ACCESSORY_MAP: +audio-technica🎧:
@@ -525,7 +526,9 @@ _NOISE_WORDS = re.compile(
     r'compare|palyginti|vergleichen|porównaj|'
     r'discount|sale|angebote|oferta|rabat|akcija|nuolaida|nuolaidos|'
     r'pirkti|internetu|kur nusipirkti|išpardavimas|'
-    r'promocja|wyprzedaż|recenzja|gdzie kupić|preisvergleich)\b',
+    r'promocja|wyprzedaż|recenzja|gdzie kupić|preisvergleich|'
+    r'lietuva|lietuvoje|vokietija|vokietijoje|lenkija|lenkijoje|anglijoje|'
+    r'deutschland|polska|in deutschland|in poland)\b',
     re.IGNORECASE
 )
 
@@ -3880,7 +3883,7 @@ def health():
     )
     return jsonify({
         "status": "ok",
-        "version": "6.81",
+        "version": "6.82",
         "uptime_s": uptime_s,
         "shops": ["Varle.lt", "Elesen.lt", "Pigu.lt", "Topo centras", "Amazon.DE", "Amazon.PL"],
         "ai": {
@@ -3958,7 +3961,7 @@ if __name__ == "__main__":
 
     port = int(os.getenv("PORT", 5000))
 
-    print("\n🟢 Goody API v6.81")
+    print("\n🟢 Goody API v6.82")
     print(f"📊 Supabase: {'✅ configured' if SUPABASE_URL else '⚠️ not set'}")
     print("📦 Active shops: Varle + Elesen + Pigu + Topo + Amazon.DE + Amazon.PL")
     print(f"🔑 ScraperAPI: {'✅ configured' if SCRAPER_API_KEY else '⚠️ not set'}")
