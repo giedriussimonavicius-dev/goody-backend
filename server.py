@@ -1,5 +1,6 @@
 """
-Goody Backend v7.15 — _LT_DE/PL: +vežimėlis/vaikiška kėdutė/kūdikio monitorius; _KNOWN_BRANDS: +bugaboo/cybex/britax/graco:
+Goody Backend v7.16 — _NOISE_WORDS: +ranking/empfehlung/ratgeber/najlepszy/polecany; _KNOWN_BRANDS: +keychron:
+- v7.15 — _LT_DE/PL: +vežimėlis/vaikiška kėdutė/kūdikio monitorius; _KNOWN_BRANDS: +bugaboo/cybex/britax/graco:
 - v7.14 — _KNOWN_BRANDS: +nest/tado/shelly/sonoff/ring/arlo/tapo/meross; _LT_DE/PL: +termoregliatorius/išmanusis kištukas:
 - v7.13 — _NOISE_WORDS: +im test/testbericht/erfahrungen; _LT_DE/PL: +stebėjimo kamera/durų skambutis:
 - v7.12 — validate_price: +e-bike €150 floor; +air purifier €25 floor:
@@ -324,6 +325,8 @@ _KNOWN_BRANDS = {
     'nest', 'tado', 'shelly', 'sonoff', 'ring', 'arlo', 'tapo', 'meross', 'aqara',
     # Baby / child safety brands
     'bugaboo', 'cybex', 'britax', 'graco', 'uppababy',
+    # Mechanical keyboards (popular in EU gamer/enthusiast market)
+    'keychron', 'ducky', 'glorious',
 }
 _ACCESSORY_MATCH_WORDS = frozenset({
     'case', 'cover', 'sleeve', 'bumper', 'wallet', 'skin', 'sticker', 'decal',
@@ -608,7 +611,8 @@ _CATEGORY_ICON_MAP = [
     (["mikrofonas", "microphone", "mikrofon", "condenser mic", "podcast", "shure", "rode"], "🎙️"),
     (["marsrutizatorius", "router", "mesh wifi", "access point", "switch", "tinklo",
       "tp-link", "ubiquiti", "netgear", "zyxel", "fritzbox", "fritz!box"], "🌐"),
-    (["klaviatura", "klaviatūra", "keyboard", "klawiatura", "tastatur", "mechanine"], "⌨️"),
+    (["klaviatura", "klaviatūra", "keyboard", "klawiatura", "tastatur", "mechanine",
+      "keychron", "ducky", "glorious"], "⌨️"),
     (["zadintuvas", "zadintuva", "wecker", "budzik", "alarm clock"], "⏰"),
     (["lempa", "lampe", "lampa", "lempute", "lemputes", "led juosta", "led strip", "led lamp", "smart lamp",
       "sviestuvas", "sviestuvai", "prozektorius", "philips hue", "hue", "smart bulb",
@@ -642,7 +646,8 @@ _NOISE_WORDS = re.compile(
     r'pirkti|internetu|kur nusipirkti|išpardavimas|'
     r'promocja|wyprzedaż|recenzja|gdzie kupić|preisvergleich|'
     r'wo kaufen|kaufen|kupić|'
-    r'im test|testbericht|erfahrungen|erfahrungsbericht|'
+    r'im test|testbericht|erfahrungen|erfahrungsbericht|empfehlung|ratgeber|'
+    r'ranking|najlepszy|najlepsza|polecany|polecana|'
     r'lietuva|lietuvoje|vokietija|vokietijoje|lenkija|lenkijoje|anglijoje|'
     r'deutschland|polska|in deutschland|in poland|'
     r'in lithuania|in germany|in uk|in europe|delivery to|shipped to|'
@@ -4170,7 +4175,7 @@ def health():
     )
     return jsonify({
         "status": "ok",
-        "version": "7.15",
+        "version": "7.16",
         "uptime_s": uptime_s,
         "shops": ["Varle.lt", "Elesen.lt", "Pigu.lt", "Topo centras", "Amazon.DE", "Amazon.PL"],
         "ai": {
@@ -4248,7 +4253,7 @@ if __name__ == "__main__":
 
     port = int(os.getenv("PORT", 5000))
 
-    print("\n🟢 Goody API v7.15")
+    print("\n🟢 Goody API v7.16")
     print(f"📊 Supabase: {'✅ configured' if SUPABASE_URL else '⚠️ not set'}")
     print("📦 Active shops: Varle + Elesen + Pigu + Topo + Amazon.DE + Amazon.PL")
     print(f"🔑 ScraperAPI: {'✅ configured' if SCRAPER_API_KEY else '⚠️ not set'}")
