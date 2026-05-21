@@ -1,5 +1,6 @@
 """
-Goody Backend v6.53 — validate_price: +robot vacuum €50/gaming console €100 price floors:
+Goody Backend v6.54 — _ACCESSORY_MATCH_WORDS: +systainer (Festool carry case); 97 tests:
+- v6.53 — validate_price: +robot vacuum €50/gaming console €100 price floors:
 - v6.52 — _NOISE_WORDS: +discount/sale/angebote/oferta/rabat/akcija/nuolaida (cache hit boost):
 - v6.51 — _ACCESSORY_MATCH_WORDS: +strap/dirželis/armband/pasek (watch strap gaps):
 - v6.50 — _KNOWN_BRANDS: +epson/dreame/ecovacs/eufy/milwaukee/ryobi/festool/einhell/weber/instant/vitamix:
@@ -251,6 +252,8 @@ _ACCESSORY_MATCH_WORDS = frozenset({
     # Multi-word accessory phrases
     'cleaning kit', 'cleaning brush', 'carry bag', 'carry case', 'screen film',
     'wall mount', 'power bank', 'spare part',
+    # Festool-specific storage system (Systainer = proprietary carry case)
+    'systainer',
 })
 _VARIANT_WORDS = frozenset({
     'pro', 'max', 'ultra', 'plus', 'lite', 'mini', 'fe', 'edge',
@@ -3645,7 +3648,7 @@ def health():
     )
     return jsonify({
         "status": "ok",
-        "version": "6.53",
+        "version": "6.54",
         "uptime_s": uptime_s,
         "shops": ["Varle.lt", "Elesen.lt", "Pigu.lt", "Topo centras", "Amazon.DE", "Amazon.PL"],
         "ai": {
@@ -3723,7 +3726,7 @@ if __name__ == "__main__":
 
     port = int(os.getenv("PORT", 5000))
 
-    print("\n🟢 Goody API v6.53")
+    print("\n🟢 Goody API v6.54")
     print(f"📊 Supabase: {'✅ configured' if SUPABASE_URL else '⚠️ not set'}")
     print("📦 Active shops: Varle + Elesen + Pigu + Topo + Amazon.DE + Amazon.PL")
     print(f"🔑 ScraperAPI: {'✅ configured' if SCRAPER_API_KEY else '⚠️ not set'}")

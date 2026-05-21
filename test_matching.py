@@ -173,6 +173,26 @@ total_fails += run("strap filter", "Samsung Galaxy Watch6", [
     ("Samsung Galaxy Watch6 Dirželis Odinis",          False),  # LT dirželis = accessory
 ])
 
+# ── Newly-added brands (_KNOWN_BRANDS v6.50) ──────────────────
+total_fails += run("new brands", "Xiaomi 14 Pro", [
+    ("Xiaomi 14 Pro 512GB Black",                      True),
+    ("Xiaomi 14 Pro 256GB White",                      True),
+    ("Case for Xiaomi 14 Pro",                         False),  # case = accessory
+    ("Xiaomi 14 Pro Tempered Glass Screen Protector",  False),  # screen protector
+])
+
+total_fails += run("dreame brand", "Dreame L20 Ultra", [
+    ("Dreame L20 Ultra Robot Vacuum",                  True),
+    ("Dreame L20 Ultra Complete",                      True),
+    ("Replacement Brush for Dreame L20 Ultra",         False),  # replacement = accessory
+])
+
+total_fails += run("festool brand", "Festool TSC 55", [
+    ("Festool TSC 55 KEB-Plus Cordless Saw",           True),
+    ("Festool TSC 55 Li Tracksaw",                     True),
+    ("Systainer for Festool TSC 55",                   False),  # carry case
+])
+
 print(f"\n{'='*60}")
 if total_fails == 0:
     print("  Visi testai praejo!")
