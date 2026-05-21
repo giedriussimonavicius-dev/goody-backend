@@ -3693,7 +3693,7 @@ _LT_PL: list[tuple[str, str]] = sorted([
     # Pump
     ("dviračių pompa", "pompka rowerowa"), ("dviraciu pompa", "pompka rowerowa"),
     ("vandens pompa", "pompa wody"), ("vandens pompos", "pompa wody"),
-    ("pompa", "pompka"), ("pompos", "pompka"),
+    ("pompa", "pompa"), ("pompos", "pompa"),
     # Bicycle genitive
     ("dviračių šalmas", "kask rowerowy"), ("dviraciu salmas", "kask rowerowy"),
     ("dviračių", "rowerowy"), ("dviraciu", "rowerowy"),
