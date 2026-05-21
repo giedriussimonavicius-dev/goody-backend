@@ -1,5 +1,6 @@
 """
-Goody Backend v5.92 — user-agent refresh (Chrome 136) + startup version fix:
+Goody Backend v5.93 — LT translation dict: robot vacuum, soundbar, video camera, air fryer:
+- v5.92 — user-agent refresh (Chrome 136) + startup version fix:
 - v5.91 — streaming _trans_pool cleanup on client disconnect (try/finally):
 - v5.90 — health endpoint version + shops list corrected:
 - Relevance filter now runs BEFORE dedup (keeps cheapest relevant result per shop)
@@ -1888,6 +1889,19 @@ _LT_DE: list[tuple[str, str]] = sorted([
     ("grotuvas", "Player"), ("mp3 grotuvas", "MP3-Player"),
     # Accessories
     ("įkroviklis", "Ladegerät"), ("projektorius", "Projektor"),
+    # Robot vacuum (must come before plain "siurblys")
+    ("robotinis dulkių siurblys", "Saugroboter"), ("robotinis siurblys", "Saugroboter"),
+    ("robotinis", "Roboter"),
+    # Audio
+    ("garso sistema", "Soundbar"), ("garso", "Audio"),
+    ("namų kinas", "Heimkino"), ("kino sistema", "Heimkino"),
+    ("soundbar", "Soundbar"),
+    # Cameras
+    ("vaizdo kamera", "Videokamera"), ("veiksmo kamera", "Action-Kamera"),
+    # Kitchen
+    ("rankinis plakiklis", "Handmixer"), ("plakiklis", "Handmixer"),
+    ("vandens filtras", "Wasserfilter"),
+    ("oro gruzdintuvė", "Heißluftfritteuse"), ("gruzdintuvė", "Fritteuse"),
 ], key=lambda t: -len(t[0]))
 
 _LT_PL: list[tuple[str, str]] = sorted([
@@ -1965,6 +1979,18 @@ _LT_PL: list[tuple[str, str]] = sorted([
     ("grotuvas", "odtwarzacz"), ("mp3 grotuvas", "odtwarzacz mp3"),
     # Accessories
     ("įkroviklis", "ładowarka"), ("projektorius", "projektor"),
+    # Robot vacuum
+    ("robotinis dulkių siurblys", "robot odkurzający"), ("robotinis siurblys", "robot odkurzający"),
+    ("robotinis", "robotyczny"),
+    # Audio
+    ("garso sistema", "soundbar"), ("garso", "audio"),
+    ("namų kinas", "kino domowe"), ("kino sistema", "kino domowe"),
+    # Cameras
+    ("vaizdo kamera", "kamera wideo"), ("veiksmo kamera", "kamera sportowa"),
+    # Kitchen
+    ("rankinis plakiklis", "mikser ręczny"), ("plakiklis", "mikser ręczny"),
+    ("vandens filtras", "filtr wody"),
+    ("oro gruzdintuvė", "frytkownica beztłuszczowa"), ("gruzdintuvė", "frytkownica"),
 ], key=lambda t: -len(t[0]))
 
 
@@ -3287,7 +3313,7 @@ def health():
     )
     return jsonify({
         "status": "ok",
-        "version": "5.92",
+        "version": "5.93",
         "uptime_s": uptime_s,
         "shops": ["Varle.lt", "Elesen.lt", "Pigu.lt", "Topo centras", "Amazon.DE", "Amazon.PL"],
         "ai": {
@@ -3365,7 +3391,7 @@ if __name__ == "__main__":
 
     port = int(os.getenv("PORT", 5000))
 
-    print("\n🟢 Goody API v5.92")
+    print("\n🟢 Goody API v5.93")
     print(f"📊 Supabase: {'✅ configured' if SUPABASE_URL else '⚠️ not set'}")
     print("📦 Active shops: Varle + Elesen + Pigu + Topo + Amazon.DE + Amazon.PL")
     print(f"🔑 ScraperAPI: {'✅ configured' if SCRAPER_API_KEY else '⚠️ not set'}")
