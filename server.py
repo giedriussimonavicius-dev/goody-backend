@@ -1,5 +1,6 @@
 """
-Goody Backend v6.70 — _LT_DE/PL: +dujų→Gas/gazowy (gas stove/boiler); icon: +gasherd🍳:
+Goody Backend v6.71 — _ACCESSORY_MATCH_WORDS: +ersatzfilter/milchaufschäumer/luftfilter:
+- v6.70 — _LT_DE/PL: +dujų→Gas/gazowy (gas stove/boiler); icon: +gasherd🍳:
 - v6.69 — _CATEGORY_ICON_MAP: +heat pump🌬️/steam cleaner🫧/boiler🚿:
 - v6.68 — _LT_DE/PL: +šilumos siurblys→Wärmepumpe/pompa ciepła; trigger: +šilumos:
 - v6.67 — _NOISE_WORDS: +išpardavimas/promocja/wyprzedaż/recenzja/gdzie kupić/preisvergleich:
@@ -278,6 +279,12 @@ _ACCESSORY_MATCH_WORDS = frozenset({
     'systainer',
     # German tool battery pack / power supply accessories
     'akkupack', 'netzteil', 'akku-pack',
+    # German compound accessories with "Ersatz-" prefix (whole-word "ersatz" doesn't match inside these)
+    'ersatzfilter', 'ersatzteil', 'ersatzakku',
+    # Coffee machine accessories
+    'milchaufschäumer', 'milchaufschaumer', 'entkalkungstabletten', 'reinigungstabletten',
+    # Heat pump / HVAC filter accessories
+    'luftfilter',
 })
 _VARIANT_WORDS = frozenset({
     'pro', 'max', 'ultra', 'plus', 'lite', 'mini', 'fe', 'edge',
@@ -3776,7 +3783,7 @@ def health():
     )
     return jsonify({
         "status": "ok",
-        "version": "6.70",
+        "version": "6.71",
         "uptime_s": uptime_s,
         "shops": ["Varle.lt", "Elesen.lt", "Pigu.lt", "Topo centras", "Amazon.DE", "Amazon.PL"],
         "ai": {
@@ -3854,7 +3861,7 @@ if __name__ == "__main__":
 
     port = int(os.getenv("PORT", 5000))
 
-    print("\n🟢 Goody API v6.70")
+    print("\n🟢 Goody API v6.71")
     print(f"📊 Supabase: {'✅ configured' if SUPABASE_URL else '⚠️ not set'}")
     print("📦 Active shops: Varle + Elesen + Pigu + Topo + Amazon.DE + Amazon.PL")
     print(f"🔑 ScraperAPI: {'✅ configured' if SCRAPER_API_KEY else '⚠️ not set'}")
