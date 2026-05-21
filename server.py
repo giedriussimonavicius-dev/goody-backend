@@ -1,5 +1,6 @@
 """
-Goody Backend v7.08 — _LT_DE/PL: +oras vanduo→Luft-Wasser/powietrze-woda; +oras oras→Luft-Luft:
+Goody Backend v7.09 — validate_price: +air fryer €20 floor; _CATEGORY_ICON_MAP: +frytkownica/heißluftfritteuse🍳:
+- v7.08 — _LT_DE/PL: +oras vanduo→Luft-Wasser/powietrze-woda; +oras oras→Luft-Luft:
 - v7.07 — _LT_DE/PL: +robotinė vejapjovė→Mähroboter; _LT_CATEGORY_WORDS: +robotinė:
 - v7.06 — _NOISE_WORDS: +kaufen/wo kaufen/kupić (DE/PL buy-intent cache hits):
 - v7.05 — _CATEGORY_ICON_MAP: lenovo/acer/dell→💻; hisense/tcl→📺; worx/parkside/greenworks→🔨:
@@ -539,6 +540,7 @@ _CATEGORY_ICON_MAP = [
     (["virdulys", "kettle", "kavos", "nespresso", "wasserkocher", "kaffeemaschine",
       "czajnik", "ekspres", "sage", "russell", "breville", "melitta", "delonghi", "krups"], "☕"),
     (["keptuve", "blender", "mikser", "multicooker", "air fryer", "gruzdintuve",
+      "heißluftfritteuse", "heissluftfritteuse", "frytkownica",
       "robot kuchenny", "kuchenny", "thermomix", "küchenmaschine", "maisto procesorius",
       "gasherd", "kuchenka gazowa", "duju virykle", "virykle", "induktion",
       "indukcinis", "indukcine", "kaitlente", "kochfeld",
@@ -1134,6 +1136,8 @@ _POWERTOOL_W = ["bohrmaschine", "wiertarka", "akkuschrauber", "wkrętarka", "boh
                 "elektrinis grąžtas", "kampinis šlifuoklis", "winkelschleifer", "szlifierka katowa"]  # floor €10
 _MONITOR_W  = ["monitorius", "gaming monitor", "computer monitor", "pc monitor",
                "bildschirm", "ekran komputerowy", "ekran do komputera"]  # PC monitors ≥ €25
+_AIRFRYER_W = ["gruzdintuvė", "gruzdintuve", "air fryer", "heißluftfritteuse", "heissluftfritteuse",
+               "frytkownica beztłuszczowa", "frytkownica"]  # air fryers ≥ €20
 _TV_SIZE_RE = re.compile(r"\b(43|50|55|65|75|85)\b")
 
 
@@ -1232,6 +1236,10 @@ def validate_price(price: float, query: str) -> float:
 
     # PC monitor: cheapest 24" starts at ~€70 new, ~€30 used
     if any(w in q for w in _MONITOR_W) and price < 25:
+        return 0.0
+
+    # Air fryer: cheapest entry models start at ~€20
+    if any(w in q for w in _AIRFRYER_W) and price < 20:
         return 0.0
 
     # Global floor: anything below €0.50 is a parse artefact
@@ -4061,7 +4069,7 @@ def health():
     )
     return jsonify({
         "status": "ok",
-        "version": "7.08",
+        "version": "7.09",
         "uptime_s": uptime_s,
         "shops": ["Varle.lt", "Elesen.lt", "Pigu.lt", "Topo centras", "Amazon.DE", "Amazon.PL"],
         "ai": {
@@ -4139,7 +4147,7 @@ if __name__ == "__main__":
 
     port = int(os.getenv("PORT", 5000))
 
-    print("\n🟢 Goody API v7.08")
+    print("\n🟢 Goody API v7.09")
     print(f"📊 Supabase: {'✅ configured' if SUPABASE_URL else '⚠️ not set'}")
     print("📦 Active shops: Varle + Elesen + Pigu + Topo + Amazon.DE + Amazon.PL")
     print(f"🔑 ScraperAPI: {'✅ configured' if SCRAPER_API_KEY else '⚠️ not set'}")
