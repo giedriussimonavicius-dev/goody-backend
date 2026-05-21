@@ -1,5 +1,6 @@
 """
-Goody Backend v6.92 — _KNOWN_BRANDS: +steelseries/hyperx/rode/klipsch; icons: steelseries/hyperx🎮 rode🎙️ klipsch🔊; _LT_DE/PL: +rekuperatorius/garų stotis:
+Goody Backend v6.93 — _ACCESSORY_MATCH_WORDS: +notebooktasche/laptoptasche/kameratasche/rucksack/ladestation/akkuladegerät (DE compound accessory fix):
+- v6.92 — _KNOWN_BRANDS: +steelseries/hyperx/rode/klipsch; icons: steelseries/hyperx🎮 rode🎙️ klipsch🔊; _LT_DE/PL: +rekuperatorius/garų stotis:
 - v6.91 — _ACCESSORY: +netzadapter; validate_price: +projector€50/treadmill€50; _NOISE_WORDS: +atsiliepimai/apžvalgos; icon: russell hobbs→russell:
 - v6.90 — _CATEGORY_ICON_MAP: +kenwood/kitchenaid/ninja/smeg🍳; +sage/russell/breville/melitta☕; +whirlpool/hotpoint/grundig🫧; +leica📷; +shure🎙️; +logitech🖱️; +razer/corsair🎮:
 - v6.89 — _KNOWN_BRANDS: +midea/hoover; _CATEGORY_ICON_MAP: liebherr❄️/indesit+candy+beko+gorenje+haier🫧/hoover🧹/midea🌬️:
@@ -357,6 +358,12 @@ _ACCESSORY_MATCH_WORDS = frozenset({
     'ladekabel', 'aufladekabel', 'netzkabel', 'verbindungskabel', 'anschlusskabel',
     # German power adapter (compound — "adapter" whole-word would miss it)
     'netzadapter',
+    # German charging station / wireless charger
+    'ladestation', 'akkuladegerät', 'akkuladegerat',
+    # German bag compounds — "tasche" whole-word misses these compound suffixes
+    'notebooktasche', 'laptoptasche', 'kameratasche', 'fototasche', 'tabletasche',
+    # Backpack (laptop/camera context; passes if query also contains rucksack)
+    'rucksack',
 })
 _VARIANT_WORDS = frozenset({
     'pro', 'max', 'ultra', 'plus', 'lite', 'mini', 'fe', 'edge',
@@ -3949,7 +3956,7 @@ def health():
     )
     return jsonify({
         "status": "ok",
-        "version": "6.92",
+        "version": "6.93",
         "uptime_s": uptime_s,
         "shops": ["Varle.lt", "Elesen.lt", "Pigu.lt", "Topo centras", "Amazon.DE", "Amazon.PL"],
         "ai": {
@@ -4027,7 +4034,7 @@ if __name__ == "__main__":
 
     port = int(os.getenv("PORT", 5000))
 
-    print("\n🟢 Goody API v6.92")
+    print("\n🟢 Goody API v6.93")
     print(f"📊 Supabase: {'✅ configured' if SUPABASE_URL else '⚠️ not set'}")
     print("📦 Active shops: Varle + Elesen + Pigu + Topo + Amazon.DE + Amazon.PL")
     print(f"🔑 ScraperAPI: {'✅ configured' if SCRAPER_API_KEY else '⚠️ not set'}")
