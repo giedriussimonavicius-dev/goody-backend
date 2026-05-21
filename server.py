@@ -1,5 +1,6 @@
 """
-Goody Backend v7.32 — _LT_DE/PL +motopjuklas/grindų/pramoninis/muzikos/statybinis; plovykla fix:
+Goody Backend v7.33 — _NOISE_WORDS +jaki/welcher/testsieger; _LT_DE/PL +depiliatorius/garo/plyteliu:
+- v7.32 — _LT_DE/PL +motopjuklas/grindų/pramoninis/muzikos/statybinis; plovykla fix:
 - v7.31 — _LT_DE/PL +žarna/laistymo/pompa/šalmas/šašlykų; 🚲 helmet/bike pump:
 - v7.30 — _LT_DE/PL +šepetys/valiklis/ausų/generatorius/buitinis; 🔋 generator:
 - v7.29 — _LT_DE/PL +veidrodis/antklodė/langų/kūno/daugiafunkcinis; 🫧 window cleaner:
@@ -701,6 +702,9 @@ _NOISE_WORDS = re.compile(
     r'nemokamas pristatymas|nemokamas|free delivery|free shipping|'
     r'versandkostenfrei|kostenloser versand|gratis versand|'
     r'bezplatna dostawa|darmowa dostawa|'
+    r'jaki|jaka|jakie|'
+    r'welcher|welche|welches|welchem|welchen|'
+    r'testsieger|'
     r'lithuania|germany|poland)\b',
     re.IGNORECASE
 )
@@ -2484,6 +2488,12 @@ _LT_CATEGORY_WORDS = [
     "statybinis", "statybine",
     # Shaver head / shower head (always an accessory when used as a query noun)
     "galvutė", "galvute",
+    # IPL / light depilator (šviesos depiliatorius = IPL hair removal device)
+    "depiliatorius", "depiliatoriaus", "šviesos",
+    # Steam (garo = steam genitive, alternative to garų; garo laidynas = steam iron)
+    "garo",
+    # Tiles (plytelių valytuvas = tile cleaner)
+    "plyteliu", "plyteles",
 ]
 # Normalized (no diacritics) version so accent-free queries also trigger translation
 _LT_CATEGORY_WORDS_NORM = [_norm_lt(w) for w in _LT_CATEGORY_WORDS]
@@ -2867,6 +2877,16 @@ _LT_DE: list[tuple[str, str]] = sorted([
     # Construction adjective + construction dryer (must come before džiovintuvas→Haartrockner)
     ("statybinis džiovintuvas", "Bautrockner"), ("statybine dziovintuvas", "Bautrockner"),
     ("statybinis", "Bau"), ("statybine", "Bau"),
+    # IPL / light hair removal device
+    ("šviesos depiliatorius", "IPL-Gerät"), ("sviesos depiliatorius", "IPL-Gerät"),
+    ("depiliatorius", "Haarentfernungsgerät"), ("depiliatoriaus", "Haarentfernungsgerät"),
+    ("šviesos", "Licht"), ("sviesos", "Licht"),
+    # Steam (garo = genitive of garas; garų already in dict; garo laidynas = steam iron)
+    ("garo laidynas", "Dampfbügeleisen"), ("garo lygintuvas", "Dampfbügeleisen"),
+    ("garo", "Dampf"),
+    # Tiles (plytelių valytuvas = tile cleaner)
+    ("plyteliu valytuvas", "Fliesenreiniger"), ("plyteles valytuvas", "Fliesenreiniger"),
+    ("plyteliu", "Fliesen"), ("plyteles", "Fliesen"),
 ], key=lambda t: -len(t[0]))
 
 _LT_PL: list[tuple[str, str]] = sorted([
@@ -3234,6 +3254,16 @@ _LT_PL: list[tuple[str, str]] = sorted([
     # Construction dryer (must come before džiovintuvas→suszarka)
     ("statybinis džiovintuvas", "osuszacz budowlany"), ("statybine dziovintuvas", "osuszacz budowlany"),
     ("statybinis", "budowlany"), ("statybine", "budowlana"),
+    # IPL / light hair removal device
+    ("šviesos depiliatorius", "urządzenie IPL"), ("sviesos depiliatorius", "urządzenie IPL"),
+    ("depiliatorius", "urządzenie do depilacji"), ("depiliatoriaus", "urządzenie do depilacji"),
+    ("šviesos", "świetlny"), ("sviesos", "świetlny"),
+    # Steam (garo genitive form)
+    ("garo laidynas", "żelazko parowe"), ("garo lygintuvas", "żelazko parowe"),
+    ("garo", "parowy"),
+    # Tiles
+    ("plyteliu valytuvas", "myjka do płytek"), ("plyteles valytuvas", "myjka do płytek"),
+    ("plyteliu", "do płytek"), ("plyteles", "do płytek"),
 ], key=lambda t: -len(t[0]))
 
 
@@ -4561,7 +4591,7 @@ def health():
     )
     return jsonify({
         "status": "ok",
-        "version": "7.32",
+        "version": "7.33",
         "uptime_s": uptime_s,
         "shops": ["Varle.lt", "Elesen.lt", "Pigu.lt", "Topo centras", "Amazon.DE", "Amazon.PL"],
         "ai": {
@@ -4639,7 +4669,7 @@ if __name__ == "__main__":
 
     port = int(os.getenv("PORT", 5000))
 
-    print("\n🟢 Goody API v7.32")
+    print("\n🟢 Goody API v7.33")
     print(f"📊 Supabase: {'✅ configured' if SUPABASE_URL else '⚠️ not set'}")
     print("📦 Active shops: Varle + Elesen + Pigu + Topo + Amazon.DE + Amazon.PL")
     print(f"🔑 ScraperAPI: {'✅ configured' if SCRAPER_API_KEY else '⚠️ not set'}")
