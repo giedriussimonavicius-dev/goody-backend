@@ -1,5 +1,6 @@
 """
-Goody Backend v6.63 — _LT_DE/PL: +vejapjovė→Rasenmäher/kosiarka; +kompresorius→Kompressor/kompresor:
+Goody Backend v6.64 — _LT_DE/PL: +sniego valytuvas→Schneefräse/odśnieżarka; trigger: +sniego:
+- v6.63 — _LT_DE/PL: +vejapjovė→Rasenmäher/kosiarka; +kompresorius→Kompressor/kompresor:
 - v6.62 — _ACCESSORY_MATCH_WORDS: +battery pack/replacement battery/akkupack/netzteil:
 - v6.61 — _NOISE_WORDS: +kainos/apžvalga/pigiausias/pirkti/internetu/kur nusipirkti (cache hit boost):
 - v6.60 — validate_price: _VACUUM_W +siurblys/dulkiu siurblys; _SPEAKER_W +sonos/harman kardon €50 floor:
@@ -2032,6 +2033,8 @@ _LT_CATEGORY_WORDS = [
     "vejapjovė", "vejapjove",
     # Air compressor (kompresorius not covered by other entries)
     "kompresorius", "kompresoriaus",
+    # Snow blower (common LT winter purchase)
+    "sniego",
 ]
 # Normalized (no diacritics) version so accent-free queries also trigger translation
 _LT_CATEGORY_WORDS_NORM = [_norm_lt(w) for w in _LT_CATEGORY_WORDS]
@@ -2185,6 +2188,9 @@ _LT_DE: list[tuple[str, str]] = sorted([
     ("vejapjovė", "Rasenmäher"), ("vejapjove", "Rasenmäher"),
     # Air compressor
     ("kompresorius", "Kompressor"), ("kompresoriaus", "Kompressor"),
+    # Snow blower (common in LT winters)
+    ("sniego valytuvas", "Schneefräse"), ("sniego frezas", "Schneefräse"),
+    ("sniego freza", "Schneefräse"),
     # Standalone fallbacks for trigger words missing direct translations
     # (these fire only when the more-specific multi-word phrases above don't match)
     ("bėgimo", "Lauf"),
@@ -2357,6 +2363,9 @@ _LT_PL: list[tuple[str, str]] = sorted([
     ("vejapjovė", "kosiarka"), ("vejapjove", "kosiarka"),
     # Air compressor
     ("kompresorius", "kompresor"), ("kompresoriaus", "kompresor"),
+    # Snow blower
+    ("sniego valytuvas", "odśnieżarka"), ("sniego frezas", "odśnieżarka"),
+    ("sniego freza", "odśnieżarka"),
     # Standalone fallbacks for trigger words missing direct translations
     ("bėgimo", "bieganie"),
     ("garų", "parowy"),
@@ -3715,7 +3724,7 @@ def health():
     )
     return jsonify({
         "status": "ok",
-        "version": "6.63",
+        "version": "6.64",
         "uptime_s": uptime_s,
         "shops": ["Varle.lt", "Elesen.lt", "Pigu.lt", "Topo centras", "Amazon.DE", "Amazon.PL"],
         "ai": {
@@ -3793,7 +3802,7 @@ if __name__ == "__main__":
 
     port = int(os.getenv("PORT", 5000))
 
-    print("\n🟢 Goody API v6.63")
+    print("\n🟢 Goody API v6.64")
     print(f"📊 Supabase: {'✅ configured' if SUPABASE_URL else '⚠️ not set'}")
     print("📦 Active shops: Varle + Elesen + Pigu + Topo + Amazon.DE + Amazon.PL")
     print(f"🔑 ScraperAPI: {'✅ configured' if SCRAPER_API_KEY else '⚠️ not set'}")
