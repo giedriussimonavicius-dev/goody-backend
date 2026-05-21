@@ -1,5 +1,6 @@
 """
-Goody Backend v7.12 — validate_price: +e-bike €150 floor; +air purifier €25 floor:
+Goody Backend v7.13 — _NOISE_WORDS: +im test/testbericht/erfahrungen; _LT_DE/PL: +stebėjimo kamera/durų skambutis:
+- v7.12 — validate_price: +e-bike €150 floor; +air purifier €25 floor:
 - v7.11 — _LT_DE/PL: +krūmapjovė/lapų pūstuvas/žibintas/nebulizatorius; icon +heckenschere/laubbläser🔨 +taschenlampe💡:
 - v7.10 — _CATEGORY_ICON_MAP: +sharp/blaupunkt📺; +aeg🫧; +rowenta👕; +instant🍳; +vitamix🥤; +gree🌬️; +seagate/wd/sandisk🖥️:
 - v7.09 — validate_price: +air fryer €20 floor; _CATEGORY_ICON_MAP: +frytkownica/heißluftfritteuse🍳:
@@ -625,6 +626,7 @@ _NOISE_WORDS = re.compile(
     r'pirkti|internetu|kur nusipirkti|išpardavimas|'
     r'promocja|wyprzedaż|recenzja|gdzie kupić|preisvergleich|'
     r'wo kaufen|kaufen|kupić|'
+    r'im test|testbericht|erfahrungen|erfahrungsbericht|'
     r'lietuva|lietuvoje|vokietija|vokietijoje|lenkija|lenkijoje|anglijoje|'
     r'deutschland|polska|in deutschland|in poland|'
     r'in lithuania|in germany|in uk|in europe|delivery to|shipped to|'
@@ -2315,6 +2317,8 @@ _LT_CATEGORY_WORDS = [
     "žibintas", "zibintas",
     # Nebulizer / inhaler (health device)
     "nebulizatorius", "nebulizatoriaus",
+    # Security camera / video doorbell
+    "stebėjimo", "stebejimo", "skambutis",
 ]
 # Normalized (no diacritics) version so accent-free queries also trigger translation
 _LT_CATEGORY_WORDS_NORM = [_norm_lt(w) for w in _LT_CATEGORY_WORDS]
@@ -2546,6 +2550,10 @@ _LT_DE: list[tuple[str, str]] = sorted([
     ("garų stotis", "Dampfstation"), ("garu stotis", "Dampfstation"),
     # Heat recovery ventilation (rekuperatorius)
     ("rekuperatorius", "Lüftungsanlage"), ("rekuperatoriaus", "Lüftungsanlage"),
+    # Surveillance camera / video doorbell
+    ("stebėjimo kamera", "Überwachungskamera"), ("stebejimo kamera", "Überwachungskamera"),
+    ("vaizdo durų skambutis", "Video-Türklingel"), ("vaizdo duru skambutis", "Video-Türklingel"),
+    ("durų skambutis", "Türklingel"), ("duru skambutis", "Türklingel"),
     # Drone (common purchase; DJI = most popular brand)
     ("dronas su kamera", "Drohne mit Kamera"), ("dronas", "Drohne"),
     # E-reader
@@ -2774,6 +2782,10 @@ _LT_PL: list[tuple[str, str]] = sorted([
     ("garų stotis", "stacja pary"), ("garu stotis", "stacja pary"),
     # Heat recovery ventilation
     ("rekuperatorius", "rekuperator"), ("rekuperatoriaus", "rekuperator"),
+    # Surveillance camera / video doorbell
+    ("stebėjimo kamera", "kamera do monitoringu"), ("stebejimo kamera", "kamera do monitoringu"),
+    ("vaizdo durų skambutis", "wideo dzwonek do drzwi"), ("vaizdo duru skambutis", "wideo dzwonek do drzwi"),
+    ("durų skambutis", "dzwonek do drzwi"), ("duru skambutis", "dzwonek do drzwi"),
     # Drone
     ("dronas su kamera", "dron z kamerą"), ("dronas", "dron"),
     # E-reader
@@ -4111,7 +4123,7 @@ def health():
     )
     return jsonify({
         "status": "ok",
-        "version": "7.12",
+        "version": "7.13",
         "uptime_s": uptime_s,
         "shops": ["Varle.lt", "Elesen.lt", "Pigu.lt", "Topo centras", "Amazon.DE", "Amazon.PL"],
         "ai": {
@@ -4189,7 +4201,7 @@ if __name__ == "__main__":
 
     port = int(os.getenv("PORT", 5000))
 
-    print("\n🟢 Goody API v7.12")
+    print("\n🟢 Goody API v7.13")
     print(f"📊 Supabase: {'✅ configured' if SUPABASE_URL else '⚠️ not set'}")
     print("📦 Active shops: Varle + Elesen + Pigu + Topo + Amazon.DE + Amazon.PL")
     print(f"🔑 ScraperAPI: {'✅ configured' if SCRAPER_API_KEY else '⚠️ not set'}")
