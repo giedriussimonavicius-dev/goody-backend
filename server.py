@@ -1,5 +1,6 @@
 """
-Goody Backend v7.31 — _LT_DE/PL +žarna/laistymo/pompa/šalmas/šašlykų; 🚲 helmet/bike pump:
+Goody Backend v7.32 — _LT_DE/PL +motopjuklas/grindų/pramoninis/muzikos/statybinis; plovykla fix:
+- v7.31 — _LT_DE/PL +žarna/laistymo/pompa/šalmas/šašlykų; 🚲 helmet/bike pump:
 - v7.30 — _LT_DE/PL +šepetys/valiklis/ausų/generatorius/buitinis; 🔋 generator:
 - v7.29 — _LT_DE/PL +veidrodis/antklodė/langų/kūno/daugiafunkcinis; 🫧 window cleaner:
 - v7.28 — _LT_DE/PL +garintuvas/stalo kompiuteris/veido; _KNOWN_BRANDS +ugreen/baseus:
@@ -433,6 +434,8 @@ _ACCESSORY_MATCH_WORDS = frozenset({
     # Polish replacement / spare adjectives (zamienny głowica = replacement shaver head)
     'zamienny', 'zamienna', 'zamienne', 'zamiennik',
     'zapasowy', 'zapasowa', 'zapasowe',
+    # Lithuanian replacement head / nozzle (skutimosi galvutė, dušo galvutė — always accessory)
+    'galvutė', 'galvute', 'galvutės', 'galvutes',
     # German razor blades consumable (Rasierklingen for a razor, not a standalone blade search)
     # Note: NOT added — "Rasierklingen" can itself be a main product (pack of razor blades)
 })
@@ -2469,6 +2472,18 @@ _LT_CATEGORY_WORDS = [
     "šalmas", "salmas",
     # BBQ / skewer context (šašlykų grilis = BBQ grill)
     "šašlykų", "saslyku",
+    # Chainsaw (motopjūklas; pjūklas→Säge but motopjūklas is a compound)
+    "motopjuklas", "motopjūklas",
+    # Floor / ground genitive (grindų šepetys = floor brush; grindų plovykla = floor cleaner)
+    "grindų", "grindu",
+    # Industrial adjective
+    "pramoninis", "pramonine",
+    # Music center / stereo system
+    "muzikos", "centras",
+    # Construction adjective
+    "statybinis", "statybine",
+    # Shaver head / shower head (always an accessory when used as a query noun)
+    "galvutė", "galvute",
 ]
 # Normalized (no diacritics) version so accent-free queries also trigger translation
 _LT_CATEGORY_WORDS_NORM = [_norm_lt(w) for w in _LT_CATEGORY_WORDS]
@@ -2625,9 +2640,12 @@ _LT_DE: list[tuple[str, str]] = sorted([
     # Water heater / boiler
     ("vandens šildytuvas", "Warmwasserbereiter"), ("vandens sildytuvas", "Warmwasserbereiter"),
     ("boileris", "Boiler"),
-    # Pressure washer
+    # Pressure washer (must come before generic grindų plovykla below)
     ("aukštojo slėgio plovykla", "Hochdruckreiniger"), ("slėginė plovykla", "Hochdruckreiniger"),
-    ("slegine plovykla", "Hochdruckreiniger"), ("plovykla", "Hochdruckreiniger"),
+    ("slegine plovykla", "Hochdruckreiniger"),
+    # Floor cleaner / wet floor mop (longer than "plovykla" so matches first)
+    ("grindų plovykla", "Bodenreiniger"), ("grindu plovykla", "Bodenreiniger"),
+    ("plovykla", "Hochdruckreiniger"),
     # Lawn mower (vejapjovė = variant spelling of žoliapjovė, not yet in dict)
     ("vejapjovė", "Rasenmäher"), ("vejapjove", "Rasenmäher"),
     # Hedge trimmer
@@ -2837,6 +2855,18 @@ _LT_DE: list[tuple[str, str]] = sorted([
     ("šalmas", "Helm"), ("salmas", "Helm"),
     # BBQ / kebab context (šašlykų grilis = BBQ grill; use "BBQ" to avoid doubling with grilis→Grill)
     ("šašlykų", "BBQ"), ("saslyku", "BBQ"),
+    # Chainsaw (motopjūklas = chainsaw; "pjūklas"→Säge exists but doesn't match compound)
+    ("motopjūklas", "Motorsäge"), ("motopjuklas", "Motorsäge"),
+    # Floor / ground (grindų = floor genitive; longer grindų plovykla handled above)
+    ("grindų", "Boden"), ("grindu", "Boden"),
+    # Industrial adjective
+    ("pramoninis", "Industrie"), ("pramonine", "Industrie"),
+    # Music center / stereo system
+    ("muzikos centras", "Musikanlage"), ("muzikos", "Musik"),
+    ("centras", "Zentrum"),
+    # Construction adjective + construction dryer (must come before džiovintuvas→Haartrockner)
+    ("statybinis džiovintuvas", "Bautrockner"), ("statybine dziovintuvas", "Bautrockner"),
+    ("statybinis", "Bau"), ("statybine", "Bau"),
 ], key=lambda t: -len(t[0]))
 
 _LT_PL: list[tuple[str, str]] = sorted([
@@ -2981,9 +3011,12 @@ _LT_PL: list[tuple[str, str]] = sorted([
     # Water heater / boiler
     ("vandens šildytuvas", "podgrzewacz wody"), ("vandens sildytuvas", "podgrzewacz wody"),
     ("boileris", "bojler"),
-    # Pressure washer
+    # Pressure washer (must come before generic grindų plovykla below)
     ("aukštojo slėgio plovykla", "myjka ciśnieniowa"), ("slėginė plovykla", "myjka ciśnieniowa"),
-    ("slegine plovykla", "myjka ciśnieniowa"), ("plovykla", "myjka ciśnieniowa"),
+    ("slegine plovykla", "myjka ciśnieniowa"),
+    # Floor cleaner / wet floor mop
+    ("grindų plovykla", "mop elektryczny"), ("grindu plovykla", "mop elektryczny"),
+    ("plovykla", "myjka ciśnieniowa"),
     # Lawn mower (vejapjovė = variant spelling)
     ("vejapjovė", "kosiarka"), ("vejapjove", "kosiarka"),
     # Hedge trimmer
@@ -3189,6 +3222,18 @@ _LT_PL: list[tuple[str, str]] = sorted([
     ("šalmas", "kask"), ("salmas", "kask"),
     # BBQ
     ("šašlykų", "BBQ"), ("saslyku", "BBQ"),
+    # Chainsaw
+    ("motopjūklas", "piła łańcuchowa"), ("motopjuklas", "piła łańcuchowa"),
+    # Floor / ground
+    ("grindų", "podłogi"), ("grindu", "podłogi"),
+    # Industrial adjective
+    ("pramoninis", "przemysłowy"), ("pramonine", "przemysłowa"),
+    # Music center / stereo system
+    ("muzikos centras", "zestaw muzyczny"), ("muzikos", "muzyka"),
+    ("centras", "centrum"),
+    # Construction dryer (must come before džiovintuvas→suszarka)
+    ("statybinis džiovintuvas", "osuszacz budowlany"), ("statybine dziovintuvas", "osuszacz budowlany"),
+    ("statybinis", "budowlany"), ("statybine", "budowlana"),
 ], key=lambda t: -len(t[0]))
 
 
@@ -4516,7 +4561,7 @@ def health():
     )
     return jsonify({
         "status": "ok",
-        "version": "7.31",
+        "version": "7.32",
         "uptime_s": uptime_s,
         "shops": ["Varle.lt", "Elesen.lt", "Pigu.lt", "Topo centras", "Amazon.DE", "Amazon.PL"],
         "ai": {
@@ -4594,7 +4639,7 @@ if __name__ == "__main__":
 
     port = int(os.getenv("PORT", 5000))
 
-    print("\n🟢 Goody API v7.31")
+    print("\n🟢 Goody API v7.32")
     print(f"📊 Supabase: {'✅ configured' if SUPABASE_URL else '⚠️ not set'}")
     print("📦 Active shops: Varle + Elesen + Pigu + Topo + Amazon.DE + Amazon.PL")
     print(f"🔑 ScraperAPI: {'✅ configured' if SCRAPER_API_KEY else '⚠️ not set'}")
