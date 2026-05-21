@@ -1,5 +1,5 @@
 """
-Goody Backend v6.22 — whole-word matching in _static_translate (fix cascade double-substitution):
+Goody Backend v6.23 — mikrofonas→Mikrofon/mikrofon; maršrutizatorius→Router; išmanioji→Smart:
 - v6.16 — garų→Dampf/parowy standalone; nešiojamas+product translation fixes:
 - v6.15 — nešiojamas+product fixes: kondicionierius/siurblys/pjūklas no longer→Laptop:
 - v6.14 — relevance filter in Elesen/Pigu/Topo DOM scrapers (was only in SPA/Amazon):
@@ -1897,6 +1897,12 @@ _LT_CATEGORY_WORDS = [
     "elektrinis", "elektrine",
     # Smart adjective (išmanusis laikrodis already handled; standalone catches others)
     "ismanius", "ismanusis",
+    # Smart adjective feminine form
+    "išmanioji", "ismanioji",
+    # Microphone
+    "mikrofonas",
+    # Router / network
+    "maršrutizatorius", "marsrutizatorius",
 ]
 # Normalized (no diacritics) version so accent-free queries also trigger translation
 _LT_CATEGORY_WORDS_NORM = [_norm_lt(w) for w in _LT_CATEGORY_WORDS]
@@ -2054,10 +2060,15 @@ _LT_DE: list[tuple[str, str]] = sorted([
     # Electric/smart adjective standalones (multi-word phrases above match first)
     ("elektrinis", "elektrisch"), ("elektrine", "elektrisch"),
     ("ismanusis", "Smart"), ("ismanius", "Smart"),
+    ("išmanioji", "Smart"), ("ismanioji", "Smart"),
     # Diminutive watch form (laikrodis → Uhr already exists; laikrodukas = small watch)
     ("laikrodukas", "Uhr"),
     # Standalone "kino" (home cinema context; "kino sistema"→"Heimkino" matches first when paired)
     ("kino", "Heimkino"),
+    # Microphone
+    ("mikrofonas", "Mikrofon"),
+    # Router
+    ("maršrutizatorius", "Router"), ("marsrutizatorius", "Router"),
 ], key=lambda t: -len(t[0]))
 
 _LT_PL: list[tuple[str, str]] = sorted([
@@ -2202,8 +2213,13 @@ _LT_PL: list[tuple[str, str]] = sorted([
     # Electric/smart adjective standalones
     ("elektrinis", "elektryczny"), ("elektrine", "elektryczna"),
     ("ismanusis", "smart"), ("ismanius", "smart"),
+    ("išmanioji", "smart"), ("ismanioji", "smart"),
     # Diminutive watch form
     ("laikrodukas", "zegarek"),
+    # Microphone
+    ("mikrofonas", "mikrofon"),
+    # Router
+    ("maršrutizatorius", "router"), ("marsrutizatorius", "router"),
     # Note: standalone "kino" intentionally omitted for PL — "kino sistema"/"namų kinas" handle
     # compound cases; "kino" alone is a valid PL word that Amazon.PL understands directly.
     # Adding ("kino","kino domowe") here would cause cascade: "kino domowe"→"kino domowe domowe".
@@ -3533,7 +3549,7 @@ def health():
     )
     return jsonify({
         "status": "ok",
-        "version": "6.22",
+        "version": "6.23",
         "uptime_s": uptime_s,
         "shops": ["Varle.lt", "Elesen.lt", "Pigu.lt", "Topo centras", "Amazon.DE", "Amazon.PL"],
         "ai": {
@@ -3611,7 +3627,7 @@ if __name__ == "__main__":
 
     port = int(os.getenv("PORT", 5000))
 
-    print("\n🟢 Goody API v6.22")
+    print("\n🟢 Goody API v6.23")
     print(f"📊 Supabase: {'✅ configured' if SUPABASE_URL else '⚠️ not set'}")
     print("📦 Active shops: Varle + Elesen + Pigu + Topo + Amazon.DE + Amazon.PL")
     print(f"🔑 ScraperAPI: {'✅ configured' if SCRAPER_API_KEY else '⚠️ not set'}")
