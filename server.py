@@ -1,5 +1,6 @@
 """
-Goody Backend v6.28 — TV📺/vacuum🧹/washing🫧 DE+PL icon keywords; fridge cleanup:
+Goody Backend v6.29 — ☕coffee/kettle split from 🍳; 🤖robot vacuum; 🛴scooter split; DE/PL icon gaps:
+- v6.28 — TV📺/vacuum🧹/washing🫧 DE+PL icon keywords; fridge cleanup:
 - v6.27 — fridge❄️/AC🌬️ split; projector📽️; juicer🥤 backend icons:
 - v6.26 — alarm/lamp backend icons; vaizdo/veiksmo LT triggers; scan executor cleanup:
 - v6.25 — _ph_exec.shutdown in finally (GeneratorExit cleanup fix):
@@ -319,33 +320,39 @@ _CATEGORY_ICON_MAP = [
     (["iphone", "samsung galaxy", "xiaomi", "oneplus", "pixel", "telefon", "smartphone",
       "galaxy s", "galaxy a", "redmi", "poco"], "📱"),
     (["macbook", "laptop", "notebook", "thinkpad", "dell xps", "asus", "surface pro",
-      "chromebook"], "💻"),
+      "chromebook", "nesiojamas"], "💻"),
     (["ipad", "galaxy tab", "tablet"], "📱"),
     (["oled", "qled", " tv ", " tv", "tv ", "television", "televizorius", "fernseher",
       "telewizor", "monitor", "ekranas", "screen", "55\"", "65\"", "43\""], "📺"),
-    (["headphone", "earphone", "earbuds", "ausines", "ausinukai", "airpods", "wh-1000", "bose qc", "jabra", "beats", "marshall"], "🎧"),
-    (["playstation", "xbox", "nintendo", "lego", "gamepad", "rtx 4", "rtx 3",
-      "geforce", "gaming"], "🎮"),
-    (["camera", "nikon", "canon", "sony zv", "fotoaparatas", "mirrorless", "dslr", "gopro", "dji"], "📷"),
-    (["dulkiu siurblys", "siurblys", "vacuum", "dyson v", "roomba", "roborock", "miele",
+    (["headphone", "earphone", "earbuds", "ausines", "ausinukai", "airpods", "wh-1000", "bose qc",
+      "jabra", "beats", "marshall", "kopfhörer", "słuchawki"], "🎧"),
+    (["playstation", "xbox", "nintendo", "gamepad", "rtx 4", "rtx 3",
+      "geforce", "gaming", "spielkonsole", "konsola", "konsole"], "🎮"),
+    (["camera", "nikon", "canon", "sony zv", "fotoaparatas", "mirrorless", "dslr", "gopro", "dji",
+      "aparat"], "📷"),
+    (["roomba", "roborock", "irobot", "robot siurblys", "saugroboter"], "🤖"),
+    (["dulkiu siurblys", "siurblys", "vacuum", "dyson v", "miele",
       "staubsauger", "odkurzacz"], "🧹"),
     (["skalbykle", "washing machine", "waschmaschine", "pralka", "indaplove",
       "dishwasher", "spülmaschine", "zmywarka", "bosch wan", "samsung ww"], "🫧"),
-    (["keptuve", "virdulys", "kettle", "blender", "mikser", "multicooker",
-      "air fryer", "gruzdintuve", "kavos aparatas", "nespresso"], "🍳"),
+    (["virdulys", "kettle", "kavos", "nespresso", "wasserkocher", "kaffeemaschine",
+      "czajnik", "ekspres"], "☕"),
+    (["keptuve", "blender", "mikser", "multicooker", "air fryer", "gruzdintuve"], "🍳"),
     (["lego", "zaislai", "pampers", "chicco", "fisher-price", "baby"], "🧸"),
     (["ssd", "nvme", "hdd", "ram ddr", "corsair", "kingston fury",
-      "procesorius", "cpu", "ryzen", "core i"], "🖥️"),
-    (["spausdintuvas", "printer", "scanner", "hp laserjet", "epson"], "🖨️"),
+      "procesorius", "cpu", "ryzen", "core i", "festplatte", "dysk ssd"], "🖥️"),
+    (["spausdintuvas", "printer", "scanner", "hp laserjet", "epson", "drucker", "drukarka"], "🖨️"),
     (["philips shav", "braun series", "gillette", "skustuvas", "epilator"], "🪒"),
-    (["laikrodis", "smartwatch", "apple watch", "garmin", "fitbit", "samsung watch", "fossil", "polar", "suunto"], "⌚"),
-    (["dviratis", "elektrinis dviratis", "paspirtukas", "e-bike", "ebike", "scooter"], "🚲"),
+    (["laikrodis", "smartwatch", "apple watch", "garmin", "fitbit", "samsung watch", "fossil", "polar", "suunto",
+      "zegarek"], "⌚"),
+    (["paspirtukas", "e-roller", "elektroroller", "hulajnoga elektryczna"], "🛴"),
+    (["dviratis", "elektrinis dviratis", "e-bike", "ebike", "scooter", "fahrrad", "rower"], "🚲"),
     (["saldytuvas", "saldiklis", "saldymo", "kühlschrank", "gefrierschrank",
       "lodówka", "zamrażarka", "lodowka", "zamrazarka"], "❄️"),
     (["kondicionierius", "oro kondicionierius", "klimaanlage", "klimatyzator"], "🌬️"),
     (["makita", "dewalt", "bosch gsr", "graztas", "pjuklas", "power tool", "drill", "grąžtas",
       "šlifuoklis", "slifuoklis", "suktukas", "kampinis", "winkelschleifer", "schleifer", "schrauber", "szlifierka", "wkrętarka"], "🔨"),
-    (["begimu takelis", "begimo takelis", "laufband", "treadmill", "treniruoklis"], "🏃"),
+    (["begimu takelis", "begimo takelis", "laufband", "treadmill", "treniruoklis", "bieżnia"], "🏃"),
     (["projektorius", "projector", "projektor", "beamer"], "📽️"),
     (["sulciaspaude", "sulciu", "juicer", "entsafter", "wyciskarka"], "🥤"),
     (["garsiakalbis", "garsine", "kolonele", "soundbar", "lautsprecher", "głośnik", "speaker",
@@ -3581,7 +3588,7 @@ def health():
     )
     return jsonify({
         "status": "ok",
-        "version": "6.28",
+        "version": "6.29",
         "uptime_s": uptime_s,
         "shops": ["Varle.lt", "Elesen.lt", "Pigu.lt", "Topo centras", "Amazon.DE", "Amazon.PL"],
         "ai": {
@@ -3659,7 +3666,7 @@ if __name__ == "__main__":
 
     port = int(os.getenv("PORT", 5000))
 
-    print("\n🟢 Goody API v6.28")
+    print("\n🟢 Goody API v6.29")
     print(f"📊 Supabase: {'✅ configured' if SUPABASE_URL else '⚠️ not set'}")
     print("📦 Active shops: Varle + Elesen + Pigu + Topo + Amazon.DE + Amazon.PL")
     print(f"🔑 ScraperAPI: {'✅ configured' if SCRAPER_API_KEY else '⚠️ not set'}")
