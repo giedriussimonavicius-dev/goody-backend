@@ -1,5 +1,6 @@
 """
-Goody Backend v6.99 — fix: remove lg from TV icon entry (LG washing machine showed 📺); _LT_DE/PL: +planšetinis/nešiojamasis; validate_price: +shaver€10:
+Goody Backend v7.00 — validate_price: +printer€20/power tool€10; _LT_DE/PL: +planšetinis/nešiojamasis; lg icon bug fix:
+- v6.99 — fix: remove lg from TV icon entry (LG washing machine showed 📺); _LT_DE/PL: +planšetinis/nešiojamasis; validate_price: +shaver€10:
 - v6.98 — _CATEGORY_ICON_MAP: dyson🧹/intel+amd🖥️/nvidia🎮/bose+sennheiser🎧/jbl🔊/braun🪒/tefal🍳/delonghi☕/lg📺/huawei📱/siemens+zanussi🫧:
 - v6.97 — _NOISE_WORDS: +in lithuania/in germany/in poland/in uk/in europe/delivery to; test_matching: +drone/chromecast tests:
 - v6.96 — _CATEGORY_ICON_MAP: +chromecast/fire tv/apple tv/nvidia shield📺; _KNOWN_BRANDS: +alienware; _ACCESSORY: +panzerglas/displayschutzglas:
@@ -1107,6 +1108,9 @@ _MOWER_W    = ["rasenmäher", "rasenmaher", "kosiarka", "žoliapjovė", "zoliapj
 _PROJECTOR_W = ["projektorius", "projector", "projektor", "beamer"]  # cheapest ~€50
 _TREADMILL_W = ["laufband", "treadmill", "bieżnia", "bėgimo takelis", "begimo takelis"]  # cheapest ~€100
 _SHAVER_W   = ["skustuvas", "rasierer", "golarka", "elektrinis skustuvas", "epilatorius", "epilator"]  # cheapest ~€10
+_PRINTER_W  = ["spausdintuvas", "printer", "drucker", "drukarka"]  # cheapest inkjet ~€30
+_POWERTOOL_W = ["bohrmaschine", "wiertarka", "akkuschrauber", "wkrętarka", "bohrhammer",
+                "elektrinis grąžtas", "kampinis šlifuoklis", "winkelschleifer", "szlifierka katowa"]  # floor €10
 _TV_SIZE_RE = re.compile(r"\b(43|50|55|65|75|85)\b")
 
 
@@ -1193,6 +1197,14 @@ def validate_price(price: float, query: str) -> float:
 
     # Electric shaver / epilator: cheapest entry-level ~€10
     if any(w in q for w in _SHAVER_W) and price < 10:
+        return 0.0
+
+    # Printer: cheapest inkjet ~€30 — prevents centai misidentification
+    if any(w in q for w in _PRINTER_W) and price < 20:
+        return 0.0
+
+    # Power tool (drill/saw/grinder): cheapest entry Parkside ~€10
+    if any(w in q for w in _POWERTOOL_W) and price < 10:
         return 0.0
 
     # Global floor: anything below €0.50 is a parse artefact
@@ -4010,7 +4022,7 @@ def health():
     )
     return jsonify({
         "status": "ok",
-        "version": "6.99",
+        "version": "7.00",
         "uptime_s": uptime_s,
         "shops": ["Varle.lt", "Elesen.lt", "Pigu.lt", "Topo centras", "Amazon.DE", "Amazon.PL"],
         "ai": {
@@ -4088,7 +4100,7 @@ if __name__ == "__main__":
 
     port = int(os.getenv("PORT", 5000))
 
-    print("\n🟢 Goody API v6.99")
+    print("\n🟢 Goody API v7.00")
     print(f"📊 Supabase: {'✅ configured' if SUPABASE_URL else '⚠️ not set'}")
     print("📦 Active shops: Varle + Elesen + Pigu + Topo + Amazon.DE + Amazon.PL")
     print(f"🔑 ScraperAPI: {'✅ configured' if SCRAPER_API_KEY else '⚠️ not set'}")
