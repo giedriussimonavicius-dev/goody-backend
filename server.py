@@ -1,5 +1,6 @@
 """
-Goody Backend v5.95 — fix get_category_icon: normalize LT diacritics; add siurblys/ausinukai/gruzdintuve icons:
+Goody Backend v5.96 — Amazon scraper: scan up to 8 items (was 5) for better relevance filtering:
+- v5.95 — fix get_category_icon: normalize LT diacritics; add siurblys/ausinukai/gruzdintuve icons:
 - v5.94 — fix LT trigger words: gruzdintuvė, plakiklis, garso, namų, kino, vandens, robotinis:
 - v5.93 — LT translation dict: robot vacuum, soundbar, video camera, air fryer:
 - v5.92 — user-agent refresh (Chrome 136) + startup version fix:
@@ -1575,7 +1576,7 @@ def scrape_amazon(query: str, domain: str = "de") -> list:
                 snippet = resp.text[5000:6000] if len(resp.text) > 5000 else resp.text
                 print(f"[Amazon.{domain}] No items. Body snippet: {snippet[:300]}")
 
-        for item in items[:5]:
+        for item in items[:8]:
             try:
                 h2_el = item.select_one("h2")
                 name = ""
@@ -3325,7 +3326,7 @@ def health():
     )
     return jsonify({
         "status": "ok",
-        "version": "5.95",
+        "version": "5.96",
         "uptime_s": uptime_s,
         "shops": ["Varle.lt", "Elesen.lt", "Pigu.lt", "Topo centras", "Amazon.DE", "Amazon.PL"],
         "ai": {
@@ -3403,7 +3404,7 @@ if __name__ == "__main__":
 
     port = int(os.getenv("PORT", 5000))
 
-    print("\n🟢 Goody API v5.95")
+    print("\n🟢 Goody API v5.96")
     print(f"📊 Supabase: {'✅ configured' if SUPABASE_URL else '⚠️ not set'}")
     print("📦 Active shops: Varle + Elesen + Pigu + Topo + Amazon.DE + Amazon.PL")
     print(f"🔑 ScraperAPI: {'✅ configured' if SCRAPER_API_KEY else '⚠️ not set'}")
