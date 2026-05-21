@@ -1,5 +1,6 @@
 """
-Goody Backend v6.45 — _LT_CATEGORY_WORDS: +genitive triggers (svarstyklių/čiužinio/kietojo/indų):
+Goody Backend v6.46 — _LT_CATEGORY_WORDS: remove duplicate viryklė; cache_stats: "query"→"product_name":
+- v6.45 — _LT_CATEGORY_WORDS: +genitive triggers (svarstyklių/čiužinio/kietojo/indų):
 - v6.44 — scan-image AI prompt: +barcode instruction, +key specs in product_name:
 - v6.43 — icon: robot kuchenny/küchenmaschine/thermomix → 🍳 (not 🤖 robot vacuum):
 - v6.43 — Elesen centai fix: skip conversion when price text has decimal separator:
@@ -1891,7 +1892,7 @@ _LT_CATEGORY_WORDS = [
     # New product categories
     "dviratis", "paspirtukas", "maišytuvas",
     # Missing trigger words for existing dict entries
-    "viryklė", "šaldymo", "valytuvas",
+    "šaldymo", "valytuvas",
     # Watches, wearables, earbuds
     "laikrodis", "laikrodukas", "ausinukai", "ausinuko",
     # Kitchen / food
@@ -3484,7 +3485,7 @@ def cache_stats():
         age = now - v["ts"]
         ttl = v.get("ttl", CACHE_TTL_SECONDS)
         remaining = max(0, ttl - age)
-        q = v.get("data", {}).get("query", "?")
+        q = v.get("data", {}).get("product_name", "?")
         live_entries.append({
             "query": q,
             "age_s": round(age),
@@ -3616,7 +3617,7 @@ def health():
     )
     return jsonify({
         "status": "ok",
-        "version": "6.45",
+        "version": "6.46",
         "uptime_s": uptime_s,
         "shops": ["Varle.lt", "Elesen.lt", "Pigu.lt", "Topo centras", "Amazon.DE", "Amazon.PL"],
         "ai": {
@@ -3694,7 +3695,7 @@ if __name__ == "__main__":
 
     port = int(os.getenv("PORT", 5000))
 
-    print("\n🟢 Goody API v6.45")
+    print("\n🟢 Goody API v6.46")
     print(f"📊 Supabase: {'✅ configured' if SUPABASE_URL else '⚠️ not set'}")
     print("📦 Active shops: Varle + Elesen + Pigu + Topo + Amazon.DE + Amazon.PL")
     print(f"🔑 ScraperAPI: {'✅ configured' if SCRAPER_API_KEY else '⚠️ not set'}")
