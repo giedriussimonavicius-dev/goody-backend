@@ -1,5 +1,6 @@
 """
-Goody Backend v7.14 — _KNOWN_BRANDS: +nest/tado/shelly/sonoff/ring/arlo/tapo/meross; _LT_DE/PL: +termoregliatorius/išmanusis kištukas:
+Goody Backend v7.15 — _LT_DE/PL: +vežimėlis/vaikiška kėdutė/kūdikio monitorius; _KNOWN_BRANDS: +bugaboo/cybex/britax/graco:
+- v7.14 — _KNOWN_BRANDS: +nest/tado/shelly/sonoff/ring/arlo/tapo/meross; _LT_DE/PL: +termoregliatorius/išmanusis kištukas:
 - v7.13 — _NOISE_WORDS: +im test/testbericht/erfahrungen; _LT_DE/PL: +stebėjimo kamera/durų skambutis:
 - v7.12 — validate_price: +e-bike €150 floor; +air purifier €25 floor:
 - v7.11 — _LT_DE/PL: +krūmapjovė/lapų pūstuvas/žibintas/nebulizatorius; icon +heckenschere/laubbläser🔨 +taschenlampe💡:
@@ -321,6 +322,8 @@ _KNOWN_BRANDS = {
     'gigabyte', 'msi', 'zotac', 'sapphire',
     # Smart home / IoT brands (popular in EU/LT)
     'nest', 'tado', 'shelly', 'sonoff', 'ring', 'arlo', 'tapo', 'meross', 'aqara',
+    # Baby / child safety brands
+    'bugaboo', 'cybex', 'britax', 'graco', 'uppababy',
 }
 _ACCESSORY_MATCH_WORDS = frozenset({
     'case', 'cover', 'sleeve', 'bumper', 'wallet', 'skin', 'sticker', 'decal',
@@ -557,7 +560,12 @@ _CATEGORY_ICON_MAP = [
       "grill", "grilis", "bbq", "barbecue", "weber",
       "moulinex", "krups", "cuisinart", "neff", "severin", "bomann",
       "kenwood", "kitchenaid", "ninja", "smeg", "tefal", "instant"], "🍳"),
-    (["lego", "zaislai", "pampers", "chicco", "fisher-price", "baby"], "🧸"),
+    (["lego", "zaislai", "pampers", "chicco", "fisher-price", "baby",
+      "kinderwagen", "wózek dziecięcy", "wozek dzieciecy", "vežimėlis", "vezimelis",
+      "kindersitz", "fotelik samochodowy", "kėdutė", "kedute",
+      "babyphone", "niania elektroniczna", "kūdikio", "kudikio",
+      "babybett", "lopšelis", "lopselis",
+      "bugaboo", "cybex", "britax", "graco", "uppababy"], "🧸"),
     (["monitor", "monitorius", "gaming monitor", "display", "bildschirm", "ekran komputerowy"], "🖥️"),
     (["ssd", "nvme", "hdd", "ram ddr", "corsair", "kingston fury",
       "procesorius", "cpu", "ryzen", "core i", "festplatte", "dysk ssd",
@@ -2329,6 +2337,8 @@ _LT_CATEGORY_WORDS = [
     "stebėjimo", "stebejimo", "skambutis",
     # Smart home
     "termoregliatorius", "termoreguliatorius", "kištukas", "kistukas", "jungiklis",
+    # Baby / child products
+    "vežimėlis", "vezimelis", "kėdutė", "kedute", "lopšelis", "lopselis",
 ]
 # Normalized (no diacritics) version so accent-free queries also trigger translation
 _LT_CATEGORY_WORDS_NORM = [_norm_lt(w) for w in _LT_CATEGORY_WORDS]
@@ -2569,6 +2579,15 @@ _LT_DE: list[tuple[str, str]] = sorted([
     ("termoregliatorius", "Thermostat"), ("termoreguliatorius", "Thermostat"),
     ("išmanusis kištukas", "Smarte Steckdose"), ("ismanysis kistukas", "Smarte Steckdose"),
     ("išmanusis jungiklis", "Smart Schalter"), ("ismanysis jungiklis", "Smart Schalter"),
+    # Baby / child products
+    ("kūdikio monitorius", "Babyphone"), ("kudikio monitorius", "Babyphone"),
+    ("automobilinė vaikiška kėdutė", "Kindersitz"), ("automobiliné vaiskia kédute", "Kindersitz"),
+    ("vaikiška kėdutė", "Kindersitz"), ("vaiska kedute", "Kindersitz"),
+    ("kėdutė", "Kindersitz"), ("kedute", "Kindersitz"),
+    ("vaikiškas vežimėlis", "Kinderwagen"), ("vaikiskas vezimelis", "Kinderwagen"),
+    ("vežimėlis", "Kinderwagen"), ("vezimelis", "Kinderwagen"),
+    ("kūdikio lovelė", "Babybett"), ("kudikio lovele", "Babybett"),
+    ("lopšelis", "Babybett"), ("lopselis", "Babybett"),
     # Drone (common purchase; DJI = most popular brand)
     ("dronas su kamera", "Drohne mit Kamera"), ("dronas", "Drohne"),
     # E-reader
@@ -2806,6 +2825,14 @@ _LT_PL: list[tuple[str, str]] = sorted([
     ("termoregliatorius", "termostat"), ("termoreguliatorius", "termostat"),
     ("išmanusis kištukas", "inteligentne gniazdko"), ("ismanysis kistukas", "inteligentne gniazdko"),
     ("išmanusis jungiklis", "smart włącznik"), ("ismanysis jungiklis", "smart włącznik"),
+    # Baby / child products
+    ("kūdikio monitorius", "niania elektroniczna"), ("kudikio monitorius", "niania elektroniczna"),
+    ("automobilinė vaikiška kėdutė", "fotelik samochodowy"), ("vaikiška kėdutė", "fotelik samochodowy"),
+    ("vaiska kedute", "fotelik samochodowy"), ("kėdutė", "fotelik"), ("kedute", "fotelik"),
+    ("vaikiškas vežimėlis", "wózek dziecięcy"), ("vaikiskas vezimelis", "wózek dziecięcy"),
+    ("vežimėlis", "wózek dziecięcy"), ("vezimelis", "wózek dziecięcy"),
+    ("kūdikio lovelė", "łóżeczko niemowlęce"), ("kudikio lovele", "łóżeczko niemowlęce"),
+    ("lopšelis", "łóżeczko niemowlęce"), ("lopselis", "łóżeczko niemowlęce"),
     # Drone
     ("dronas su kamera", "dron z kamerą"), ("dronas", "dron"),
     # E-reader
@@ -4143,7 +4170,7 @@ def health():
     )
     return jsonify({
         "status": "ok",
-        "version": "7.14",
+        "version": "7.15",
         "uptime_s": uptime_s,
         "shops": ["Varle.lt", "Elesen.lt", "Pigu.lt", "Topo centras", "Amazon.DE", "Amazon.PL"],
         "ai": {
@@ -4221,7 +4248,7 @@ if __name__ == "__main__":
 
     port = int(os.getenv("PORT", 5000))
 
-    print("\n🟢 Goody API v7.14")
+    print("\n🟢 Goody API v7.15")
     print(f"📊 Supabase: {'✅ configured' if SUPABASE_URL else '⚠️ not set'}")
     print("📦 Active shops: Varle + Elesen + Pigu + Topo + Amazon.DE + Amazon.PL")
     print(f"🔑 ScraperAPI: {'✅ configured' if SCRAPER_API_KEY else '⚠️ not set'}")
