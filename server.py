@@ -1,5 +1,6 @@
 """
-Goody Backend v6.52 — _NOISE_WORDS: +discount/sale/angebote/oferta/rabat/akcija/nuolaida (cache hit boost):
+Goody Backend v6.53 — validate_price: +robot vacuum €50/gaming console €100 price floors:
+- v6.52 — _NOISE_WORDS: +discount/sale/angebote/oferta/rabat/akcija/nuolaida (cache hit boost):
 - v6.51 — _ACCESSORY_MATCH_WORDS: +strap/dirželis/armband/pasek (watch strap gaps):
 - v6.50 — _KNOWN_BRANDS: +epson/dreame/ecovacs/eufy/milwaukee/ryobi/festool/einhell/weber/instant/vitamix:
 - v6.49 — _NOISE_WORDS: +kaip nusipirkti/kur rasti/palyginti/compare/vergleichen (cache hit boost):
@@ -921,6 +922,9 @@ _FRIDGE_W   = ["šaldytuvas", "saldytuvas", "refrigerator", "kühlschrank", "lod
 _LAPTOP_W   = ["laptop", "notebook", "thinkpad", "ideapad", "vivobook", "zenbook",
                "dell xps", "surface pro", "chromebook", "kompiuteris"]
 _AIRCON_W   = ["oro kondicionierius", "kondicionierius", "klimaanlage", "klimatyzator", "air conditioner"]
+_ROBOT_VAC_W = ["roomba", "roborock", "irobot", "saugroboter", "robot siurblys", "robotinis siurblys",
+                "robot odkurzający", "robot sprzątający"]
+_CONSOLE_W  = ["playstation 5", "ps5", "xbox series x", "xbox series s", "nintendo switch"]
 _TV_SIZE_RE = re.compile(r"\b(43|50|55|65|75|85)\b")
 
 
@@ -967,6 +971,14 @@ def validate_price(price: float, query: str) -> float:
 
     # Air conditioner: > €150
     if any(w in q for w in _AIRCON_W) and price < 150:
+        return 0.0
+
+    # Robot vacuum: > €50 (cheapest is ~€70 new)
+    if any(w in q for w in _ROBOT_VAC_W) and price < 50:
+        return 0.0
+
+    # Gaming console (PS5/Xbox/Switch): > €100
+    if any(w in q for w in _CONSOLE_W) and price < 100:
         return 0.0
 
     # Global floor: anything below €0.50 is a parse artefact
@@ -3633,7 +3645,7 @@ def health():
     )
     return jsonify({
         "status": "ok",
-        "version": "6.52",
+        "version": "6.53",
         "uptime_s": uptime_s,
         "shops": ["Varle.lt", "Elesen.lt", "Pigu.lt", "Topo centras", "Amazon.DE", "Amazon.PL"],
         "ai": {
@@ -3711,7 +3723,7 @@ if __name__ == "__main__":
 
     port = int(os.getenv("PORT", 5000))
 
-    print("\n🟢 Goody API v6.52")
+    print("\n🟢 Goody API v6.53")
     print(f"📊 Supabase: {'✅ configured' if SUPABASE_URL else '⚠️ not set'}")
     print("📦 Active shops: Varle + Elesen + Pigu + Topo + Amazon.DE + Amazon.PL")
     print(f"🔑 ScraperAPI: {'✅ configured' if SCRAPER_API_KEY else '⚠️ not set'}")
