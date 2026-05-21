@@ -1,5 +1,6 @@
 """
-Goody Backend v6.35 — render_js 6s (fits 8s stream timeout); +brands honor/vivo/fujifilm/oral-b; _walk depth 12; SPA keys expanded:
+Goody Backend v6.36 — accessory filter: 'remote' → 'remote control' (prevents false-hide of presentation remotes):
+- v6.35 — render_js 6s (fits 8s stream timeout); +brands honor/vivo/fujifilm/oral-b; _walk depth 12; SPA keys expanded:
 - v6.34 — LT shops: direct(2s) → render_js=True(7s), within 9s pool timeout:
 - v6.33 — LT shop render_js fallback helpers (_scrape_*_from_html refactor):
 - v6.32 — icon fixes: nesiojamas→nesiojamas kompiuteris💻; lempute💡; robotinis🤖:
@@ -210,7 +211,7 @@ _ACCESSORY_MATCH_WORDS = frozenset({
     'screen protector', 'tempered glass', 'film', 'foil',
     'replacement', 'spare', 'repair', 'filter', 'bag', 'brush', 'attachment',
     'earpad', 'eartip', 'ear tip', 'cushion', 'pad',
-    'stylus', 'remote', 'controller',
+    'stylus', 'remote control', 'controller',
     # NOTE: 'headset' intentionally omitted — over-ear headphones are often marketed as headsets
     # (e.g. "Sony WH-1000XM5 Wireless Headset") and would be incorrectly filtered.
     'watch band', 'sport band', 'fitness band', 'wristband', 'band',
@@ -3586,7 +3587,7 @@ def health():
     )
     return jsonify({
         "status": "ok",
-        "version": "6.35",
+        "version": "6.36",
         "uptime_s": uptime_s,
         "shops": ["Varle.lt", "Elesen.lt", "Pigu.lt", "Topo centras", "Amazon.DE", "Amazon.PL"],
         "ai": {
@@ -3664,7 +3665,7 @@ if __name__ == "__main__":
 
     port = int(os.getenv("PORT", 5000))
 
-    print("\n🟢 Goody API v6.35")
+    print("\n🟢 Goody API v6.36")
     print(f"📊 Supabase: {'✅ configured' if SUPABASE_URL else '⚠️ not set'}")
     print("📦 Active shops: Varle + Elesen + Pigu + Topo + Amazon.DE + Amazon.PL")
     print(f"🔑 ScraperAPI: {'✅ configured' if SCRAPER_API_KEY else '⚠️ not set'}")
