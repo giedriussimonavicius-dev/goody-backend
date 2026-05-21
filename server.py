@@ -1,5 +1,6 @@
 """
-Goody Backend v6.66 — validate_price: +pressure washer €20/lawn mower €30 floors (centai fix):
+Goody Backend v6.67 — _NOISE_WORDS: +išpardavimas/promocja/wyprzedaż/recenzja/gdzie kupić/preisvergleich:
+- v6.66 — validate_price: +pressure washer €20/lawn mower €30 floors (centai fix):
 - v6.65 — _CATEGORY_ICON_MAP: +kärcher (umlaut) to power tools🔨:
 - v6.64 — _LT_DE/PL: +sniego valytuvas→Schneefräse/odśnieżarka; trigger: +sniego:
 - v6.63 — _LT_DE/PL: +vejapjovė→Rasenmäher/kosiarka; +kompresorius→Kompressor/kompresor:
@@ -450,7 +451,8 @@ _NOISE_WORDS = re.compile(
     r'pigiausiai|pigiausias|cheapest|billigste|najtaniej|order|bestellen|zamów|'
     r'compare|palyginti|vergleichen|porównaj|'
     r'discount|sale|angebote|oferta|rabat|akcija|nuolaida|nuolaidos|'
-    r'pirkti|internetu|kur nusipirkti)\b',
+    r'pirkti|internetu|kur nusipirkti|išpardavimas|'
+    r'promocja|wyprzedaż|recenzja|gdzie kupić|preisvergleich)\b',
     re.IGNORECASE
 )
 
@@ -3738,7 +3740,7 @@ def health():
     )
     return jsonify({
         "status": "ok",
-        "version": "6.66",
+        "version": "6.67",
         "uptime_s": uptime_s,
         "shops": ["Varle.lt", "Elesen.lt", "Pigu.lt", "Topo centras", "Amazon.DE", "Amazon.PL"],
         "ai": {
@@ -3816,7 +3818,7 @@ if __name__ == "__main__":
 
     port = int(os.getenv("PORT", 5000))
 
-    print("\n🟢 Goody API v6.66")
+    print("\n🟢 Goody API v6.67")
     print(f"📊 Supabase: {'✅ configured' if SUPABASE_URL else '⚠️ not set'}")
     print("📦 Active shops: Varle + Elesen + Pigu + Topo + Amazon.DE + Amazon.PL")
     print(f"🔑 ScraperAPI: {'✅ configured' if SCRAPER_API_KEY else '⚠️ not set'}")
