@@ -1,5 +1,6 @@
 """
-Goody Backend v7.10 — _CATEGORY_ICON_MAP: +sharp/blaupunkt📺; +aeg🫧; +rowenta👕; +instant🍳; +vitamix🥤; +gree🌬️; +seagate/wd/sandisk🖥️:
+Goody Backend v7.11 — _LT_DE/PL: +krūmapjovė/lapų pūstuvas/žibintas/nebulizatorius; icon +heckenschere/laubbläser🔨 +taschenlampe💡:
+- v7.10 — _CATEGORY_ICON_MAP: +sharp/blaupunkt📺; +aeg🫧; +rowenta👕; +instant🍳; +vitamix🥤; +gree🌬️; +seagate/wd/sandisk🖥️:
 - v7.09 — validate_price: +air fryer €20 floor; _CATEGORY_ICON_MAP: +frytkownica/heißluftfritteuse🍳:
 - v7.08 — _LT_DE/PL: +oras vanduo→Luft-Wasser/powietrze-woda; +oras oras→Luft-Luft:
 - v7.07 — _LT_DE/PL: +robotinė vejapjovė→Mähroboter; _LT_CATEGORY_WORDS: +robotinė:
@@ -561,7 +562,8 @@ _CATEGORY_ICON_MAP = [
     (["svarstykles", "körperwaage", "korperwaage", "body scale", "body fat scale",
       "personenwaage", "waga lazienkowa"], "⚖️"),
     (["beurer", "omron", "medisana", "withings", "blood pressure", "kraujospy dis",
-      "tensiometro", "cisnienomierz"], "🩺"),
+      "tensiometro", "cisnienomierz",
+      "nebulizatorius", "nebulizator", "inhalator", "inhaler"], "🩺"),
     (["philips shav", "braun series", "gillette", "oral-b", "skustuvas", "epilator",
       "toothbrush", "zahnbürste", "sepetelis", "šepetėlis", "szczoteczka", "braun"], "🪒"),
     (["laikrodis", "smartwatch", "apple watch", "garmin", "fitbit", "samsung watch", "fossil", "polar", "suunto",
@@ -576,7 +578,9 @@ _CATEGORY_ICON_MAP = [
       "schrauber", "bohrmaschine", "szlifierka", "wiertarka", "wkrętarka", "perforatorius",
       "karcher", "kärcher", "hochdruckreiniger", "myjka cisnieniowa", "plovykla",
       "stihl", "husqvarna", "gardena", "milwaukee", "ryobi", "festool", "einhell", "metabo",
-      "worx", "parkside", "greenworks"], "🔨"),
+      "worx", "parkside", "greenworks",
+      "heckenschere", "laubbläser", "laubblaser", "nożyce do żywopłotu", "dmuchawa do liści",
+      "krūmapjovė", "krumapjove", "lapų pūstuvas", "lapu pustuvas"], "🔨"),
     (["begimu takelis", "begimo takelis", "laufband", "treadmill", "treniruoklis", "bieżnia"], "🏃"),
     (["projektorius", "projector", "projektor", "beamer"], "📽️"),
     (["sulciaspaude", "sulciu", "juicer", "entsafter", "wyciskarka", "vitamix"], "🥤"),
@@ -593,7 +597,8 @@ _CATEGORY_ICON_MAP = [
     (["zadintuvas", "zadintuva", "wecker", "budzik", "alarm clock"], "⏰"),
     (["lempa", "lampe", "lampa", "lempute", "lemputes", "led juosta", "led strip", "led lamp", "smart lamp",
       "sviestuvas", "sviestuvai", "prozektorius", "philips hue", "hue", "smart bulb",
-      "smart light", "zigbee", "nanoleaf"], "💡"),
+      "smart light", "zigbee", "nanoleaf",
+      "taschenlampe", "latarka", "žibintas", "zibintas", "flashlight", "torch"], "💡"),
     (["boileris", "bojler", "warmwasserbereiter", "podgrzewacz wody",
       "vandens sildytuvas", "water heater", "katilas", "gaskessel", "kociol",
       "vaillant", "viessmann", "baxi", "ariston"], "🚿"),
@@ -2291,6 +2296,12 @@ _LT_CATEGORY_WORDS = [
     "nešiojamasis",
     # Battery (power tool / standalone battery pack nominative form — genitive "akumuliatoriaus" also common)
     "akumuliatorius", "akumuliatoriaus",
+    # Garden tools (common outdoor power tool searches)
+    "krūmapjovė", "krumapjove", "lapų pūstuvas", "lapu pustuvas",
+    # Flashlight
+    "žibintas", "zibintas",
+    # Nebulizer / inhaler (health device)
+    "nebulizatorius", "nebulizatoriaus",
 ]
 # Normalized (no diacritics) version so accent-free queries also trigger translation
 _LT_CATEGORY_WORDS_NORM = [_norm_lt(w) for w in _LT_CATEGORY_WORDS]
@@ -2448,6 +2459,14 @@ _LT_DE: list[tuple[str, str]] = sorted([
     ("slegine plovykla", "Hochdruckreiniger"), ("plovykla", "Hochdruckreiniger"),
     # Lawn mower (vejapjovė = variant spelling of žoliapjovė, not yet in dict)
     ("vejapjovė", "Rasenmäher"), ("vejapjove", "Rasenmäher"),
+    # Hedge trimmer
+    ("krūmapjovė", "Heckenschere"), ("krumapjove", "Heckenschere"),
+    # Leaf blower
+    ("lapų pūstuvas", "Laubbläser"), ("lapu pustuvas", "Laubbläser"),
+    # Flashlight / torch
+    ("žibintas", "Taschenlampe"), ("zibintas", "Taschenlampe"),
+    # Nebulizer / inhaler
+    ("nebulizatorius", "Inhalator"), ("nebulizatoriaus", "Inhalator"),
     # Air compressor
     ("kompresorius", "Kompressor"), ("kompresoriaus", "Kompressor"),
     # Snow blower (common in LT winters)
@@ -2669,6 +2688,14 @@ _LT_PL: list[tuple[str, str]] = sorted([
     ("slegine plovykla", "myjka ciśnieniowa"), ("plovykla", "myjka ciśnieniowa"),
     # Lawn mower (vejapjovė = variant spelling)
     ("vejapjovė", "kosiarka"), ("vejapjove", "kosiarka"),
+    # Hedge trimmer
+    ("krūmapjovė", "nożyce do żywopłotu"), ("krumapjove", "nożyce do żywopłotu"),
+    # Leaf blower
+    ("lapų pūstuvas", "dmuchawa do liści"), ("lapu pustuvas", "dmuchawa do liści"),
+    # Flashlight / torch
+    ("žibintas", "latarka"), ("zibintas", "latarka"),
+    # Nebulizer / inhaler
+    ("nebulizatorius", "nebulizator"), ("nebulizatoriaus", "nebulizator"),
     # Air compressor
     ("kompresorius", "kompresor"), ("kompresoriaus", "kompresor"),
     # Snow blower
@@ -4071,7 +4098,7 @@ def health():
     )
     return jsonify({
         "status": "ok",
-        "version": "7.10",
+        "version": "7.11",
         "uptime_s": uptime_s,
         "shops": ["Varle.lt", "Elesen.lt", "Pigu.lt", "Topo centras", "Amazon.DE", "Amazon.PL"],
         "ai": {
@@ -4149,7 +4176,7 @@ if __name__ == "__main__":
 
     port = int(os.getenv("PORT", 5000))
 
-    print("\n🟢 Goody API v7.10")
+    print("\n🟢 Goody API v7.11")
     print(f"📊 Supabase: {'✅ configured' if SUPABASE_URL else '⚠️ not set'}")
     print("📦 Active shops: Varle + Elesen + Pigu + Topo + Amazon.DE + Amazon.PL")
     print(f"🔑 ScraperAPI: {'✅ configured' if SCRAPER_API_KEY else '⚠️ not set'}")
