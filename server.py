@@ -1,5 +1,6 @@
 """
-Goody Backend v6.91 — _ACCESSORY: +netzadapter; validate_price: +projector€50/treadmill€50; _NOISE_WORDS: +atsiliepimai/apžvalgos; icon: russell hobbs→russell:
+Goody Backend v6.92 — _KNOWN_BRANDS: +steelseries/hyperx/rode/klipsch; icons: steelseries/hyperx🎮 rode🎙️ klipsch🔊; _LT_DE/PL: +rekuperatorius/garų stotis:
+- v6.91 — _ACCESSORY: +netzadapter; validate_price: +projector€50/treadmill€50; _NOISE_WORDS: +atsiliepimai/apžvalgos; icon: russell hobbs→russell:
 - v6.90 — _CATEGORY_ICON_MAP: +kenwood/kitchenaid/ninja/smeg🍳; +sage/russell/breville/melitta☕; +whirlpool/hotpoint/grundig🫧; +leica📷; +shure🎙️; +logitech🖱️; +razer/corsair🎮:
 - v6.89 — _KNOWN_BRANDS: +midea/hoover; _CATEGORY_ICON_MAP: liebherr❄️/indesit+candy+beko+gorenje+haier🫧/hoover🧹/midea🌬️:
 - v6.88 — _ACCESSORY_MATCH_WORDS: +ladekabel/aufladekabel/netzkabel (DE cable compounds); _LT_DE/PL: +dantų iryklė→Munddusche/irygator:
@@ -284,6 +285,10 @@ _KNOWN_BRANDS = {
     'neff', 'asko',  # smeg already in set above
     # Vacuum + laundry (EU market brands)
     'midea', 'hoover',
+    # Gaming peripherals
+    'steelseries', 'hyperx',
+    # Professional audio
+    'rode', 'klipsch',
     # Audio / home cinema
     'yamaha', 'denon', 'pioneer', 'onkyo', 'marantz', 'audio-technica',
     # Networking / smart home
@@ -468,7 +473,8 @@ _CATEGORY_ICON_MAP = [
       "jabra", "beats", "marshall", "kopfhörer", "słuchawki", "audio-technica"], "🎧"),
     (["playstation", "ps5", "ps4", "xbox", "nintendo", "gamepad", "rtx 4", "rtx 3",
       "geforce", "gaming", "spielkonsole", "konsola", "konsole",
-      "gigabyte", "msi", "zotac", "sapphire", "razer", "corsair"], "🎮"),
+      "gigabyte", "msi", "zotac", "sapphire", "razer", "corsair",
+      "steelseries", "hyperx"], "🎮"),
     (["camera", "nikon", "canon", "sony zv", "sony alpha", "fotoaparatas", "mirrorless", "dslr",
       "gopro", "dji", "aparat foto", "aparat cyfr", "fujifilm", "olympus", "leica"], "📷"),
     (["roomba", "roborock", "irobot", "robot siurblys", "robotinis", "saugroboter",
@@ -522,11 +528,11 @@ _CATEGORY_ICON_MAP = [
     (["sulciaspaude", "sulciu", "juicer", "entsafter", "wyciskarka"], "🥤"),
     (["garsiakalbis", "garsine", "kolonele", "soundbar", "lautsprecher", "głośnik", "speaker",
       "tragbarer lautsprecher", "głośnik przenośny", "sonos", "harman kardon",
-      "yamaha", "denon", "marantz", "pioneer", "onkyo"], "🔊"),
+      "yamaha", "denon", "marantz", "pioneer", "onkyo", "klipsch"], "🔊"),
     (["pelė", "pele", "maus", "mouse", "mysz", "logitech"], "🖱️"),
     (["laidynas", "lygintuvas", "bügeleisen", "bugeleisen", "żelazko", "dampfbügeleisen", "dampfbugeleisen"], "👕"),
     (["ziuronai", "fernglas", "lornetka", "binocular"], "🔭"),
-    (["mikrofonas", "microphone", "mikrofon", "condenser mic", "podcast", "shure"], "🎙️"),
+    (["mikrofonas", "microphone", "mikrofon", "condenser mic", "podcast", "shure", "rode"], "🎙️"),
     (["marsrutizatorius", "router", "mesh wifi", "access point", "switch", "tinklo",
       "tp-link", "ubiquiti", "netgear", "zyxel", "fritzbox", "fritz!box"], "🌐"),
     (["klaviatura", "klaviatūra", "keyboard", "klawiatura", "tastatur", "mechanine"], "⌨️"),
@@ -2185,6 +2191,10 @@ _LT_CATEGORY_WORDS = [
     "colių", "coliai", "colio",
     # Oral irrigator / water flosser
     "iryklė", "irykle",
+    # Heat recovery ventilation (common LT home appliance)
+    "rekuperatorius", "rekuperatoriaus",
+    # Steam station (pro iron with detached boiler)
+    "stotis",
 ]
 # Normalized (no diacritics) version so accent-free queries also trigger translation
 _LT_CATEGORY_WORDS_NORM = [_norm_lt(w) for w in _LT_CATEGORY_WORDS]
@@ -2401,6 +2411,10 @@ _LT_DE: list[tuple[str, str]] = sorted([
     # Oral irrigator / water flosser
     ("dantų iryklė", "Munddusche"), ("dantų irykle", "Munddusche"),
     ("iryklė", "Munddusche"), ("irykle", "Munddusche"),
+    # Steam station (professional iron with separate boiler)
+    ("garų stotis", "Dampfstation"), ("garu stotis", "Dampfstation"),
+    # Heat recovery ventilation (rekuperatorius)
+    ("rekuperatorius", "Lüftungsanlage"), ("rekuperatoriaus", "Lüftungsanlage"),
 ], key=lambda t: -len(t[0]))
 
 _LT_PL: list[tuple[str, str]] = sorted([
@@ -2604,6 +2618,10 @@ _LT_PL: list[tuple[str, str]] = sorted([
     # Oral irrigator / water flosser
     ("dantų iryklė", "irygator dentystyczny"), ("dantų irykle", "irygator dentystyczny"),
     ("iryklė", "irygator"), ("irykle", "irygator"),
+    # Steam station (professional iron)
+    ("garų stotis", "stacja pary"), ("garu stotis", "stacja pary"),
+    # Heat recovery ventilation
+    ("rekuperatorius", "rekuperator"), ("rekuperatoriaus", "rekuperator"),
 ], key=lambda t: -len(t[0]))
 
 
@@ -3931,7 +3949,7 @@ def health():
     )
     return jsonify({
         "status": "ok",
-        "version": "6.91",
+        "version": "6.92",
         "uptime_s": uptime_s,
         "shops": ["Varle.lt", "Elesen.lt", "Pigu.lt", "Topo centras", "Amazon.DE", "Amazon.PL"],
         "ai": {
@@ -4009,7 +4027,7 @@ if __name__ == "__main__":
 
     port = int(os.getenv("PORT", 5000))
 
-    print("\n🟢 Goody API v6.91")
+    print("\n🟢 Goody API v6.92")
     print(f"📊 Supabase: {'✅ configured' if SUPABASE_URL else '⚠️ not set'}")
     print("📦 Active shops: Varle + Elesen + Pigu + Topo + Amazon.DE + Amazon.PL")
     print(f"🔑 ScraperAPI: {'✅ configured' if SCRAPER_API_KEY else '⚠️ not set'}")
