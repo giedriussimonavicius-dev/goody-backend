@@ -1,5 +1,6 @@
 """
-Goody Backend v6.80 — _LT_DE/PL: +colių→Zoll/cali (inch) TV size translation:
+Goody Backend v6.81 — _KNOWN_BRANDS +gigabyte/msi/fritzbox; _CATEGORY_ICON_MAP +gigabyte/msi🎮/fritzbox🌐:
+- v6.80 — _LT_DE/PL: +colių→Zoll/cali (inch) TV size translation:
 - v6.79 — _LT_DE/PL: +kavos malūnėlis/automatinis kavos aparatas translations:
 - v6.78 — _CATEGORY_ICON_MAP: +dreame/ecovacs/eufy🤖; _ACCESSORY_MAP: +audio-technica🎧:
 - v6.77 — _LT_DE/PL: +virtuvinis kombainas/akumuliatorinis; _ACCESSORY: +toner/wandhalterung/dėklai; _KNOWN_BRANDS: +audio-technica:
@@ -274,7 +275,9 @@ _KNOWN_BRANDS = {
     # Audio / home cinema
     'yamaha', 'denon', 'pioneer', 'onkyo', 'marantz', 'audio-technica',
     # Networking / smart home
-    'ubiquiti', 'zyxel', 'netgear', 'tp-link',
+    'ubiquiti', 'zyxel', 'netgear', 'tp-link', 'fritzbox', 'avm',
+    # GPU / PC component brands
+    'gigabyte', 'msi', 'zotac', 'sapphire',
 }
 _ACCESSORY_MATCH_WORDS = frozenset({
     'case', 'cover', 'sleeve', 'bumper', 'wallet', 'skin', 'sticker', 'decal',
@@ -437,7 +440,8 @@ _CATEGORY_ICON_MAP = [
     (["headphone", "earphone", "earbuds", "ausines", "ausinukai", "airpods", "wh-1000", "bose qc",
       "jabra", "beats", "marshall", "kopfhörer", "słuchawki", "audio-technica"], "🎧"),
     (["playstation", "ps5", "ps4", "xbox", "nintendo", "gamepad", "rtx 4", "rtx 3",
-      "geforce", "gaming", "spielkonsole", "konsola", "konsole"], "🎮"),
+      "geforce", "gaming", "spielkonsole", "konsola", "konsole",
+      "gigabyte", "msi", "zotac", "sapphire"], "🎮"),
     (["camera", "nikon", "canon", "sony zv", "sony alpha", "fotoaparatas", "mirrorless", "dslr",
       "gopro", "dji", "aparat foto", "aparat cyfr", "fujifilm", "olympus"], "📷"),
     (["roomba", "roborock", "irobot", "robot siurblys", "robotinis", "saugroboter",
@@ -494,7 +498,7 @@ _CATEGORY_ICON_MAP = [
     (["ziuronai", "fernglas", "lornetka", "binocular"], "🔭"),
     (["mikrofonas", "microphone", "mikrofon", "condenser mic", "podcast"], "🎙️"),
     (["marsrutizatorius", "router", "mesh wifi", "access point", "switch", "tinklo",
-      "tp-link", "ubiquiti", "netgear", "zyxel"], "🌐"),
+      "tp-link", "ubiquiti", "netgear", "zyxel", "fritzbox", "fritz!box"], "🌐"),
     (["klaviatura", "klaviatūra", "keyboard", "klawiatura", "tastatur", "mechanine"], "⌨️"),
     (["zadintuvas", "zadintuva", "wecker", "budzik", "alarm clock"], "⏰"),
     (["lempa", "lampe", "lampa", "lempute", "lemputes", "led juosta", "led strip", "led lamp", "smart lamp",
@@ -3876,7 +3880,7 @@ def health():
     )
     return jsonify({
         "status": "ok",
-        "version": "6.80",
+        "version": "6.81",
         "uptime_s": uptime_s,
         "shops": ["Varle.lt", "Elesen.lt", "Pigu.lt", "Topo centras", "Amazon.DE", "Amazon.PL"],
         "ai": {
@@ -3954,7 +3958,7 @@ if __name__ == "__main__":
 
     port = int(os.getenv("PORT", 5000))
 
-    print("\n🟢 Goody API v6.80")
+    print("\n🟢 Goody API v6.81")
     print(f"📊 Supabase: {'✅ configured' if SUPABASE_URL else '⚠️ not set'}")
     print("📦 Active shops: Varle + Elesen + Pigu + Topo + Amazon.DE + Amazon.PL")
     print(f"🔑 ScraperAPI: {'✅ configured' if SCRAPER_API_KEY else '⚠️ not set'}")
