@@ -1,5 +1,6 @@
 """
-Goody Backend v6.11 — _CATEGORY_ICON_MAP: speaker🔊, mouse🖱️, iron👕 icons:
+Goody Backend v6.12 — _varle_from_next_data: early relevance filter (matches _walk_for_products):
+- v6.11 — _CATEGORY_ICON_MAP: speaker🔊, mouse🖱️, iron👕 icons:
 - v6.10 — diskas→Festplatte, lygintuvas→Bügeleisen, nešiojamas garsiakalbis fix:
 - v6.9 — _LT_PL storage/keyboard translations: kietasis diskas, atmintinė, mechaninė:
 - v6.8 — LT translations: garsinė/kolonėlė→Lautsprecher, kampinis šlifuoklis/suktukas:
@@ -1196,20 +1197,24 @@ def _varle_from_next_data(html: str, query: str) -> list:
                             if not img and isinstance(node.get("image"), str):
                                 img = node["image"]
                             img = img if isinstance(img, str) and img.startswith("http") else ""
-                            r = _make_result("Varle.lt", "🇱🇹", link, vp, str(name_val)[:100], "varle", img)
-                            rv = node.get("rating") or node.get("averageRating") or 0
-                            try:
-                                rv = float(str(rv).replace(",", "."))
-                                if 0 < rv <= 5:
-                                    r["rating"] = rv
-                            except (ValueError, TypeError):
-                                pass
-                            rc = node.get("reviewCount") or node.get("review_count") or 0
-                            try:
-                                r["review_count"] = int(rc)
-                            except (ValueError, TypeError):
-                                pass
-                            results.append(r)
+                            name_str = str(name_val)[:100]
+                            if not is_relevant_result(query, name_str):
+                                pass  # skip accessories early so they don't fill the 8-slot cap
+                            else:
+                                r = _make_result("Varle.lt", "🇱🇹", link, vp, name_str, "varle", img)
+                                rv = node.get("rating") or node.get("averageRating") or 0
+                                try:
+                                    rv = float(str(rv).replace(",", "."))
+                                    if 0 < rv <= 5:
+                                        r["rating"] = rv
+                                except (ValueError, TypeError):
+                                    pass
+                                rc = node.get("reviewCount") or node.get("review_count") or 0
+                                try:
+                                    r["review_count"] = int(rc)
+                                except (ValueError, TypeError):
+                                    pass
+                                results.append(r)
                     except (ValueError, TypeError):
                         pass
                 for v in node.values():
@@ -3445,7 +3450,7 @@ def health():
     )
     return jsonify({
         "status": "ok",
-        "version": "6.11",
+        "version": "6.12",
         "uptime_s": uptime_s,
         "shops": ["Varle.lt", "Elesen.lt", "Pigu.lt", "Topo centras", "Amazon.DE", "Amazon.PL"],
         "ai": {
@@ -3523,7 +3528,7 @@ if __name__ == "__main__":
 
     port = int(os.getenv("PORT", 5000))
 
-    print("\n🟢 Goody API v6.11")
+    print("\n🟢 Goody API v6.12")
     print(f"📊 Supabase: {'✅ configured' if SUPABASE_URL else '⚠️ not set'}")
     print("📦 Active shops: Varle + Elesen + Pigu + Topo + Amazon.DE + Amazon.PL")
     print(f"🔑 ScraperAPI: {'✅ configured' if SCRAPER_API_KEY else '⚠️ not set'}")
