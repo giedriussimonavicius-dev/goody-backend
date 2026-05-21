@@ -1,5 +1,6 @@
 """
-Goody Backend v7.18 — _LT_DE/PL: +trimeris/masažo kėdė/drėgmės surinktuvas; icon +rasentrimmer🔨 +massagesessel🩺:
+Goody Backend v7.19 — validate_price: _ROBOT_VAC_W +ilife/cecotec; +_GARDENTOOL_W €5; +_DEHUMID_W €15; +_MASSAGE_W €50:
+- v7.18 — _LT_DE/PL: +trimeris/masažo kėdė/drėgmės surinktuvas; icon +rasentrimmer🔨 +massagesessel🩺:
 - v7.17 — _LT_DE/PL: +ryžių viryklė/maisto džiovintuvas/arbatinukas/galios bankas; _LT_CATEGORY_WORDS:
 - v7.16 — _NOISE_WORDS: +ranking/empfehlung/ratgeber/najlepszy/polecany; _KNOWN_BRANDS: +keychron:
 - v7.15 — _LT_DE/PL: +vežimėlis/vaikiška kėdutė/kūdikio monitorius; _KNOWN_BRANDS: +bugaboo/cybex/britax/graco:
@@ -1156,7 +1157,14 @@ _LAPTOP_W   = ["laptop", "notebook", "thinkpad", "ideapad", "vivobook", "zenbook
                "dell xps", "surface pro", "chromebook", "kompiuteris"]
 _AIRCON_W   = ["oro kondicionierius", "kondicionierius", "klimaanlage", "klimatyzator", "air conditioner"]
 _ROBOT_VAC_W = ["roomba", "roborock", "irobot", "saugroboter", "robot siurblys", "robotinis siurblys",
-                "robot odkurzający", "robot sprzątający", "dreame", "ecovacs", "eufy"]
+                "robot odkurzający", "robot sprzątający", "dreame", "ecovacs", "eufy", "ilife", "cecotec"]
+_GARDENTOOL_W = ["heckenschere", "laubbläser", "laubblaaser", "rasentrimmer", "nożyce do żywopłotu",
+                  "dmuchawa do liści", "dmuchawa", "podkaszarka", "krūmapjovė", "krumapjove",
+                  "lapų pūstuvas", "lapu pustuvas", "trimeris"]  # garden tools ≥ €5
+_DEHUMID_W   = ["luftentfeuchter", "entfeuchter", "pochłaniacz wilgoci", "odwilżacz",
+                "drėgmės surinktuvas", "dregmes surinktuvas", "dehumidifier"]  # dehumidifiers ≥ €15
+_MASSAGE_W   = ["massagesessel", "massage chair", "fotel masujący", "fotel masujacy",
+                "masažo kėdė", "masazo kede"]  # massage chairs ≥ €50
 _CONSOLE_W  = ["playstation 5", "ps5", "xbox series x", "xbox series s", "nintendo switch"]
 _VACUUM_W   = ["dulkių siurblys", "dulkiu siurblys", "siurblys", "staubsauger", "odkurzacz", "vacuum cleaner", "dyson v"]
 _WATCH_W    = ["apple watch", "samsung watch", "galaxy watch", "garmin", "smartwatch"]
@@ -1289,6 +1297,18 @@ def validate_price(price: float, query: str) -> float:
 
     # Air purifier: cheapest desktop HEPA starts at ~€30
     if any(w in q for w in _AIRPUR_W) and price < 25:
+        return 0.0
+
+    # Garden tools (hedge trimmer / leaf blower / grass trimmer): cheapest corded ~€15
+    if any(w in q for w in _GARDENTOOL_W) and price < 5:
+        return 0.0
+
+    # Dehumidifier: cheapest desktop unit ~€30
+    if any(w in q for w in _DEHUMID_W) and price < 15:
+        return 0.0
+
+    # Massage chair: cheapest entry model ~€100
+    if any(w in q for w in _MASSAGE_W) and price < 50:
         return 0.0
 
     # Global floor: anything below €0.50 is a parse artefact
@@ -4226,7 +4246,7 @@ def health():
     )
     return jsonify({
         "status": "ok",
-        "version": "7.18",
+        "version": "7.19",
         "uptime_s": uptime_s,
         "shops": ["Varle.lt", "Elesen.lt", "Pigu.lt", "Topo centras", "Amazon.DE", "Amazon.PL"],
         "ai": {
@@ -4304,7 +4324,7 @@ if __name__ == "__main__":
 
     port = int(os.getenv("PORT", 5000))
 
-    print("\n🟢 Goody API v7.18")
+    print("\n🟢 Goody API v7.19")
     print(f"📊 Supabase: {'✅ configured' if SUPABASE_URL else '⚠️ not set'}")
     print("📦 Active shops: Varle + Elesen + Pigu + Topo + Amazon.DE + Amazon.PL")
     print(f"🔑 ScraperAPI: {'✅ configured' if SCRAPER_API_KEY else '⚠️ not set'}")
