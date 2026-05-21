@@ -1,5 +1,6 @@
 """
-Goody Backend v6.71 — _ACCESSORY_MATCH_WORDS: +ersatzfilter/milchaufschäumer/luftfilter:
+Goody Backend v6.72 — _ACCESSORY_MATCH_WORDS: +ohrpolster/tragetasche/ersatzohrpolster:
+- v6.71 — _ACCESSORY_MATCH_WORDS: +ersatzfilter/milchaufschäumer/luftfilter:
 - v6.70 — _LT_DE/PL: +dujų→Gas/gazowy (gas stove/boiler); icon: +gasherd🍳:
 - v6.69 — _CATEGORY_ICON_MAP: +heat pump🌬️/steam cleaner🫧/boiler🚿:
 - v6.68 — _LT_DE/PL: +šilumos siurblys→Wärmepumpe/pompa ciepła; trigger: +šilumos:
@@ -280,11 +281,15 @@ _ACCESSORY_MATCH_WORDS = frozenset({
     # German tool battery pack / power supply accessories
     'akkupack', 'netzteil', 'akku-pack',
     # German compound accessories with "Ersatz-" prefix (whole-word "ersatz" doesn't match inside these)
-    'ersatzfilter', 'ersatzteil', 'ersatzakku',
+    'ersatzfilter', 'ersatzteil', 'ersatzakku', 'ersatzohrpolster',
     # Coffee machine accessories
     'milchaufschäumer', 'milchaufschaumer', 'entkalkungstabletten', 'reinigungstabletten',
     # Heat pump / HVAC filter accessories
     'luftfilter',
+    # Headphone / audio accessories (German)
+    'ohrpolster', 'ohrkissen', 'kopfpolster',
+    # Carry bag / case (German) — not caught by "tasche" since it's a suffix
+    'tragetasche', 'tragegurt', 'schutztasche',
 })
 _VARIANT_WORDS = frozenset({
     'pro', 'max', 'ultra', 'plus', 'lite', 'mini', 'fe', 'edge',
@@ -3783,7 +3788,7 @@ def health():
     )
     return jsonify({
         "status": "ok",
-        "version": "6.71",
+        "version": "6.72",
         "uptime_s": uptime_s,
         "shops": ["Varle.lt", "Elesen.lt", "Pigu.lt", "Topo centras", "Amazon.DE", "Amazon.PL"],
         "ai": {
@@ -3861,7 +3866,7 @@ if __name__ == "__main__":
 
     port = int(os.getenv("PORT", 5000))
 
-    print("\n🟢 Goody API v6.71")
+    print("\n🟢 Goody API v6.72")
     print(f"📊 Supabase: {'✅ configured' if SUPABASE_URL else '⚠️ not set'}")
     print("📦 Active shops: Varle + Elesen + Pigu + Topo + Amazon.DE + Amazon.PL")
     print(f"🔑 ScraperAPI: {'✅ configured' if SCRAPER_API_KEY else '⚠️ not set'}")
