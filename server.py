@@ -1,5 +1,6 @@
 """
-Goody Backend v6.12 — _varle_from_next_data: early relevance filter (matches _walk_for_products):
+Goody Backend v6.13 — standalone fallback translations: kondicionierius/valytuvas/robotas/kampinis:
+- v6.12 — _varle_from_next_data: early relevance filter (matches _walk_for_products):
 - v6.11 — _CATEGORY_ICON_MAP: speaker🔊, mouse🖱️, iron👕 icons:
 - v6.10 — diskas→Festplatte, lygintuvas→Bügeleisen, nešiojamas garsiakalbis fix:
 - v6.9 — _LT_PL storage/keyboard translations: kietasis diskas, atmintinė, mechaninė:
@@ -2007,6 +2008,17 @@ _LT_DE: list[tuple[str, str]] = sorted([
     # Iron (lygintuvas is a common LT alternative to laidynas)
     ("garų lygintuvas", "Dampfbügeleisen"), ("garų laidynas", "Dampfbügeleisen"),
     ("lygintuvas", "Bügeleisen"),
+    # Standalone fallbacks for trigger words missing direct translations
+    # (these fire only when the more-specific multi-word phrases above don't match)
+    ("kondicionierius", "Klimaanlage"), ("kondicionieriaus", "Klimaanlage"),
+    ("valytuvas", "Reiniger"),
+    ("kraujo", "Blutdruck"),
+    ("robotas", "Roboter"),
+    ("maisto", "Küchenmaschine"),
+    ("spaustuvas", "Entsafter"),
+    ("apyrankė", "Fitness Tracker"), ("apyranke", "Fitness Tracker"),
+    ("kampinis", "Winkelschleifer"),
+    ("kietasis", "Festplatte"),
 ], key=lambda t: -len(t[0]))
 
 _LT_PL: list[tuple[str, str]] = sorted([
@@ -2128,6 +2140,16 @@ _LT_PL: list[tuple[str, str]] = sorted([
     # Iron (lygintuvas is a common LT alternative to laidynas)
     ("garų lygintuvas", "żelazko parowe"), ("garų laidynas", "żelazko parowe"),
     ("lygintuvas", "żelazko"),
+    # Standalone fallbacks for trigger words missing direct translations
+    ("kondicionierius", "klimatyzator"), ("kondicionieriaus", "klimatyzator"),
+    ("valytuvas", "oczyszczacz"),
+    ("kraujo", "ciśnienie krwi"),
+    ("robotas", "robot"),
+    ("maisto", "robot kuchenny"),
+    ("spaustuvas", "wyciskarka"),
+    ("apyrankė", "opaska fitness"), ("apyranke", "opaska fitness"),
+    ("kampinis", "szlifierka kątowa"),
+    ("kietasis", "dysk twardy"),
 ], key=lambda t: -len(t[0]))
 
 
@@ -3450,7 +3472,7 @@ def health():
     )
     return jsonify({
         "status": "ok",
-        "version": "6.12",
+        "version": "6.13",
         "uptime_s": uptime_s,
         "shops": ["Varle.lt", "Elesen.lt", "Pigu.lt", "Topo centras", "Amazon.DE", "Amazon.PL"],
         "ai": {
@@ -3528,7 +3550,7 @@ if __name__ == "__main__":
 
     port = int(os.getenv("PORT", 5000))
 
-    print("\n🟢 Goody API v6.12")
+    print("\n🟢 Goody API v6.13")
     print(f"📊 Supabase: {'✅ configured' if SUPABASE_URL else '⚠️ not set'}")
     print("📦 Active shops: Varle + Elesen + Pigu + Topo + Amazon.DE + Amazon.PL")
     print(f"🔑 ScraperAPI: {'✅ configured' if SCRAPER_API_KEY else '⚠️ not set'}")
