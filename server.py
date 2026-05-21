@@ -1,5 +1,6 @@
 """
-Goody Backend v6.10 — diskas→Festplatte, lygintuvas→Bügeleisen, nešiojamas garsiakalbis fix:
+Goody Backend v6.11 — _CATEGORY_ICON_MAP: speaker🔊, mouse🖱️, iron👕 icons:
+- v6.10 — diskas→Festplatte, lygintuvas→Bügeleisen, nešiojamas garsiakalbis fix:
 - v6.9 — _LT_PL storage/keyboard translations: kietasis diskas, atmintinė, mechaninė:
 - v6.8 — LT translations: garsinė/kolonėlė→Lautsprecher, kampinis šlifuoklis/suktukas:
 - v6.7 — MAIN_PRODUCT_KEYWORDS +power tools (LT/DE/PL); classify correctly < €150:
@@ -329,6 +330,10 @@ _CATEGORY_ICON_MAP = [
     (["makita", "dewalt", "bosch gsr", "graztas", "pjuklas", "power tool", "drill", "grąžtas",
       "šlifuoklis", "slifuoklis", "suktukas", "kampinis", "winkelschleifer", "schleifer", "schrauber", "szlifierka", "wkrętarka"], "🔨"),
     (["begimu takelis", "begimo takelis", "laufband", "treadmill", "treniruoklis"], "🏃"),
+    (["garsiakalbis", "garsine", "kolonele", "soundbar", "lautsprecher", "głośnik", "speaker",
+      "tragbarer lautsprecher", "głośnik przenośny"], "🔊"),
+    (["pelė", "pele", "maus", "mouse", "mysz"], "🖱️"),
+    (["laidynas", "lygintuvas", "bugeleisen", "żelazko", "dampfbugeleisen"], "👕"),
 ]
 
 
@@ -3440,7 +3445,7 @@ def health():
     )
     return jsonify({
         "status": "ok",
-        "version": "6.10",
+        "version": "6.11",
         "uptime_s": uptime_s,
         "shops": ["Varle.lt", "Elesen.lt", "Pigu.lt", "Topo centras", "Amazon.DE", "Amazon.PL"],
         "ai": {
@@ -3518,7 +3523,7 @@ if __name__ == "__main__":
 
     port = int(os.getenv("PORT", 5000))
 
-    print("\n🟢 Goody API v6.10")
+    print("\n🟢 Goody API v6.11")
     print(f"📊 Supabase: {'✅ configured' if SUPABASE_URL else '⚠️ not set'}")
     print("📦 Active shops: Varle + Elesen + Pigu + Topo + Amazon.DE + Amazon.PL")
     print(f"🔑 ScraperAPI: {'✅ configured' if SCRAPER_API_KEY else '⚠️ not set'}")
