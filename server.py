@@ -1,5 +1,6 @@
 """
-Goody Backend v6.30 — icon keyword fixes: bügeleisen👕 umlaut; sviestuvai/prozektorius💡 norm:
+Goody Backend v6.31 — phone📱 brands (motorola/honor/realme/oppo/vivo); ps5/ps4🎮; fix aparat→aparat foto📷:
+- v6.30 — icon keyword fixes: bügeleisen👕 umlaut; sviestuvai/prozektorius💡 norm:
 - v6.29 — ☕coffee/kettle split from 🍳; 🤖robot vacuum; 🛴scooter split; DE/PL icon gaps:
 - v6.28 — TV📺/vacuum🧹/washing🫧 DE+PL icon keywords; fridge cleanup:
 - v6.27 — fridge❄️/AC🌬️ split; projector📽️; juicer🥤 backend icons:
@@ -319,7 +320,7 @@ _server_start: float = time.time()
 
 _CATEGORY_ICON_MAP = [
     (["iphone", "samsung galaxy", "xiaomi", "oneplus", "pixel", "telefon", "smartphone",
-      "galaxy s", "galaxy a", "redmi", "poco"], "📱"),
+      "galaxy s", "galaxy a", "redmi", "poco", "motorola", "honor", "realme", "oppo", "vivo"], "📱"),
     (["macbook", "laptop", "notebook", "thinkpad", "dell xps", "asus", "surface pro",
       "chromebook", "nesiojamas"], "💻"),
     (["ipad", "galaxy tab", "tablet"], "📱"),
@@ -327,10 +328,10 @@ _CATEGORY_ICON_MAP = [
       "telewizor", "monitor", "ekranas", "screen", "55\"", "65\"", "43\""], "📺"),
     (["headphone", "earphone", "earbuds", "ausines", "ausinukai", "airpods", "wh-1000", "bose qc",
       "jabra", "beats", "marshall", "kopfhörer", "słuchawki"], "🎧"),
-    (["playstation", "xbox", "nintendo", "gamepad", "rtx 4", "rtx 3",
+    (["playstation", "ps5", "ps4", "xbox", "nintendo", "gamepad", "rtx 4", "rtx 3",
       "geforce", "gaming", "spielkonsole", "konsola", "konsole"], "🎮"),
-    (["camera", "nikon", "canon", "sony zv", "fotoaparatas", "mirrorless", "dslr", "gopro", "dji",
-      "aparat"], "📷"),
+    (["camera", "nikon", "canon", "sony zv", "sony alpha", "fotoaparatas", "mirrorless", "dslr",
+      "gopro", "dji", "aparat foto", "aparat cyfr", "fujifilm", "olympus"], "📷"),
     (["roomba", "roborock", "irobot", "robot siurblys", "saugroboter"], "🤖"),
     (["dulkiu siurblys", "siurblys", "vacuum", "dyson v", "miele",
       "staubsauger", "odkurzacz"], "🧹"),
@@ -3589,7 +3590,7 @@ def health():
     )
     return jsonify({
         "status": "ok",
-        "version": "6.30",
+        "version": "6.31",
         "uptime_s": uptime_s,
         "shops": ["Varle.lt", "Elesen.lt", "Pigu.lt", "Topo centras", "Amazon.DE", "Amazon.PL"],
         "ai": {
@@ -3667,7 +3668,7 @@ if __name__ == "__main__":
 
     port = int(os.getenv("PORT", 5000))
 
-    print("\n🟢 Goody API v6.30")
+    print("\n🟢 Goody API v6.31")
     print(f"📊 Supabase: {'✅ configured' if SUPABASE_URL else '⚠️ not set'}")
     print("📦 Active shops: Varle + Elesen + Pigu + Topo + Amazon.DE + Amazon.PL")
     print(f"🔑 ScraperAPI: {'✅ configured' if SCRAPER_API_KEY else '⚠️ not set'}")
