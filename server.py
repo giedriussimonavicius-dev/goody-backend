@@ -736,7 +736,7 @@ def fetch_url(url: str, lang: str = "lt", timeout: int = SHOP_TIMEOUT,
 
 
 def get_cache_ttl(query: str) -> int:
-    """Popular searches (searched 5+ times) get 1-hour TTL; others get 30 min."""
+    """Popular searches (searched 5+ times) get 2-hour TTL; others get 30 min."""
     key = re.sub(r'\s+', ' ', query.lower().strip())
     if _search_counts.get(key, 0) >= POPULAR_THRESHOLD:
         return POPULAR_CACHE_TTL
