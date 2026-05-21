@@ -1,5 +1,6 @@
 """
-Goody Backend v6.37 — icon fix: monitor→🖥️ (was 📺); +display/monitorius/bildschirm to monitor entry:
+Goody Backend v6.38 — icon 🪒 +oral-b/toothbrush/zahnbürste/šepetėlis/szczoteczka:
+- v6.37 — icon fix: monitor→🖥️ (was 📺); +display/monitorius/bildschirm to monitor entry:
 - v6.36 — accessory filter: 'remote' → 'remote control' (prevents false-hide of presentation remotes):
 - v6.35 — render_js 6s (fits 8s stream timeout); +brands honor/vivo/fujifilm/oral-b; _walk depth 12; SPA keys expanded:
 - v6.34 — LT shops: direct(2s) → render_js=True(7s), within 9s pool timeout:
@@ -357,7 +358,8 @@ _CATEGORY_ICON_MAP = [
     (["ssd", "nvme", "hdd", "ram ddr", "corsair", "kingston fury",
       "procesorius", "cpu", "ryzen", "core i", "festplatte", "dysk ssd"], "🖥️"),
     (["spausdintuvas", "printer", "scanner", "hp laserjet", "epson", "drucker", "drukarka"], "🖨️"),
-    (["philips shav", "braun series", "gillette", "skustuvas", "epilator"], "🪒"),
+    (["philips shav", "braun series", "gillette", "oral-b", "skustuvas", "epilator",
+      "toothbrush", "zahnbürste", "sepetelis", "šepetėlis", "szczoteczka"], "🪒"),
     (["laikrodis", "smartwatch", "apple watch", "garmin", "fitbit", "samsung watch", "fossil", "polar", "suunto",
       "zegarek"], "⌚"),
     (["paspirtukas", "e-roller", "elektroroller", "hulajnoga elektryczna"], "🛴"),
@@ -3589,7 +3591,7 @@ def health():
     )
     return jsonify({
         "status": "ok",
-        "version": "6.37",
+        "version": "6.38",
         "uptime_s": uptime_s,
         "shops": ["Varle.lt", "Elesen.lt", "Pigu.lt", "Topo centras", "Amazon.DE", "Amazon.PL"],
         "ai": {
@@ -3667,7 +3669,7 @@ if __name__ == "__main__":
 
     port = int(os.getenv("PORT", 5000))
 
-    print("\n🟢 Goody API v6.37")
+    print("\n🟢 Goody API v6.38")
     print(f"📊 Supabase: {'✅ configured' if SUPABASE_URL else '⚠️ not set'}")
     print("📦 Active shops: Varle + Elesen + Pigu + Topo + Amazon.DE + Amazon.PL")
     print(f"🔑 ScraperAPI: {'✅ configured' if SCRAPER_API_KEY else '⚠️ not set'}")
