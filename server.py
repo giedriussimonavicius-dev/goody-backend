@@ -1,5 +1,5 @@
 """
-Goody Backend v6.18 — laikrodukas→Uhr/zegarek translation; elektrinis/išmanusis standalones:
+Goody Backend v6.19 — watch band accessory filter; kino standalone translation (Heimkino/kino domowe):
 - v6.16 — garų→Dampf/parowy standalone; nešiojamas+product translation fixes:
 - v6.15 — nešiojamas+product fixes: kondicionierius/siurblys/pjūklas no longer→Laptop:
 - v6.14 — relevance filter in Elesen/Pigu/Topo DOM scrapers (was only in SPA/Amazon):
@@ -193,7 +193,7 @@ _ACCESSORY_MATCH_WORDS = frozenset({
     'stylus', 'remote', 'controller',
     # NOTE: 'headset' intentionally omitted — over-ear headphones are often marketed as headsets
     # (e.g. "Sony WH-1000XM5 Wireless Headset") and would be incorrectly filtered.
-    'watch band', 'sport band', 'fitness band', 'wristband',
+    'watch band', 'sport band', 'fitness band', 'wristband', 'band',
     'dėklas', 'maišelis', 'rankinė', 'stovas', 'laikiklis',
     'kroviklis', 'kabelis', 'plėvelė', 'stikliukas', 'apsauga',
     'etui', 'obudowa', 'pokrowiec', 'ładowarka', 'kabel', 'szkło', 'folia',
@@ -2051,6 +2051,8 @@ _LT_DE: list[tuple[str, str]] = sorted([
     ("ismanusis", "Smart"), ("ismanius", "Smart"),
     # Diminutive watch form (laikrodis → Uhr already exists; laikrodukas = small watch)
     ("laikrodukas", "Uhr"),
+    # Standalone "kino" (home cinema context; "kino sistema"→"Heimkino" matches first when paired)
+    ("kino", "Heimkino"),
 ], key=lambda t: -len(t[0]))
 
 _LT_PL: list[tuple[str, str]] = sorted([
@@ -2196,6 +2198,8 @@ _LT_PL: list[tuple[str, str]] = sorted([
     ("ismanusis", "smart"), ("ismanius", "smart"),
     # Diminutive watch form
     ("laikrodukas", "zegarek"),
+    # Standalone "kino" (home cinema context; "kino sistema"→"kino domowe" matches first when paired)
+    ("kino", "kino domowe"),
 ], key=lambda t: -len(t[0]))
 
 
@@ -3518,7 +3522,7 @@ def health():
     )
     return jsonify({
         "status": "ok",
-        "version": "6.18",
+        "version": "6.19",
         "uptime_s": uptime_s,
         "shops": ["Varle.lt", "Elesen.lt", "Pigu.lt", "Topo centras", "Amazon.DE", "Amazon.PL"],
         "ai": {
@@ -3596,7 +3600,7 @@ if __name__ == "__main__":
 
     port = int(os.getenv("PORT", 5000))
 
-    print("\n🟢 Goody API v6.18")
+    print("\n🟢 Goody API v6.19")
     print(f"📊 Supabase: {'✅ configured' if SUPABASE_URL else '⚠️ not set'}")
     print("📦 Active shops: Varle + Elesen + Pigu + Topo + Amazon.DE + Amazon.PL")
     print(f"🔑 ScraperAPI: {'✅ configured' if SCRAPER_API_KEY else '⚠️ not set'}")

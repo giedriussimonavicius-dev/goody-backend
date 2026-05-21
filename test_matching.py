@@ -155,6 +155,14 @@ total_fails += run("headset for phone", "iPhone 17", [
     ("Bluetooth Headset for iPhone 17",             False),  # headset = accessory for phone
 ])
 
+# ── Watch band accessory filter ──────────────────────────────
+total_fails += run("watch band filter", "Apple Watch Series 11", [
+    ("Apple Watch Series 11 Midnight 45mm GPS",     True),
+    ("Apple Watch Series 11 GPS 41mm Starlight",    True),
+    ("Apple Watch Series 11 Leather Band 45mm",     False),  # band = accessory
+    ("Apple Watch Sport Band 45mm Series 11",       False),  # sport band = accessory
+])
+
 print(f"\n{'='*60}")
 if total_fails == 0:
     print("  Visi testai praejo!")
