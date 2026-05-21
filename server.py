@@ -1,5 +1,6 @@
 """
-Goody Backend v7.25 — _KNOWN_BRANDS/icon +jackery/ecoflow/bluetti🔋; _LT_DE/PL: +galios stotelė/stebėjimo:
+Goody Backend v7.26 — _VARIANT_WORDS +classic; _LT_DE/PL +fitness; _NOISE_WORDS +free shipping/nemokamas:
+- v7.25 — _KNOWN_BRANDS/icon +jackery/ecoflow/bluetti🔋; _LT_DE/PL: +galios stotelė/stebėjimo:
 - v7.24 — _LT_DE/PL: standalone +kištukas→Steckdose; +jungiklis→Schalter; +skambutis→Türklingel:
 - v7.23 — _LT_CATEGORY_WORDS: +kūdikio/lovelė/pistoletas; _LT_DE/PL: +glue/paint gun; +lovelė/kūdikio:
 - v7.22 — _ACCESSORY: +scherkopf/zamienny/zapasowy; _NOISE_WORDS: +najtanszy/bestpreis/opinie:
@@ -431,7 +432,7 @@ _ACCESSORY_MATCH_WORDS = frozenset({
 _VARIANT_WORDS = frozenset({
     'pro', 'max', 'ultra', 'plus', 'lite', 'mini', 'fe', 'edge',
     'note', 'fold', 'flip', 'air', 'neo', 'active', 'sport',
-    'slim', 'boost', 'titan',
+    'slim', 'boost', 'titan', 'classic',
 })
 
 
@@ -621,7 +622,9 @@ _CATEGORY_ICON_MAP = [
       "heckenschere", "laubbläser", "laubblaser", "nożyce do żywopłotu", "dmuchawa do liści",
       "rasentrimmer", "podkaszarka", "trimeris",
       "krūmapjovė", "krumapjove", "lapų pūstuvas", "lapu pustuvas"], "🔨"),
-    (["begimu takelis", "begimo takelis", "laufband", "treadmill", "treniruoklis", "bieżnia"], "🏃"),
+    (["begimu takelis", "begimo takelis", "laufband", "treadmill", "treniruoklis", "bieżnia",
+      "hanteliai", "hantel", "hanteln", "kettlebell", "svarsciai", "svarsčiai",
+      "ciężary", "gewicht", "hantle", "fitnessgerät", "sprzęt fitness"], "🏃"),
     (["projektorius", "projector", "projektor", "beamer"], "📽️"),
     (["sulciaspaude", "sulciu", "juicer", "entsafter", "wyciskarka", "vitamix"], "🥤"),
     (["garsiakalbis", "garsine", "kolonele", "soundbar", "lautsprecher", "głośnik", "speaker",
@@ -677,6 +680,9 @@ _NOISE_WORDS = re.compile(
     r'lietuva|lietuvoje|vokietija|vokietijoje|lenkija|lenkijoje|anglijoje|'
     r'deutschland|polska|in deutschland|in poland|'
     r'in lithuania|in germany|in uk|in europe|delivery to|shipped to|'
+    r'nemokamas pristatymas|nemokamas|free delivery|free shipping|'
+    r'versandkostenfrei|kostenloser versand|gratis versand|'
+    r'bezplatna dostawa|darmowa dostawa|'
     r'lithuania|germany|poland)\b',
     re.IGNORECASE
 )
@@ -2280,6 +2286,8 @@ _LT_CATEGORY_WORDS = [
     "drėkintuvas", "termometras",
     # Gaming, fitness, multimedia
     "žaidimų", "bėgimo", "grotuvas", "įkroviklis", "projektorius",
+    # Fitness weights / equipment
+    "hanteliai", "hantelius", "hantelis", "svarsčiai", "svarsciai", "treniruoklis", "treniruoklio",
     # Air fryer (new dict entries from v5.93)
     "gruzdintuvė", "gruzdintuve",
     # Hand mixer / beater
@@ -2492,6 +2500,10 @@ _LT_DE: list[tuple[str, str]] = sorted([
     ("žaidimų", "Gaming"),
     # Fitness
     ("bėgimo takelis", "Laufband"),
+    ("treniruoklis", "Trainingsgerät"), ("treniruoklio", "Trainingsgerät"),
+    ("hanteliai", "Hanteln"), ("hantelius", "Hanteln"), ("hantelis", "Hantel"),
+    ("svarsčiai", "Gewichte"), ("svarsciai", "Gewichte"), ("svarsti", "Gewicht"),
+    ("kettlebell", "Kettlebell"),
     # Multimedia
     ("grotuvas", "Player"), ("mp3 grotuvas", "MP3-Player"),
     # Accessories
@@ -2776,6 +2788,10 @@ _LT_PL: list[tuple[str, str]] = sorted([
     ("žaidimų", "gaming"),
     # Fitness
     ("bėgimo takelis", "bieżnia elektryczna"),
+    ("treniruoklis", "sprzęt fitness"), ("treniruoklio", "sprzęt fitness"),
+    ("hanteliai", "hantle"), ("hantelius", "hantle"), ("hantelis", "hantel"),
+    ("svarsčiai", "ciężary"), ("svarsciai", "ciężary"), ("svarsti", "ciężarek"),
+    ("kettlebell", "kettlebell"),
     # Multimedia
     ("grotuvas", "odtwarzacz"), ("mp3 grotuvas", "odtwarzacz mp3"),
     # Accessories
@@ -4304,7 +4320,7 @@ def health():
     )
     return jsonify({
         "status": "ok",
-        "version": "7.25",
+        "version": "7.26",
         "uptime_s": uptime_s,
         "shops": ["Varle.lt", "Elesen.lt", "Pigu.lt", "Topo centras", "Amazon.DE", "Amazon.PL"],
         "ai": {
@@ -4382,7 +4398,7 @@ if __name__ == "__main__":
 
     port = int(os.getenv("PORT", 5000))
 
-    print("\n🟢 Goody API v7.25")
+    print("\n🟢 Goody API v7.26")
     print(f"📊 Supabase: {'✅ configured' if SUPABASE_URL else '⚠️ not set'}")
     print("📦 Active shops: Varle + Elesen + Pigu + Topo + Amazon.DE + Amazon.PL")
     print(f"🔑 ScraperAPI: {'✅ configured' if SCRAPER_API_KEY else '⚠️ not set'}")
