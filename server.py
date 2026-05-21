@@ -1,5 +1,6 @@
 """
-Goody Backend v6.46 — _LT_CATEGORY_WORDS: remove duplicate viryklė; cache_stats: "query"→"product_name":
+Goody Backend v6.47 — _KNOWN_BRANDS: +poco/redmi/nothing; icon map: +nothing phone:
+- v6.46 — _LT_CATEGORY_WORDS: remove duplicate viryklė; cache_stats: "query"→"product_name":
 - v6.45 — _LT_CATEGORY_WORDS: +genitive triggers (svarstyklių/čiužinio/kietojo/indų):
 - v6.44 — scan-image AI prompt: +barcode instruction, +key specs in product_name:
 - v6.43 — icon: robot kuchenny/küchenmaschine/thermomix → 🍳 (not 🤖 robot vacuum):
@@ -208,7 +209,7 @@ _KNOWN_BRANDS = {
     # Sports / wearables / cameras
     'polar', 'suunto', 'gopro', 'dji', 'nokia', 'roborock', 'beats', 'marshall',
     # Phone brands in icon map but missing from brand matching
-    'honor', 'vivo',
+    'honor', 'vivo', 'poco', 'redmi', 'nothing',
     # Camera brands
     'fujifilm', 'olympus', 'leica',
     # Personal care
@@ -341,7 +342,7 @@ _server_start: float = time.time()
 
 _CATEGORY_ICON_MAP = [
     (["iphone", "samsung galaxy", "xiaomi", "oneplus", "pixel", "telefon", "smartphone",
-      "galaxy s", "galaxy a", "redmi", "poco", "motorola", "honor", "realme", "oppo", "vivo"], "📱"),
+      "galaxy s", "galaxy a", "redmi", "poco", "motorola", "honor", "realme", "oppo", "vivo", "nothing phone"], "📱"),
     (["macbook", "laptop", "notebook", "thinkpad", "dell xps", "asus", "surface pro",
       "chromebook", "nesiojamas kompiuteris"], "💻"),
     (["ipad", "galaxy tab", "tablet"], "📱"),
@@ -3617,7 +3618,7 @@ def health():
     )
     return jsonify({
         "status": "ok",
-        "version": "6.46",
+        "version": "6.47",
         "uptime_s": uptime_s,
         "shops": ["Varle.lt", "Elesen.lt", "Pigu.lt", "Topo centras", "Amazon.DE", "Amazon.PL"],
         "ai": {
@@ -3695,7 +3696,7 @@ if __name__ == "__main__":
 
     port = int(os.getenv("PORT", 5000))
 
-    print("\n🟢 Goody API v6.46")
+    print("\n🟢 Goody API v6.47")
     print(f"📊 Supabase: {'✅ configured' if SUPABASE_URL else '⚠️ not set'}")
     print("📦 Active shops: Varle + Elesen + Pigu + Topo + Amazon.DE + Amazon.PL")
     print(f"🔑 ScraperAPI: {'✅ configured' if SCRAPER_API_KEY else '⚠️ not set'}")
