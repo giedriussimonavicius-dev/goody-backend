@@ -1,5 +1,5 @@
 """
-Goody Backend v7.46 — stalo tenisas fix; _LT_DE/PL +kvepalai/parfumas/sampunas/tenisas/badmintonas/futbolas/krepsis/zvake/foto ramelis/pagalve/patalyne/termopuodelis/snieglente/riedlente:
+Goody Backend v7.47 — _LT_DE/PL +sofa/fotelis/lentyna/komoda/kepure/salikas/kelnes/marskiniai/dzinsai/maudymosi/boksas/riedutis/roges/gertuve/sauskelnes/jogos:
 - v7.45 — _LT_DE/PL +knyga/striuke/megztinis/pirstines/suknele/vafline/supuokles/baldai/konstruktorius/pavesine/masinyke:
 - v7.44 — _LT_DE/PL +vitaminas/magnio/kreatinas/batai/kedai/sportbaciai/lele/peilis/zirkles/pjaustytuvas/padangos/tepalas/matavimo juosta:
 - v7.43 — _static_translate→None fix; _LT_DE/PL +gitara/pianinas/bügnai/smuikas/batutas/slidės/pačiūžos/meškerė/žvejybos/plaukimo/pienukė/lova/spinta/kilimas/vaizdo registratorius:
@@ -812,6 +812,32 @@ _CATEGORY_ICON_MAP = [
     (["termopuodelis", "termopuodelio", "termosinis puodelis", "termo puodelis",
       "thermobecher", "kubek termiczny", "travel mug", "thermos mug",
       "hydro flask", "stanley cup", "contigo", "yeti"], "☕"),
+    # Sofa / armchair / shelf / dresser (v7.47)
+    (["sofa", "sofos", "schlafsofa", "ecksofa", "sofa rozkładana", "sofa narożna"], "🛋️"),
+    (["fotelis", "fotelio", "sessel", "fotel", "recliner", "armchair"], "🪑"),
+    (["lentyna", "lentynu", "regal", "regal ", "półka", "polka", "bookshelf", "shelf"], "📦"),
+    (["komoda", "komodu", "kommode", "dresser", "chest of drawers"], "🪞"),
+    # Clothing (v7.47)
+    (["kepure", "kepures", "kepurė", "mutze", "mütze", "czapka", "hat ", "beanie", "cap "], "🧢"),
+    (["salikas", "saliko", "šalikas", "schal", "szalik", "scarf"], "🧣"),
+    (["kelnes", "kelniu", "kelnės", "hose", "spodnie", "trousers", "pants"], "👖"),
+    (["marskiniai", "marskiniu", "marškiniai", "hemd", "koszula", "shirt"], "👔"),
+    (["dzinsai", "dzinsu", "džinsai", "jeans", "jeansy"], "👖"),
+    (["maudymosi kostiumelis", "maudymosi", "badeanzug", "badehose", "stron kapielowy", "swimsuit", "bikini"], "🩱"),
+    # Boxing (v7.47)
+    (["boksas", "bokso", "boxen", "boxsack", "boxhandschuhe", "boks", "bokserski", "boxing"], "🥊"),
+    # Roller skates / sled (v7.47)
+    (["riedutis", "rieduciu", "inlineskates", "rolki", "wrotki", "roller skates"], "⛸️"),
+    (["roges", "rogiu", "rogės", "schlitten", "sanki", "sled", "sledge"], "🛷"),
+    # Water bottle (v7.47)
+    (["gertuve", "gertuviu", "gertuvė", "trinkflasche", "bidon", "water bottle", "sports bottle",
+      "hydro flask", "nalgene", "camelbak"], "🍶"),
+    # Diapers (v7.47)
+    (["sauskelnes", "sauskelnems", "sauskelnės", "windeln", "pieluchy", "pampers", "huggies",
+      "baby wipes", "diaper"], "👶"),
+    # Yoga (v7.47)
+    (["jogos kilimelis", "jogos", "yogamatte", "yoga mat", "mata do jogi", "yoga block",
+      "yoga", "pilates mat"], "🧘"),
 ]
 
 
@@ -2942,6 +2968,27 @@ _LT_CATEGORY_WORDS = [
     "tepalas", "tepalo",
     # Tape measure
     "matavimo",
+    # v7.47 — Furniture
+    "sofa", "sofos",
+    "fotelis", "fotelio",
+    "lentyna", "lentynu",
+    "komoda", "komodu",
+    # v7.47 — Clothing
+    "kepurė", "kepures",
+    "šalikas", "saliko",
+    "kelnės", "kelniu",
+    "marškiniai", "marskiniu",
+    "džinsai", "dzinsu",
+    "maudymosi",
+    "kostiumelis", "kostiumelio",
+    # v7.47 — Sports
+    "boksas", "bokso",
+    "riedutis", "rieduciu",
+    "rogės", "rogiu",
+    # v7.47 — Daily products
+    "gertuvė", "gertuviu",
+    "sauskelnės", "sauskelnems",
+    "jogos",
 ]
 # Normalized (no diacritics) version so accent-free queries also trigger translation
 _LT_CATEGORY_WORDS_NORM = [_norm_lt(w) for w in _LT_CATEGORY_WORDS]
@@ -3765,6 +3812,35 @@ _LT_DE: list[tuple[str, str]] = sorted([
     ("lova", "Bett"), ("lovos", "Bett"),
     ("drabuzine spinta", "Kleiderschrank"), ("spinta", "Schrank"), ("spintos", "Schrank"),
     ("kilimas", "Teppich"), ("kilimo", "Teppich"),
+    # v7.47 — Furniture
+    ("kampine sofa", "Ecksofa"), ("miegama sofa", "Schlafsofa"),
+    ("sofa", "Sofa"), ("sofos", "Sofas"),
+    ("fotelis", "Sessel"), ("fotelio", "Sessel"),
+    ("knygu lentyna", "Bücherregal"), ("sodo lentyna", "Gartenregal"),
+    ("lentyna", "Regal"), ("lentynu", "Regale"),
+    ("komoda", "Kommode"), ("komodu", "Kommoden"),
+    # v7.47 — Clothing
+    ("ziemos kepure", "Wintermütze"), ("vaiku kepure", "Kindermütze"),
+    ("kepure", "Mütze"), ("kepures", "Mützen"),
+    ("salikas", "Schal"), ("saliko", "Schal"),
+    ("sportines kelnes", "Sporthose"), ("ziemos kelnes", "Winterhose"),
+    ("kelnes", "Hose"), ("kelniu", "Hosen"),
+    ("marskiniai", "Hemd"), ("marskiniu", "Hemden"),
+    ("dzinsai", "Jeans"), ("dzinsu", "Jeans"),
+    ("maudymosi kostiumelis", "Badeanzug"), ("maudymosi kelnaites", "Badehose"),
+    ("maudymosi", "Bade"),
+    ("kostiumelis", "Kostümchen"),
+    # v7.47 — Boxing / roller skates / sled
+    ("bokso maišas", "Boxsack"), ("bokso pirstines", "Boxhandschuhe"),
+    ("boksas", "Boxen"), ("bokso", "Box"),
+    ("riedutis", "Inlineskates"), ("rieduciu", "Inlineskates"),
+    ("roges", "Schlitten"), ("rogiu", "Schlitten"),
+    # v7.47 — Water bottle / diapers / yoga
+    ("sporto gertuve", "Sporttrinkflasche"), ("vaiku gertuve", "Kinderflasche"),
+    ("gertuve", "Trinkflasche"), ("gertuviu", "Trinkflaschen"),
+    ("sauskelnes", "Windeln"), ("sauskelnems", "Windeln"),
+    ("jogos kilimelis", "Yogamatte"), ("jogos blokelis", "Yogablock"),
+    ("jogos", "Yoga"),
 ], key=lambda t: -len(t[0]))
 
 _LT_PL: list[tuple[str, str]] = sorted([
@@ -4570,6 +4646,35 @@ _LT_PL: list[tuple[str, str]] = sorted([
     # Thermos mug
     ("termosinis puodelis", "kubek termiczny"), ("termo puodelis", "kubek termiczny"),
     ("termopuodelis", "kubek termiczny"), ("termopuodelio", "kubek termiczny"),
+    # v7.47 — Furniture
+    ("kampine sofa", "sofa narożna"), ("miegama sofa", "sofa rozkładana"),
+    ("sofa", "sofa"), ("sofos", "sofa"),
+    ("fotelis", "fotel"), ("fotelio", "fotela"),
+    ("knygu lentyna", "regał na książki"), ("sodo lentyna", "regał ogrodowy"),
+    ("lentyna", "półka"), ("lentynu", "półki"),
+    ("komoda", "komoda"), ("komodu", "komoda"),
+    # v7.47 — Clothing
+    ("ziemos kepure", "czapka zimowa"), ("vaiku kepure", "czapka dziecięca"),
+    ("kepure", "czapka"), ("kepures", "czapki"),
+    ("salikas", "szalik"), ("saliko", "szalik"),
+    ("sportines kelnes", "spodnie sportowe"), ("ziemos kelnes", "spodnie zimowe"),
+    ("kelnes", "spodnie"), ("kelniu", "spodnie"),
+    ("marskiniai", "koszula"), ("marskiniu", "koszule"),
+    ("dzinsai", "jeansy"), ("dzinsu", "jeansy"),
+    ("maudymosi kostiumelis", "strój kąpielowy"), ("maudymosi kelnaites", "kąpielówki"),
+    ("maudymosi", "kąpielowy"),
+    ("kostiumelis", "kostiumek"),
+    # v7.47 — Boxing / roller skates / sled
+    ("bokso maišas", "worek treningowy"), ("bokso pirstines", "rękawice bokserskie"),
+    ("boksas", "boks"), ("bokso", "bokserski"),
+    ("riedutis", "rolki"), ("rieduciu", "rolki"),
+    ("roges", "sanki"), ("rogiu", "sanki"),
+    # v7.47 — Water bottle / diapers / yoga
+    ("sporto gertuve", "bidon sportowy"), ("vaiku gertuve", "bidon dla dzieci"),
+    ("gertuve", "bidon"), ("gertuviu", "bidon"),
+    ("sauskelnes", "pieluchy"), ("sauskelnems", "pieluchy"),
+    ("jogos kilimelis", "mata do jogi"), ("jogos blokelis", "blok do jogi"),
+    ("jogos", "joga"),
 ], key=lambda t: -len(t[0]))
 
 
@@ -5903,7 +6008,7 @@ def health():
     )
     return jsonify({
         "status": "ok",
-        "version": "7.46",
+        "version": "7.47",
         "uptime_s": uptime_s,
         "shops": ["Varle.lt", "Elesen.lt", "Pigu.lt", "Topo centras", "Amazon.DE", "Amazon.PL"],
         "ai": {
@@ -5981,7 +6086,7 @@ if __name__ == "__main__":
 
     port = int(os.getenv("PORT", 5000))
 
-    print("\n🟢 Goody API v7.46")
+    print("\n🟢 Goody API v7.47")
     print(f"📊 Supabase: {'✅ configured' if SUPABASE_URL else '⚠️ not set'}")
     print("📦 Active shops: Varle + Elesen + Pigu + Topo + Amazon.DE + Amazon.PL")
     print(f"🔑 ScraperAPI: {'✅ configured' if SCRAPER_API_KEY else '⚠️ not set'}")
