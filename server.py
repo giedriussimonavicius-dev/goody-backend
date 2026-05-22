@@ -1,5 +1,5 @@
 """
-Goody Backend v7.51 — _LT_DE/PL +uzdanga/uzuolaida/rolete/zaluzija/paklode/apklotas/baseinas/baidarele/kanoja/irklai/kabelis/laidas/tinklines/plastilinas/grindys/plytelis:
+Goody Backend v7.52 — _LT_DE/PL +sofa kampine fix/kampine/hamakas/ausinukas/menteliklis/štanga/suoliukas/irklente/stovyklavimo/aminoru/tinklinė:
 - v7.45 — _LT_DE/PL +knyga/striuke/megztinis/pirstines/suknele/vafline/supuokles/baldai/konstruktorius/pavesine/masinyke:
 - v7.44 — _LT_DE/PL +vitaminas/magnio/kreatinas/batai/kedai/sportbaciai/lele/peilis/zirkles/pjaustytuvas/padangos/tepalas/matavimo juosta:
 - v7.43 — _static_translate→None fix; _LT_DE/PL +gitara/pianinas/bügnai/smuikas/batutas/slidės/pačiūžos/meškerė/žvejybos/plaukimo/pienukė/lova/spinta/kilimas/vaizdo registratorius:
@@ -935,6 +935,22 @@ _CATEGORY_ICON_MAP = [
       "vinyl floor", "floor panel"], "🏠"),
     (["plytelis", "plyteliu", "fliese", "fliesen", "płytka ceramiczna", "ceramic tile",
       "plytelių klijai", "floor tile"], "🏠"),
+    # Hammock (v7.52)
+    (["hamakas", "hamaku", "hängematte", "hamak", "hammock"], "🪢"),
+    # Earbud singular (v7.52)
+    (["ausinukas", "ausinuko", "ohrhörer", "słuchawki douszne", "in-ear"], "🎧"),
+    # Fitness equipment (v7.52)
+    (["menteliklis", "klimmzugstange", "drążek do podciągania", "pull-up bar"], "🏋️"),
+    (["stanga", "stangos", "langhantel", "sztanga", "barbell"], "🏋️"),
+    (["suoliukas", "preso suoliukas", "hantelbank", "ławka treningowa", "weight bench"], "🏋️"),
+    # SUP board (v7.52)
+    (["irklente", "irklentes", "sup-board", "deska sup", "paddleboard", "sup board"], "🏄"),
+    # Camping gear (v7.52)
+    (["stovyklavimo kede", "stovyklavimo stalas", "stovyklavimo virykle",
+      "campingstuhl", "campingtisch", "campingkocher", "krzesło campingowe",
+      "camping chair", "camping table", "camping stove"], "⛺"),
+    # Amino acids supplement (v7.52)
+    (["aminorugsciai", "aminoru", "aminosäuren", "aminokwasy", "amino acids", "bcaa", "eaa"], "💊"),
 ]
 
 
@@ -3116,6 +3132,22 @@ _LT_CATEGORY_WORDS = [
     # v7.49 — Hunting / protection sports
     "medziokle", "medziokles",
     "sliauztukai", "sliauztukas",
+    # v7.52 — Electrical / triggers
+    "tinklinė", "tinklinis",
+    # v7.52 — Hammock
+    "hamakas", "hamaku",
+    # v7.52 — Earbud singular
+    "ausinukas", "ausinuko",
+    # v7.52 — Fitness
+    "menteliklis", "menteliklio",
+    "štanga", "stangos",
+    "suoliukas", "suoliuko",
+    # v7.52 — SUP board
+    "irklentė", "irklentes",
+    # v7.52 — Camping
+    "stovyklavimo",
+    # v7.52 — Amino acids
+    "aminorugsciai", "aminoru",
     # v7.51 — Window treatments
     "uzdanga", "uzdangu",
     "uzuolaida", "uzuolaidų",
@@ -3979,6 +4011,19 @@ _LT_DE: list[tuple[str, str]] = sorted([
     ("lova", "Bett"), ("lovos", "Bett"),
     ("drabuzine spinta", "Kleiderschrank"), ("spinta", "Schrank"), ("spintos", "Schrank"),
     ("kilimas", "Teppich"), ("kilimo", "Teppich"),
+    # v7.52 — Word-order fix for sofa kampine + misc
+    ("sofa kampine", "Ecksofa"), ("sofa miegama", "Schlafsofa"),
+    ("kampine", "Eck"),
+    ("hamakas", "Hängematte"), ("hamaku", "Hängematte"),
+    ("ausinukas", "Ohrhörer"), ("ausinuko", "Ohrhörer"),
+    ("menteliklis", "Klimmzugstange"), ("menteliklio", "Klimmzugstange"),
+    ("stanga", "Langhantel"), ("stangos", "Langhantel"),
+    ("preso suoliukas", "Schrägbank"), ("suoliukas", "Hantelbank"), ("suoliuko", "Hantelbank"),
+    ("irklente", "SUP-Board"), ("irklentes", "SUP-Boards"),
+    ("stovyklavimo kede", "Campingstuhl"), ("stovyklavimo stalas", "Campingtisch"),
+    ("stovyklavimo virykle", "Campingkocher"), ("stovyklavimo miegmaišis", "Campingschlafsack"),
+    ("stovyklavimo", "Camping"),
+    ("aminorugsciai", "Aminosäuren"), ("aminoru", "Aminosäuren"),
     # v7.51 — Window treatments
     ("langų uždanga", "Fenstergardine"), ("interjero uzdanga", "Innengardine"),
     ("uzdanga", "Vorhang"), ("uzdangu", "Vorhänge"),
@@ -4898,6 +4943,19 @@ _LT_PL: list[tuple[str, str]] = sorted([
     # Thermos mug
     ("termosinis puodelis", "kubek termiczny"), ("termo puodelis", "kubek termiczny"),
     ("termopuodelis", "kubek termiczny"), ("termopuodelio", "kubek termiczny"),
+    # v7.52 — Word-order fix for sofa kampine + misc
+    ("sofa kampine", "sofa narożna"), ("sofa miegama", "sofa rozkładana"),
+    ("kampine", "narożna"),
+    ("hamakas", "hamak"), ("hamaku", "hamaka"),
+    ("ausinukas", "słuchawki douszne"), ("ausinuko", "słuchawki douszne"),
+    ("menteliklis", "drążek do podciągania"), ("menteliklio", "drążka do podciągania"),
+    ("stanga", "sztanga"), ("stangos", "sztanga"),
+    ("preso suoliukas", "ławka do wyciskania"), ("suoliukas", "ławka treningowa"), ("suoliuko", "ławki treningowej"),
+    ("irklente", "deska SUP"), ("irklentes", "deski SUP"),
+    ("stovyklavimo kede", "krzesło campingowe"), ("stovyklavimo stalas", "stół campingowy"),
+    ("stovyklavimo virykle", "kuchenka campingowa"), ("stovyklavimo miegmaišis", "śpiwór campingowy"),
+    ("stovyklavimo", "campingowy"),
+    ("aminorugsciai", "aminokwasy"), ("aminoru", "aminokwasów"),
     # v7.51 — Window treatments
     ("langu uzdanga", "firanka okienna"), ("interjero uzdanga", "zasłona wewnętrzna"),
     ("uzdanga", "zasłona"), ("uzdangu", "zasłony"),
@@ -6342,7 +6400,7 @@ def health():
     )
     return jsonify({
         "status": "ok",
-        "version": "7.51",
+        "version": "7.52",
         "uptime_s": uptime_s,
         "shops": ["Varle.lt", "Elesen.lt", "Pigu.lt", "Topo centras", "Amazon.DE", "Amazon.PL"],
         "ai": {
@@ -6420,7 +6478,7 @@ if __name__ == "__main__":
 
     port = int(os.getenv("PORT", 5000))
 
-    print("\n🟢 Goody API v7.51")
+    print("\n🟢 Goody API v7.52")
     print(f"📊 Supabase: {'✅ configured' if SUPABASE_URL else '⚠️ not set'}")
     print("📦 Active shops: Varle + Elesen + Pigu + Topo + Amazon.DE + Amazon.PL")
     print(f"🔑 ScraperAPI: {'✅ configured' if SCRAPER_API_KEY else '⚠️ not set'}")
