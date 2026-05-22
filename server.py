@@ -1,5 +1,5 @@
 """
-Goody Backend v7.50 — _LT_DE/PL +automagnetola/vairas/ratai/dazai/tapetai/laminatas/parketas/akordeonas/trimitas/saksofonas/pieštukas/flomasteris/fontanas:
+Goody Backend v7.51 — _LT_DE/PL +uzdanga/uzuolaida/rolete/zaluzija/paklode/apklotas/baseinas/baidarele/kanoja/irklai/kabelis/laidas/tinklines/plastilinas/grindys/plytelis:
 - v7.45 — _LT_DE/PL +knyga/striuke/megztinis/pirstines/suknele/vafline/supuokles/baldai/konstruktorius/pavesine/masinyke:
 - v7.44 — _LT_DE/PL +vitaminas/magnio/kreatinas/batai/kedai/sportbaciai/lele/peilis/zirkles/pjaustytuvas/padangos/tepalas/matavimo juosta:
 - v7.43 — _static_translate→None fix; _LT_DE/PL +gitara/pianinas/bügnai/smuikas/batutas/slidės/pačiūžos/meškerė/žvejybos/plaukimo/pienukė/lova/spinta/kilimas/vaizdo registratorius:
@@ -907,6 +907,34 @@ _CATEGORY_ICON_MAP = [
       "tušinukas", "kugelschreiber", "długopis", "ballpoint"], "✏️"),
     # Garden fountain (v7.50)
     (["fontanas", "fontano", "brunnen", "fontanna", "fountain", "gartenbrunnen"], "⛲"),
+    # Window treatments (v7.51)
+    (["uzdanga", "uzdangu", "uzuolaida", "uzuolaidų", "vorhang", "zasłona", "zaslona",
+      "curtain", "gordijn", "gardine", "fenstergardine"], "🪟"),
+    (["rolete", "roletu", "rollo", "roleta", "roller blind", "blackout blind",
+      "zaluzija", "zaluziju", "jalousie", "żaluzja", "venetian blind"], "🪟"),
+    # Bedding addition (v7.51)
+    (["paklode", "paklodziu", "bettlaken", "spannbettlaken", "prześcieradło", "przescieradlo",
+      "fitted sheet", "bedsheet"], "🛏️"),
+    (["apklotas", "apklotu", "decke", "koc ", "throw blanket", "fleece blanket",
+      "wolldecke", "strickdecke"], "🛏️"),
+    # Water sports (v7.51)
+    (["baseinas", "baseino", "schwimmbecken", "basen", "pool ", "planschbecken",
+      "aufblasbarer pool", "swimming pool", "intex pool"], "🏊"),
+    (["baidarele", "baidareles", "kanoja", "kanojos", "kajak", "kanu", "canoe",
+      "kayak", "kanu "], "🛶"),
+    (["irklai", "irklu", "paddel", "wiosło", "wiosla", "paddle", "oar"], "🛶"),
+    # Cables / electrical (v7.51)
+    (["kabelis", "kabelio", "laidas", "laido", "kabel ", "kabel usb",
+      "tinklines", "tinkliniu", "steckdosenleiste", "listwa zasilająca",
+      "power strip", "extension cord", "hdmi", "displayport", "usb-c cable"], "🔌"),
+    # Arts / crafts (v7.51)
+    (["plastilinas", "plastilino", "knete", "plastelina", "plasticine", "modeling clay",
+      "fimo", "sculpey", "air dry clay"], "🎨"),
+    # Flooring / tiles (v7.51)
+    (["grindys", "grindylentu", "boden", "podłoga", "dielen", "deski podłogowe",
+      "vinyl floor", "floor panel"], "🏠"),
+    (["plytelis", "plyteliu", "fliese", "fliesen", "płytka ceramiczna", "ceramic tile",
+      "plytelių klijai", "floor tile"], "🏠"),
 ]
 
 
@@ -3088,6 +3116,28 @@ _LT_CATEGORY_WORDS = [
     # v7.49 — Hunting / protection sports
     "medziokle", "medziokles",
     "sliauztukai", "sliauztukas",
+    # v7.51 — Window treatments
+    "uzdanga", "uzdangu",
+    "uzuolaida", "uzuolaidų",
+    "rolete", "roletu",
+    "zaluzija", "zaluziju",
+    # v7.51 — Bedding addition
+    "paklode", "paklodziu",
+    "apklotas", "apklotu",
+    # v7.51 — Water sports
+    "baseinas", "baseino",
+    "baidarele", "baidareles",
+    "kanoja", "kanojos",
+    "irklai", "irklu",
+    # v7.51 — Cables / electrical
+    "kabelis", "kabelio",
+    "laidas", "laido",
+    "tinklines", "tinkliniu",
+    # v7.51 — Arts / crafts
+    "plastilinas", "plastilino",
+    # v7.51 — Flooring / construction
+    "grindys", "grindylentu",
+    "plytelis", "plyteliu",
     # v7.50 — Automotive accessories
     "automagnetola", "automagnetolos",
     "vairas", "vairo",
@@ -3929,6 +3979,31 @@ _LT_DE: list[tuple[str, str]] = sorted([
     ("lova", "Bett"), ("lovos", "Bett"),
     ("drabuzine spinta", "Kleiderschrank"), ("spinta", "Schrank"), ("spintos", "Schrank"),
     ("kilimas", "Teppich"), ("kilimo", "Teppich"),
+    # v7.51 — Window treatments
+    ("langų uždanga", "Fenstergardine"), ("interjero uzdanga", "Innengardine"),
+    ("uzdanga", "Vorhang"), ("uzdangu", "Vorhänge"),
+    ("uzuolaida", "Vorhang"), ("uzuolaidų", "Vorhänge"),
+    ("tamsinamoji rolete", "Verdunkelungsrollo"), ("rolete", "Rollo"), ("roletu", "Rollos"),
+    ("zaluzija", "Jalousie"), ("zaluziju", "Jalousien"),
+    # v7.51 — Bedding addition
+    ("flanelinė paklodė", "Flanellbettlaken"), ("paklode", "Bettlaken"), ("paklodziu", "Bettlaken"),
+    ("megztas apklotas", "Strickdecke"), ("apklotas", "Decke"), ("apklotu", "Decken"),
+    # v7.51 — Water sports
+    ("vaiku baseinas", "Kinderplanschbecken"), ("interjero baseinas", "Innenschwimmbad"),
+    ("aufblasbarer baseinas", "aufblasbarer Pool"),
+    ("baseinas", "Schwimmbecken"), ("baseino", "Pool"),
+    ("baidarele", "Kajak"), ("baidareles", "Kajaks"),
+    ("kanoja", "Kanu"), ("kanojos", "Kanu"),
+    ("irklai", "Paddel"), ("irklu", "Paddel"),
+    # v7.51 — Cables / electrical
+    ("kabelis", "Kabel"), ("kabelio", "Kabel"),
+    ("laidas", "Kabel"), ("laido", "Kabel"),
+    ("tinklines", "Steckdosenleiste"), ("tinkliniu", "Steckdosenleisten"),
+    # v7.51 — Arts / crafts
+    ("plastilinas", "Knete"), ("plastilino", "Knete"),
+    # v7.51 — Flooring / construction
+    ("grindys", "Boden"), ("grindylentu", "Dielen"),
+    ("plytelis", "Fliese"), ("plyteliu", "Fliesen"),
     # v7.50 — Automotive accessories
     ("automobilio radijas", "Autoradio"), ("automagnetola", "Autoradio"), ("automagnetolos", "Autoradio"),
     ("automobilio vairas", "Lenkrad"), ("sportinis vairas", "Sportlenkrad"),
@@ -4823,6 +4898,29 @@ _LT_PL: list[tuple[str, str]] = sorted([
     # Thermos mug
     ("termosinis puodelis", "kubek termiczny"), ("termo puodelis", "kubek termiczny"),
     ("termopuodelis", "kubek termiczny"), ("termopuodelio", "kubek termiczny"),
+    # v7.51 — Window treatments
+    ("langu uzdanga", "firanka okienna"), ("interjero uzdanga", "zasłona wewnętrzna"),
+    ("uzdanga", "zasłona"), ("uzdangu", "zasłony"),
+    ("uzuolaida", "zasłona"), ("uzuolaidų", "zasłony"),
+    ("tamsinamoji rolete", "roletka zaciemniająca"), ("rolete", "roleta"), ("roletu", "rolety"),
+    ("zaluzija", "żaluzja"), ("zaluziju", "żaluzje"),
+    # v7.51 — Bedding addition
+    ("flanelinė paklodė", "flanelowe prześcieradło"), ("paklode", "prześcieradło"), ("paklodziu", "prześcieradła"),
+    ("megztas apklotas", "koc dziergany"), ("apklotas", "koc"), ("apklotu", "koce"),
+    # v7.51 — Water sports
+    ("vaiku baseinas", "basen dziecięcy"), ("baseinas", "basen"), ("baseino", "basenu"),
+    ("baidarele", "kajak"), ("baidareles", "kajaki"),
+    ("kanoja", "kajak"), ("kanojos", "kajaki"),
+    ("irklai", "wiosło"), ("irklu", "wiosła"),
+    # v7.51 — Cables / electrical
+    ("kabelis", "kabel"), ("kabelio", "kabla"),
+    ("laidas", "kabel"), ("laido", "kabla"),
+    ("tinklines", "listwa zasilająca"), ("tinkliniu", "listwy zasilające"),
+    # v7.51 — Arts / crafts
+    ("plastilinas", "plastelina"), ("plastilino", "plasteliny"),
+    # v7.51 — Flooring / construction
+    ("grindys", "podłoga"), ("grindylentu", "deski podłogowe"),
+    ("plytelis", "płytka ceramiczna"), ("plyteliu", "płytki ceramiczne"),
     # v7.50 — Automotive accessories
     ("automobilio radijas", "radio samochodowe"), ("automagnetola", "radio samochodowe"), ("automagnetolos", "radio samochodowe"),
     ("automobilio vairas", "kierownica"), ("sportinis vairas", "kierownica sportowa"),
@@ -6244,7 +6342,7 @@ def health():
     )
     return jsonify({
         "status": "ok",
-        "version": "7.50",
+        "version": "7.51",
         "uptime_s": uptime_s,
         "shops": ["Varle.lt", "Elesen.lt", "Pigu.lt", "Topo centras", "Amazon.DE", "Amazon.PL"],
         "ai": {
@@ -6322,7 +6420,7 @@ if __name__ == "__main__":
 
     port = int(os.getenv("PORT", 5000))
 
-    print("\n🟢 Goody API v7.50")
+    print("\n🟢 Goody API v7.51")
     print(f"📊 Supabase: {'✅ configured' if SUPABASE_URL else '⚠️ not set'}")
     print("📦 Active shops: Varle + Elesen + Pigu + Topo + Amazon.DE + Amazon.PL")
     print(f"🔑 ScraperAPI: {'✅ configured' if SCRAPER_API_KEY else '⚠️ not set'}")
