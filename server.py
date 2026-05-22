@@ -3139,7 +3139,8 @@ _LT_CATEGORY_WORDS = [
     "peiliu",     # peiliu blokas = knife block (peiliai was trigger, not peiliu gen.pl.)
     "pienu",      # pienu putuke = milk frother (compound trigger)
     "piestuko",   # pencil genitive
-    "svarstis",   # single weight disc
+    "svarstis",   # single weight disc (nominative)
+    "svarsti",    # weight (short/genitive form used in queries)
     # v7.52 — Hammock
     "hamakas", "hamaku",
     # v7.52 — Earbud singular
@@ -3478,7 +3479,7 @@ _LT_DE: list[tuple[str, str]] = sorted([
     ("stebėjimo", "Überwachung"), ("stebejimo", "Überwachung"),
     # Baby / child products
     ("kūdikio monitorius", "Babyphone"), ("kudikio monitorius", "Babyphone"),
-    ("automobilinė vaikiška kėdutė", "Kindersitz"), ("automobiliné vaiskia kédute", "Kindersitz"),
+    ("automobilinė vaikiška kėdutė", "Kindersitz"), ("automobiline vaiskia kedute", "Kindersitz"),
     ("vaikiška kėdutė", "Kindersitz"), ("vaiska kedute", "Kindersitz"),
     ("kėdutė", "Kindersitz"), ("kedute", "Kindersitz"),
     ("vaikiškas vežimėlis", "Kinderwagen"), ("vaikiskas vezimelis", "Kinderwagen"),
