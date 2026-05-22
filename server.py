@@ -1,5 +1,5 @@
 """
-Goody Backend v7.52 — _LT_DE/PL +sofa kampine fix/kampine/hamakas/ausinukas/menteliklis/štanga/suoliukas/irklente/stovyklavimo/aminoru/tinklinė:
+Goody Backend v7.53 — trigger gaps fixed: valdymo/peiliu/pienu/piestuko/svarstis now detectable as LT queries:
 - v7.45 — _LT_DE/PL +knyga/striuke/megztinis/pirstines/suknele/vafline/supuokles/baldai/konstruktorius/pavesine/masinyke:
 - v7.44 — _LT_DE/PL +vitaminas/magnio/kreatinas/batai/kedai/sportbaciai/lele/peilis/zirkles/pjaustytuvas/padangos/tepalas/matavimo juosta:
 - v7.43 — _static_translate→None fix; _LT_DE/PL +gitara/pianinas/bügnai/smuikas/batutas/slidės/pačiūžos/meškerė/žvejybos/plaukimo/pienukė/lova/spinta/kilimas/vaizdo registratorius:
@@ -3134,6 +3134,12 @@ _LT_CATEGORY_WORDS = [
     "sliauztukai", "sliauztukas",
     # v7.52 — Electrical / triggers
     "tinklinė", "tinklinis",
+    # v7.53 — Trigger gaps (dict entries not reachable without these)
+    "valdymo",    # nuotolinio valdymo pultas = remote control
+    "peiliu",     # peiliu blokas = knife block (peiliai was trigger, not peiliu gen.pl.)
+    "pienu",      # pienu putuke = milk frother (compound trigger)
+    "piestuko",   # pencil genitive
+    "svarstis",   # single weight disc
     # v7.52 — Hammock
     "hamakas", "hamaku",
     # v7.52 — Earbud singular
@@ -6400,7 +6406,7 @@ def health():
     )
     return jsonify({
         "status": "ok",
-        "version": "7.52",
+        "version": "7.53",
         "uptime_s": uptime_s,
         "shops": ["Varle.lt", "Elesen.lt", "Pigu.lt", "Topo centras", "Amazon.DE", "Amazon.PL"],
         "ai": {
@@ -6478,7 +6484,7 @@ if __name__ == "__main__":
 
     port = int(os.getenv("PORT", 5000))
 
-    print("\n🟢 Goody API v7.52")
+    print("\n🟢 Goody API v7.53")
     print(f"📊 Supabase: {'✅ configured' if SUPABASE_URL else '⚠️ not set'}")
     print("📦 Active shops: Varle + Elesen + Pigu + Topo + Amazon.DE + Amazon.PL")
     print(f"🔑 ScraperAPI: {'✅ configured' if SCRAPER_API_KEY else '⚠️ not set'}")
