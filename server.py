@@ -1,5 +1,6 @@
 """
-Goody Backend v7.54 — exact model fix: model-query fallback removed (31385 no longer shows 31128); MacBook floor €500; iPhone floor €400; Lego floor €8; verdict_label LT/DE/PL; AI prompt enforces language:
+Goody Backend v7.55 — scan-image: extract exact product_code (LEGO #/EAN/SKU/model) + brand/pieces/age; query uses brand+code (no translation); validate code in result titles, mark "Galimai netikslus atitikimas"; AI accepts language param (lt/en/ru/pl/de) and is enforced in prompt; ru added to rule_based_ai_analyze:
+- v7.54 — exact model fix: model-query fallback removed (31385 no longer shows 31128); MacBook floor €500; iPhone floor €400; Lego floor €8; verdict_label LT/DE/PL; AI prompt enforces language:
 - v7.53 — trigger gaps fixed: valdymo/peiliu/pienu/piestuko/svarstis now detectable as LT queries:
 - v7.45 — _LT_DE/PL +knyga/striuke/megztinis/pirstines/suknele/vafline/supuokles/baldai/konstruktorius/pavesine/masinyke:
 - v7.44 — _LT_DE/PL +vitaminas/magnio/kreatinas/batai/kedai/sportbaciai/lele/peilis/zirkles/pjaustytuvas/padangos/tepalas/matavimo juosta:
@@ -5167,18 +5168,21 @@ def empty_ai():
     }
 
 
-def rule_based_ai_analyze(query: str, results: list, price_history: dict = None) -> dict:
-    # Detect query language for localised rule-based output
-    is_lt = _is_lt_query(query) or any(ord(c) > 127 for c in query[:20])
-    q_low = query.lower()
-    is_de = any(c in q_low for c in ("ä", "ö", "ü", "ß")) or any(w in q_low for w in ("waschmaschine", "kühlschrank", "fernseher", "drucker"))
-    is_pl = any(c in q_low for c in ("ę", "ó", "ń")) or any(w in q_low for w in ("pralka", "odkurzacz", "lodówka", "golarka", "ekspres"))
-    lang = "lt" if is_lt else ("de" if is_de else ("pl" if is_pl else "en"))
+def rule_based_ai_analyze(query: str, results: list, price_history: dict = None, language: str = "") -> dict:
+    # Explicit language param from frontend takes priority over auto-detect
+    lang = (language or "").strip().lower()
+    if lang not in ("lt", "en", "ru", "pl", "de"):
+        is_lt = _is_lt_query(query) or any(ord(c) > 127 for c in query[:20])
+        q_low = query.lower()
+        is_de = any(c in q_low for c in ("ä", "ö", "ü", "ß")) or any(w in q_low for w in ("waschmaschine", "kühlschrank", "fernseher", "drucker"))
+        is_pl = any(c in q_low for c in ("ę", "ó", "ń")) or any(w in q_low for w in ("pralka", "odkurzacz", "lodówka", "golarka", "ekspres"))
+        lang = "lt" if is_lt else ("de" if is_de else ("pl" if is_pl else "en"))
 
     _L = {
         "lt": {"no_price": "Kainų nerasta.", "try_specific": "Pabandykite tikslesnį pavadinimą.", "refine": "Patikslinkite paiešką.", "one_seller": "Rastas tik 1 pardavėjas — palyginti negalime.", "cheap_pct": "Pigiausia kaina yra {pct:.0f}% žemiau brangiausios.", "near_avg": "Geriausia kaina artima rinkos vidurkiui.", "normal": "Kaina atrodo normali.", "rec": "Geriausia rasta kaina €{pmin:.2f}. Palyginkite pristatymą ir pardavėją prieš pirkdami.", "summary": "Goody rado {n} kainų. Pigiausia: €{pmin:.2f}, vidurkis: €{pavg:.2f}.", "at_hist_low": "Kaina šiuo metu istoriniame minimume — geras metas pirkti.", "above_hist_avg": "Kaina viršija 30 dienų vidurkį — galbūt verta palaukti."},
         "de": {"no_price": "Keine Preise gefunden.", "try_specific": "Bitte genaueren Produktnamen eingeben.", "refine": "Suche verfeinern.", "one_seller": "Nur 1 Händler gefunden — kein Preisvergleich möglich.", "cheap_pct": "Das günstigste Angebot liegt {pct:.0f}% unter dem teuersten.", "near_avg": "Der beste Preis liegt nahe am Marktdurchschnitt.", "normal": "Der Preis sieht angemessen aus.", "rec": "Bester gefundener Preis €{pmin:.2f}. Versandkosten und Händler vergleichen.", "summary": "Goody fand {n} Preise. Günstigster: €{pmin:.2f}, Durchschnitt: €{pavg:.2f}.", "at_hist_low": "Preis aktuell auf historischem Tief — guter Kaufzeitpunkt.", "above_hist_avg": "Preis über dem 30-Tage-Durchschnitt — abwarten könnte sich lohnen."},
         "pl": {"no_price": "Nie znaleziono cen.", "try_specific": "Wpisz dokładniejszą nazwę produktu.", "refine": "Doprecyzuj wyszukiwanie.", "one_seller": "Znaleziono tylko 1 sprzedawcę — porównanie niemożliwe.", "cheap_pct": "Najtańsza oferta jest {pct:.0f}% poniżej najdroższej.", "near_avg": "Najlepsza cena bliska średniej rynkowej.", "normal": "Cena wygląda normalnie.", "rec": "Najlepsza znaleziona cena €{pmin:.2f}. Porównaj dostawę i sprzedawcę.", "summary": "Goody znalazło {n} cen. Najtańsza: €{pmin:.2f}, średnia: €{pavg:.2f}.", "at_hist_low": "Cena aktualnie na historycznym minimum — dobry moment na zakup.", "above_hist_avg": "Cena powyżej 30-dniowej średniej — warto poczekać."},
+        "ru": {"no_price": "Цены не найдены.", "try_specific": "Попробуйте более точное название.", "refine": "Уточните поиск.", "one_seller": "Найден только 1 продавец — сравнение невозможно.", "cheap_pct": "Самое дешёвое предложение на {pct:.0f}% ниже самого дорогого.", "near_avg": "Лучшая цена близка к рыночной средней.", "normal": "Цена выглядит нормальной.", "rec": "Лучшая найденная цена €{pmin:.2f}. Сравните доставку и продавца.", "summary": "Goody нашёл {n} цен. Самая дешёвая: €{pmin:.2f}, средняя: €{pavg:.2f}.", "at_hist_low": "Цена сейчас на историческом минимуме — хорошее время для покупки.", "above_hist_avg": "Цена выше 30-дневного среднего — возможно стоит подождать."},
         "en": {"no_price": "No prices found.", "try_specific": "Try a more specific product name.", "refine": "Refine your search.", "one_seller": "Only one seller found — price comparison unavailable.", "cheap_pct": "The cheapest offer is {pct:.0f}% below the highest found price.", "near_avg": "The best price is close to the current market average.", "normal": "The current price looks reasonable.", "rec": "Best found price is €{pmin:.2f}. Compare delivery and seller reliability before buying.", "summary": "Goody found {n} price(s). Lowest: €{pmin:.2f}, average: €{pavg:.2f}.", "at_hist_low": "Price is at historical low — good time to buy.", "above_hist_avg": "Price is above the 30-day average — consider waiting."},
     }
     L = _L.get(lang, _L["en"])
@@ -5213,6 +5217,7 @@ def rule_based_ai_analyze(query: str, results: list, price_history: dict = None)
         "lt": {"BUY": "Pirkti dabar", "WAIT": "Palaukite", "OK": "Normali"},
         "de": {"BUY": "Jetzt kaufen", "WAIT": "Abwarten", "OK": "Normal"},
         "pl": {"BUY": "Kup teraz", "WAIT": "Poczekaj", "OK": "Normalna"},
+        "ru": {"BUY": "Покупать", "WAIT": "Подождать", "OK": "Нормально"},
         "en": {"BUY": "Buy now", "WAIT": "Wait", "OK": "Normal"},
     }.get(lang, {"BUY": "Buy now", "WAIT": "Wait", "OK": "Normal"})
 
@@ -5252,7 +5257,13 @@ def rule_based_ai_analyze(query: str, results: list, price_history: dict = None)
     }
 
 
-def build_ai_prompt(query: str, results: list, price_history: dict = None) -> str:
+_LANG_NAME_MAP = {
+    "lt": "Lithuanian", "en": "English", "ru": "Russian",
+    "pl": "Polish", "de": "German",
+}
+
+
+def build_ai_prompt(query: str, results: list, price_history: dict = None, language: str = "") -> str:
     prices = [r.get("price", 0) for r in results if r.get("price", 0) > 0]
     p_min = min(prices) if prices else 0
     p_max = max(prices) if prices else 0
@@ -5272,28 +5283,32 @@ def build_ai_prompt(query: str, results: list, price_history: dict = None) -> st
         hist_note = " (AT HISTORICAL LOW!)" if at_low else f", currently {round((p_min/hist['lowest']-1)*100)}% above low"
         hist_line = f" 30d history: low €{hist['lowest']}, high €{hist.get('highest','?')}{hist_note}."
 
-    _ai_lang = "Lithuanian" if _is_lt_query(query) or any(ord(c)>127 for c in query[:20]) else \
-               "German" if any(c in query.lower() for c in ("ä","ö","ü","ß")) else \
-               "Polish" if any(c in query.lower() for c in ("ę","ó","ń")) else "English"
+    _lang_code = (language or "").strip().lower()
+    if _lang_code in _LANG_NAME_MAP:
+        _ai_lang = _LANG_NAME_MAP[_lang_code]
+    else:
+        _ai_lang = "Lithuanian" if _is_lt_query(query) or any(ord(c)>127 for c in query[:20]) else \
+                   "German" if any(c in query.lower() for c in ("ä","ö","ü","ß")) else \
+                   "Polish" if any(c in query.lower() for c in ("ę","ó","ń")) else "English"
 
     return f"""Goody price comparison coach. Analyze and return JSON only.
 Product: {query}
 Shops: {shops_summary}
 Price range: €{p_min:.2f}–€{p_max:.2f} ({len(prices)} shops, {spread_pct}% spread).{hist_line}
 
-Rules: use only provided data. Be concise. ALL text fields MUST be in {_ai_lang}.
+Rules: use only provided data. Be concise. ALL text fields MUST be written in {_ai_lang} ONLY. Do NOT mix languages. Do NOT use English if the target language is not English.
 
 Return ONLY valid JSON:
-{{"verdict":"BUY|WAIT|OK","verdict_label":"1-3 words in {_ai_lang}","verdict_reason":"one sentence in {_ai_lang}","ai_summary":"1-2 sentences in {_ai_lang}","alternative":"cheaper alternative product name if clearly overpriced else empty string","buy_recommendation":"1-2 sentences in {_ai_lang}","price_forecast":"one sentence or empty string"}}"""
+{{"verdict":"BUY|WAIT|OK","verdict_label":"1-3 words in {_ai_lang}","verdict_reason":"one sentence in {_ai_lang}","ai_summary":"1-2 sentences in {_ai_lang}","alternative":"cheaper alternative product name if clearly overpriced else empty string","buy_recommendation":"1-2 sentences in {_ai_lang}","price_forecast":"one sentence in {_ai_lang} or empty string"}}"""
 
 
-def openai_analyze(query: str, results: list, price_history: dict = None) -> dict:
+def openai_analyze(query: str, results: list, price_history: dict = None, language: str = "") -> dict:
     if not OPENAI_API_KEY or OpenAI is None or not results:
-        return rule_based_ai_analyze(query, results, price_history)
+        return rule_based_ai_analyze(query, results, price_history, language)
 
     try:
         client = OpenAI(api_key=OPENAI_API_KEY)
-        prompt = build_ai_prompt(query, results, price_history)
+        prompt = build_ai_prompt(query, results, price_history, language)
 
         resp = client.chat.completions.create(
             model=AI_MODEL_OPENAI,
@@ -5317,16 +5332,16 @@ def openai_analyze(query: str, results: list, price_history: dict = None) -> dic
 
     except Exception as e:
         print(f"[OpenAI analyze] {e}")
-        return rule_based_ai_analyze(query, results, price_history)
+        return rule_based_ai_analyze(query, results, price_history, language)
 
 
-def claude_analyze(query: str, results: list, price_history: dict = None) -> dict:
+def claude_analyze(query: str, results: list, price_history: dict = None, language: str = "") -> dict:
     if not ANTHROPIC_API_KEY or not results:
-        return rule_based_ai_analyze(query, results, price_history)
+        return rule_based_ai_analyze(query, results, price_history, language)
 
     try:
         client = anthropic.Anthropic(api_key=ANTHROPIC_API_KEY)
-        prompt = build_ai_prompt(query, results, price_history)
+        prompt = build_ai_prompt(query, results, price_history, language)
 
         resp = client.messages.create(
             model=AI_MODEL_CLAUDE,
@@ -5349,30 +5364,30 @@ def claude_analyze(query: str, results: list, price_history: dict = None) -> dic
 
     except Exception as e:
         print(f"[Claude analyze] {e}")
-        return rule_based_ai_analyze(query, results, price_history)
+        return rule_based_ai_analyze(query, results, price_history, language)
 
 
-def analyze_deal_with_ai(query: str, results: list, price_history: dict = None) -> dict:
+def analyze_deal_with_ai(query: str, results: list, price_history: dict = None, language: str = "") -> dict:
     # Rule-based (free) when too few shops; paid AI when 2+ shops with meaningful spread
     if not results:
-        return rule_based_ai_analyze(query, results, price_history)
+        return rule_based_ai_analyze(query, results, price_history, language)
 
     prices = [r.get("price", 0) for r in results if r.get("price", 0) > 0]
     if len(prices) < 2:   # need at least 2 shops to compare
-        return rule_based_ai_analyze(query, results, price_history)
+        return rule_based_ai_analyze(query, results, price_history, language)
 
     price_max = max(prices)
     spread_pct = ((price_max - min(prices)) / price_max * 100) if price_max else 0
     if spread_pct < 5:    # prices are within 5% — not interesting enough for AI
-        return rule_based_ai_analyze(query, results, price_history)
+        return rule_based_ai_analyze(query, results, price_history, language)
 
     if AI_PROVIDER == "openai":
-        return openai_analyze(query, results, price_history)
+        return openai_analyze(query, results, price_history, language)
 
     if AI_PROVIDER == "claude":
-        return claude_analyze(query, results, price_history)
+        return claude_analyze(query, results, price_history, language)
 
-    return rule_based_ai_analyze(query, results, price_history)
+    return rule_based_ai_analyze(query, results, price_history, language)
 
 
 def get_price_history(query: str) -> dict:
@@ -5519,6 +5534,9 @@ def search():
         return jsonify({"error": "No data"}), 400
 
     query = data.get("query", "").strip()
+    language = (data.get("language") or "").strip().lower()
+    if language not in ("lt", "en", "ru", "pl", "de"):
+        language = ""
 
     if not query:
         return jsonify({"error": "query_required", "message": "Įveskite produkto pavadinimą."}), 400
@@ -5532,7 +5550,7 @@ def search():
     original_query = query
     query = resolve_query(query)
 
-    cache_key = hashlib.md5(f"v64:{query.lower()}".encode()).hexdigest()
+    cache_key = hashlib.md5(f"v64:{query.lower()}:{language}".encode()).hexdigest()
     etag = f'"{cache_key}"'
     cached = get_cache(cache_key)
 
@@ -5621,7 +5639,7 @@ def search():
     _relevant_for_ai = [r for r in all_results if r.get("price", 0) > 0
                         and is_relevant_result(query, r.get("product_title", ""))] or all_results
     deduped_for_ai = deduplicate_by_shop(_relevant_for_ai)
-    ai_data = analyze_deal_with_ai(query, deduped_for_ai, price_history)
+    ai_data = analyze_deal_with_ai(query, deduped_for_ai, price_history, language)
     _t_after_ai = time.time()
     result = post_process(all_results, query, ai_data, price_history)
     _t_after_pp = time.time()
@@ -5672,6 +5690,9 @@ def search_stream():
         return jsonify({"error": "No data"}), 400
 
     query = normalize_query(data.get("query", "").strip())
+    language = (data.get("language") or "").strip().lower()
+    if language not in ("lt", "en", "ru", "pl", "de"):
+        language = ""
     if not query:
         return jsonify({"error": "query_required", "message": "Įveskite produkto pavadinimą."}), 400
     if len(query) < 2:
@@ -5687,11 +5708,12 @@ def search_stream():
     used = rate_store.get(ip, {}).get("count", 1)
     rate_info = {"used": used, "limit": DAILY_FREE_LIMIT, "remaining": max(0, DAILY_FREE_LIMIT - used)}
 
-    cache_key = hashlib.md5(f"v64:{query.lower()}".encode()).hexdigest()
+    cache_key = hashlib.md5(f"v64:{query.lower()}:{language}".encode()).hexdigest()
 
     # Freeze query strings for generator closure
     _query = query
     _original = original_query
+    _lang = language
 
     def _sse(event_type: str, payload: dict) -> str:
         return f"data: {json.dumps({'type': event_type, 'payload': payload}, ensure_ascii=False)}\n\n"
@@ -5842,7 +5864,7 @@ def search_stream():
             _rel_ai = [r for r in all_results if r.get("price", 0) > 0
                        and is_relevant_result(_query, r.get("product_title", ""))] or all_results
             deduped_for_ai = deduplicate_by_shop(_rel_ai)
-            ai_data = analyze_deal_with_ai(_query, deduped_for_ai, price_history)
+            ai_data = analyze_deal_with_ai(_query, deduped_for_ai, price_history, _lang)
             result = post_process(all_results, _query, ai_data, price_history)
 
             price_for_classify = result.get("price_min", 0)
@@ -6012,6 +6034,10 @@ def scan_image():
     if len(image_b64) >= 14_000_000:  # ~10 MB binary
         return jsonify({"error": "image_too_large", "message": "Nuotrauka per didelė. Maksimalus dydis 10 MB."}), 413
 
+    language = (data.get("language") or "").strip().lower()
+    if language not in ("lt", "en", "ru", "pl", "de"):
+        language = ""
+
     if not ANTHROPIC_API_KEY:
         return jsonify({
             "error": "scan_unavailable",
@@ -6039,7 +6065,7 @@ def scan_image():
 
         response = client.messages.create(
             model=AI_MODEL_CLAUDE,
-            max_tokens=256,
+            max_tokens=500,
             messages=[
                 {
                     "role": "user",
@@ -6054,16 +6080,22 @@ def scan_image():
                         },
                         {
                             "type": "text",
-                            "text": """Analyze this image. Find the product, any visible price, and any barcode.
+                            "text": """You are extracting an EXACT product identification from packaging. Accuracy matters more than completeness — NEVER guess.
 
 Respond ONLY with JSON (no markdown):
-{"product_name":"BRAND MODEL in English","price_visible":0,"barcode":"","confidence":"high/medium/low"}
+{"brand":"","product_name":"","product_code":null,"pieces":null,"age_range":"","price_visible":0,"barcode":"","confidence":"high|medium|low"}
 
-Rules:
-- product_name: brand + model + key specs in English (e.g. "Apple iPhone 16 Pro 256GB", "Sony WH-1000XM5", "Samsung 65\" QLED TV")
-- price_visible: numeric price in EUR if a price tag is visible, else 0
-- barcode: EAN/UPC/QR digits if a barcode is clearly visible, else empty string
-- confidence: high=exact model known, medium=brand+category known, low=category only"""
+STRICT rules:
+- brand: manufacturer logo / brand name visible on box (e.g. "LEGO", "Apple", "Samsung"). Empty string if unsure.
+- product_name: full descriptive title in English (e.g. "LEGO Creator 3in1 Exotic Parrot", "Apple iPhone 16 Pro 256GB").
+- product_code: the EXACT product number printed on the box — LEGO set number (e.g. "31385"), model number, SKU, part number. Read the digits character by character. Set to null if you cannot see it clearly. DO NOT guess. DO NOT invent. DO NOT pick a similar code from memory.
+- pieces: integer number of pieces / parts if printed (e.g. 542 for LEGO). null if not visible.
+- age_range: age range as printed (e.g. "8+", "6-12"). Empty string if not visible.
+- price_visible: numeric price in EUR if a price tag is visible, else 0.
+- barcode: EAN/UPC digits if a barcode is clearly visible, else empty string.
+- confidence: "high" only when product_code is clearly read from the box. "medium" when brand + name confident but no code visible. "low" when ambiguous or category only.
+
+If you are not 100% sure of a digit in product_code, set product_code to null and confidence to "low". A wrong code is worse than no code."""
                         }
                     ]
                 }
@@ -6077,7 +6109,7 @@ Rules:
                 raw_text += block.text
 
         text = raw_text.strip().replace("```json", "").replace("```", "").strip()
-        json_m = re.search(r'\{[^{}]*"product_name"[^{}]*\}', text, re.DOTALL)
+        json_m = re.search(r'\{.*\}', text, re.DOTALL)
 
         if json_m:
             text = json_m.group(0)
@@ -6087,66 +6119,97 @@ Rules:
         except Exception:
             name_m = re.search(r'"product_name"\s*:\s*"([^"]+)"', raw_text)
             vision = {
+                "brand": "",
                 "product_name": name_m.group(1) if name_m else "",
+                "product_code": None,
+                "pieces": None,
+                "age_range": "",
                 "price_visible": 0,
                 "barcode": "",
                 "confidence": "low"
             }
 
-        product_name = vision.get("product_name", "").strip()
+        brand = (vision.get("brand") or "").strip()
+        product_name = (vision.get("product_name") or "").strip()
+        raw_code = vision.get("product_code")
+        product_code = str(raw_code).strip() if raw_code not in (None, "", "null", "None") else ""
+        pieces = vision.get("pieces")
+        try:
+            pieces = int(pieces) if pieces not in (None, "", "null") else None
+        except Exception:
+            pieces = None
+        age_range = (vision.get("age_range") or "").strip()
         price_visible = vision.get("price_visible", 0)
-        confidence = vision.get("confidence", "medium")
-        barcode_from_image = vision.get("barcode", "").strip()
+        confidence = (vision.get("confidence") or "medium").strip().lower()
+        barcode_from_image = (vision.get("barcode") or "").strip()
 
         # If AI found a barcode in the image, try free barcode lookup for a better name
         if barcode_from_image and re.match(r'^\d{8,14}$', barcode_from_image):
             bc_name = lookup_barcode_free(barcode_from_image)
             if bc_name:
                 product_name = bc_name
+                if not product_code:
+                    product_code = barcode_from_image
                 confidence = "high"
 
         if isinstance(price_visible, (int, float)) and price_visible <= 1:
             price_visible = 0
 
-        if not product_name or (confidence == "low" and len(product_name) < 4):
+        if not product_name and not product_code:
             return jsonify({
                 "error": "product_not_recognized",
                 "message": "Produktas neatpažintas. Pabandykite nufotografuoti arčiau, su geresniu apšvietimu arba įveskite pavadinimą rankiniu būdu.",
                 "confidence": confidence
             }), 422
 
-        cache_key = hashlib.md5(f"scan_v64:{product_name.lower()}".encode()).hexdigest()
+        # ── Build search query: prefer exact product code, fall back to name + pieces ──
+        if product_code and brand:
+            search_query = f"{brand} {product_code}"
+        elif product_code:
+            search_query = f"{product_name} {product_code}".strip() if product_name else product_code
+        else:
+            parts = [product_name] if product_name else []
+            if pieces:
+                parts.append(f"{pieces} pieces")
+            search_query = " ".join(parts).strip()
+
+        display_name = product_name or search_query
+
+        cache_key = hashlib.md5(f"scan_v66:{search_query.lower()}:{product_code}:{language}".encode()).hexdigest()
         cached = get_cache(cache_key)
 
         if cached:
             cached["_cached"] = True
-            cached["scanned_product"] = product_name
+            cached["scanned_product"] = display_name
+            cached["scanned_product_code"] = product_code
             cached["store_price"] = price_visible
             return jsonify(cached)
 
-        query_de = product_name
-        query_pl = product_name
-        try:
-            with ThreadPoolExecutor(max_workers=2) as _pre:
-                _f_de = _pre.submit(claude_translate, product_name, "de")
-                _f_pl = _pre.submit(claude_translate, product_name, "pl")
-                query_de = _f_de.result(timeout=4) or product_name
-                query_pl = _f_pl.result(timeout=4) or product_name
-        except Exception:
-            pass
+        query_de = search_query
+        query_pl = search_query
+        # If we have a product code, do NOT translate it (LEGO 31385 stays LEGO 31385 in every market)
+        if not product_code:
+            try:
+                with ThreadPoolExecutor(max_workers=2) as _pre:
+                    _f_de = _pre.submit(claude_translate, search_query, "de")
+                    _f_pl = _pre.submit(claude_translate, search_query, "pl")
+                    query_de = _f_de.result(timeout=4) or search_query
+                    query_pl = _f_pl.result(timeout=4) or search_query
+            except Exception:
+                pass
 
         # Price history fetches in parallel with shops (starts immediately)
         _scan_ph_exec = ThreadPoolExecutor(max_workers=1)
-        scan_ph_fut = _scan_ph_exec.submit(get_price_history, product_name)
+        scan_ph_fut = _scan_ph_exec.submit(get_price_history, search_query)
 
         all_results = []
         scan_executor = ThreadPoolExecutor(max_workers=8)
         try:
             futures = {
-                scan_executor.submit(scrape_varle,   product_name):    "Varle",
-                scan_executor.submit(scrape_elesen,  product_name):    "Elesen",
-                scan_executor.submit(scrape_pigu,    product_name):    "Pigu",
-                scan_executor.submit(scrape_topo,    product_name):    "Topo",
+                scan_executor.submit(scrape_varle,   search_query):    "Varle",
+                scan_executor.submit(scrape_elesen,  search_query):    "Elesen",
+                scan_executor.submit(scrape_pigu,    search_query):    "Pigu",
+                scan_executor.submit(scrape_topo,    search_query):    "Topo",
                 scan_executor.submit(scrape_amazon,  query_de, "de"):  "Amazon.DE",
                 scan_executor.submit(scrape_amazon,  query_pl, "pl"):  "Amazon.PL",
             }
@@ -6161,6 +6224,28 @@ Rules:
         finally:
             scan_executor.shutdown(wait=False)
             _scan_ph_exec.shutdown(wait=False)
+
+        # ── VALIDATION: when we have a product code, verify it appears in each result title ──
+        _code_warn_map = {
+            "lt": "Galimai netikslus atitikimas",
+            "en": "Possibly inaccurate match",
+            "ru": "Возможно неточное совпадение",
+            "pl": "Możliwe niedokładne dopasowanie",
+            "de": "Möglicherweise ungenaue Übereinstimmung",
+        }
+        _warn_lang = language if language in _code_warn_map else "lt"
+        warn_label = _code_warn_map[_warn_lang]
+
+        if product_code:
+            code_lower = product_code.lower()
+            code_digits = re.sub(r'\D', '', product_code)
+            for r in all_results:
+                title = (r.get("product_title") or "").lower()
+                title_digits = re.sub(r'\D', '', title)
+                matched = code_lower in title or (len(code_digits) >= 4 and code_digits in title_digits)
+                r["code_match"] = bool(matched)
+                if not matched:
+                    r["match_warning"] = warn_label
 
         if isinstance(price_visible, (int, float)) and price_visible > 1:
             all_results.insert(0, {
@@ -6181,7 +6266,8 @@ Rules:
                 "is_top_rated": False,
                 "why_recommended": "",
                 "source": "scan",
-                "product_title": product_name
+                "product_title": display_name,
+                "code_match": True
             })
 
         # Collect price history (was running in parallel since shop start)
@@ -6192,28 +6278,47 @@ Rules:
             pass
 
         _scan_rel = [r for r in all_results if r.get("price", 0) > 0
-                     and is_relevant_result(product_name, r.get("product_title", ""))] or all_results
+                     and is_relevant_result(display_name, r.get("product_title", ""))] or all_results
+        # When we have a code, prefer matching results for AI analysis
+        if product_code:
+            _code_matched = [r for r in _scan_rel if r.get("code_match")]
+            if _code_matched:
+                _scan_rel = _code_matched
         deduped_for_scan_ai = deduplicate_by_shop(_scan_rel)
-        ai_data = analyze_deal_with_ai(product_name, deduped_for_scan_ai, price_history)
-        result = post_process(all_results, product_name, ai_data, price_history)
+        ai_data = analyze_deal_with_ai(display_name, deduped_for_scan_ai, price_history, language)
+        result = post_process(all_results, display_name, ai_data, price_history)
 
-        result["scanned_product"] = product_name
+        result["scanned_product"] = display_name
+        result["scanned_product_code"] = product_code
+        result["scanned_brand"] = brand
+        result["scanned_pieces"] = pieces
+        result["scanned_age_range"] = age_range
         result["scan_confidence"] = confidence
+        # Global match warning if code present but no result matched it
+        if product_code and not any(r.get("code_match") for r in all_results):
+            result["match_warning"] = warn_label
+            result["match_warning_detail"] = {
+                "lt": f"Nepavyko rasti produkto su tiksliu kodu {product_code}. Rezultatai gali būti netikslūs.",
+                "en": f"Could not find a product with exact code {product_code}. Results may be inaccurate.",
+                "ru": f"Не удалось найти продукт с точным кодом {product_code}. Результаты могут быть неточными.",
+                "pl": f"Nie znaleziono produktu z dokładnym kodem {product_code}. Wyniki mogą być niedokładne.",
+                "de": f"Produkt mit exaktem Code {product_code} nicht gefunden. Ergebnisse können ungenau sein.",
+            }[_warn_lang]
         result["store_price"] = (
             price_visible
             if isinstance(price_visible, (int, float)) and price_visible > 1
             else 0
         )
         price_for_scan_classify = price_visible if isinstance(price_visible, (int, float)) and price_visible > 1 else result.get("price_min", 0)
-        scan_product_type = classify_product_cheap(product_name, price_for_scan_classify)
+        scan_product_type = classify_product_cheap(display_name, price_for_scan_classify)
         result["product_type"] = scan_product_type
-        result["category_icon"] = get_category_icon(product_name, scan_product_type)
+        result["category_icon"] = get_category_icon(display_name, scan_product_type)
         result["search_time_ms"] = int((time.time() - t0) * 1000)
 
         set_cache(cache_key, result)
 
-        track_search(product_name)
-        threading.Thread(target=save_prices_to_supabase, args=(product_name, result.get("results", all_results)), daemon=True).start()
+        track_search(display_name)
+        threading.Thread(target=save_prices_to_supabase, args=(display_name, result.get("results", all_results)), daemon=True).start()
 
         _ip = get_client_ip()
         used = rate_store.get(_ip, {}).get("count", 1)
@@ -6426,7 +6531,7 @@ def health():
     )
     return jsonify({
         "status": "ok",
-        "version": "7.53",
+        "version": "7.55",
         "uptime_s": uptime_s,
         "shops": ["Varle.lt", "Elesen.lt", "Pigu.lt", "Topo centras", "Amazon.DE", "Amazon.PL"],
         "ai": {
@@ -6504,7 +6609,7 @@ if __name__ == "__main__":
 
     port = int(os.getenv("PORT", 5000))
 
-    print("\n🟢 Goody API v7.53")
+    print("\n🟢 Goody API v7.55")
     print(f"📊 Supabase: {'✅ configured' if SUPABASE_URL else '⚠️ not set'}")
     print("📦 Active shops: Varle + Elesen + Pigu + Topo + Amazon.DE + Amazon.PL")
     print(f"🔑 ScraperAPI: {'✅ configured' if SCRAPER_API_KEY else '⚠️ not set'}")
